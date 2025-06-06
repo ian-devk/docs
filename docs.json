@@ -1,102 +1,300 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Shelther Documentation",
   "theme": "mint",
-  "name": "Mint Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+  "logo": {
+    "dark": "/logo/shelther.svg",
+    "light": "/logo/shelther.svg"
   },
   "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#8B5CF6",
+    "light": "#A78BFA",
+    "dark": "#7C3AED"
+  },
+  "topbarLinks": [
+    {
+      "name": "Download App",
+      "url": "https://shelther.app/download"
+    },
+    {
+      "name": "Support",
+      "url": "mailto:support@shelther.app"
+    },
+    {
+      "name": "Status",
+      "url": "https://status.shelther.app"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://dashboard.shelther.app"
+  },
+  "anchors": [
+    {
+      "name": "GitHub Repository",
+      "icon": "github",
+      "url": "https://github.com/shelther/shelther-app"
+    },
+    {
+      "name": "Community Discord",
+      "icon": "discord",
+      "url": "https://discord.gg/shelther"
+    },
+    {
+      "name": "API Reference",
+      "icon": "square-terminal",
+      "url": "api-reference"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://blog.shelther.app"
+    }
+  ],
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Guides",
-        "groups": [
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "features",
+          "why-shelther",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Quick Setup",
+        "pages": [
+          "quickstart/installation",
+          "quickstart/expo-setup",
+          "quickstart/supabase-setup",
+          "quickstart/first-app",
+          "quickstart/configuration"
+        ]
+      },
+      {
+        "group": "Architecture",
+        "pages": [
+          "architecture/overview",
+          "architecture/tech-stack",
+          "architecture/client-architecture",
+          "architecture/backend-architecture",
+          "architecture/data-flow",
+          "architecture/security-design",
+          "architecture/offline-capabilities"
+        ]
+      },
+      {
+        "group": "Data Models",
+        "pages": [
+          "architecture/database-schema",
+          "architecture/user-model",
+          "architecture/safety-model",
+          "architecture/location-model",
+          "architecture/emergency-model"
+        ]
+      },
+      {
+        "group": "Core Features",
+        "pages": [
+          "features/authentication",
+          "features/emergency-alerts",
+          "features/location-tracking",
+          "features/circle-of-trust",
+          "features/check-ins",
+          "features/safety-triggers"
+        ]
+      },
+      {
+        "group": "Advanced Features",
+        "pages": [
+          "features/journey-monitoring",
+          "features/venue-safety",
+          "features/community-reports",
+          "features/ai-insights",
+          "features/wearable-integration",
+          "features/app-widget",
+          "features/offline-mode",
+          "features/accessibility",
+          "features/notifications"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/environment-setup",
+          "development/project-structure",
+          "development/expo-configuration",
+          "development/supabase-integration",
+          "development/component-development",
+          "development/state-management",
+          "development/navigation",
+          "development/location-services",
+          "development/push-notifications",
+          "development/background-tasks"
+        ]
+      },
+      {
+        "group": "Testing",
+        "pages": [
+          "development/testing-strategy",
+          "development/unit-testing",
+          "development/integration-testing",
+          "development/e2e-testing",
+          "development/performance-testing"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/introduction",
           {
-            "group": "Get Started",
+            "group": "Authentication",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "api-reference/authentication/overview",
+              "api-reference/authentication/signup",
+              "api-reference/authentication/login",
+              "api-reference/authentication/refresh-token",
+              "api-reference/authentication/logout"
             ]
           },
           {
-            "group": "Essentials",
+            "group": "User Management",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "api-reference/users/profile",
+              "api-reference/users/preferences",
+              "api-reference/users/contacts",
+              "api-reference/users/devices"
+            ]
+          },
+          {
+            "group": "Safety Services",
+            "pages": [
+              "api-reference/safety/emergency-trigger",
+              "api-reference/safety/check-ins",
+              "api-reference/safety/location-sharing",
+              "api-reference/safety/safety-status",
+              "api-reference/safety/reports"
+            ]
+          },
+          {
+            "group": "Location Services",
+            "pages": [
+              "api-reference/location/tracking",
+              "api-reference/location/geofencing",
+              "api-reference/location/venue-data",
+              "api-reference/location/safety-scores"
+            ]
+          },
+          {
+            "group": "Real-time",
+            "pages": [
+              "api-reference/realtime/websockets",
+              "api-reference/realtime/subscriptions",
+              "api-reference/realtime/push-notifications"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint Examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
+        "group": "Security & Privacy",
+        "pages": [
+          "security/overview",
+          "security/data-protection",
+          "security/privacy-controls",
+          "security/encryption",
+          "security/authentication-security",
+          "security/privacy-policy",
+          "security/data-collection",
+          "security/user-rights",
+          "security/compliance"
+        ]
+      },
+      {
+        "group": "Security Best Practices",
+        "pages": [
+          "security/development-guidelines",
+          "security/code-review",
+          "security/incident-response",
+          "security/audit-procedures"
+        ]
+      },
+      {
+        "group": "Deployment",
+        "pages": [
+          "deployment/overview",
+          "deployment/expo-builds",
+          "deployment/app-store-deployment",
+          "deployment/google-play-deployment",
+          "deployment/ota-updates"
+        ]
+      },
+      {
+        "group": "Infrastructure",
+        "pages": [
+          "deployment/supabase-deployment",
+          "deployment/environment-management",
+          "deployment/monitoring",
+          "deployment/scaling",
+          "deployment/ci-cd",
+          "deployment/automated-testing",
+          "deployment/code-quality",
+          "deployment/release-management"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/emergency-system-setup",
+          "guides/location-tracking-implementation",
+          "guides/offline-functionality",
+          "guides/push-notifications-setup",
+          "guides/testing-emergency-features",
+          "guides/performance-optimization",
+          "guides/security-hardening",
+          "guides/troubleshooting"
+        ]
+      },
+      {
+        "group": "Resources",
+        "pages": [
+          "resources/examples",
+          "resources/code-samples",
+          "resources/expo-plugins",
+          "resources/supabase-extensions",
+          "resources/postman-collection",
+          "resources/openapi-spec",
+          "resources/status-codes",
+          "resources/rate-limits",
+          "resources/glossary",
+          "resources/changelog"
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
+    ]
+  },
+  "footerSocials": {
+    "twitter": "https://twitter.com/sheltherapp",
+    "linkedin": "https://linkedin.com/company/shelther",
+    "github": "https://github.com/shelther",
+    "discord": "https://discord.gg/shelther"
+  },
+  "openapi": "https://api.shelther.app/openapi.json",
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXXX"
     }
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+  "feedback": {
+    "suggestEdit": true,
+    "raiseIssue": true,
+    "thumbsRating": true
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+  "search": {
+    "prompt": "Search Shelther docs..."
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
-  }
+  "modeToggle": {
+    "default": "dark"
+  },
+  "backgroundImage": "/images/shelther-background.png"
 }

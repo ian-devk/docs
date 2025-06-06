@@ -1,97 +1,517 @@
 ---
-title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+title: "Quick Start Guide"
+description: "Get up and running with Shelther in under 5 minutes. Complete setup guide for personal safety monitoring, emergency contacts, and safety features."
 ---
 
-## Setup your development
+# Quick Start Guide
 
-Learn how to update your docs locally and deploy them to the public.
+<Info>
+**Time to Safety:** Follow this guide to have Shelther protecting you in under 5 minutes. We'll walk you through everything from download to your first emergency contact setup.
+</Info>
 
-### Edit and preview
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="github" title="Clone your docs locally">
-    During the onboarding process, we created a repository on your Github with
-    your docs content. You can find this repository on our
-    [dashboard](https://dashboard.mintlify.com). To clone the repository
-    locally, follow these
-    [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
-    in your terminal.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Preview changes">
-    Previewing helps you make sure your changes look as intended. We built a
-    command line interface to render these changes locally. 
-    1. Install the
-    [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the
-    documentation changes locally with this command: ``` npm i -g mintlify ```
-    2. Run the following command at the root of your documentation (where
-    `docs.json` is): ``` mintlify dev ```
-    <Note>
-      If you’re currently using the legacy ```mint.json``` configuration file, please update the Mintlify CLI:
+Before you begin, make sure you have:
 
-
-      ```npm i -g mintlify@latest```
-      And run the new upgrade command in your docs repository:
-
-      ```mintlify upgrade```
-      You should now be using the new ```docs.json``` configuration file. Feel free to delete the ```mint.json``` file from your repository.
-    </Note>
-  </Accordion>
-</AccordionGroup>
-
-### Deploy your changes
-
-<AccordionGroup>
-
-<Accordion icon="message-bot" title="Install our Github app">
-  Our Github app automatically deploys your changes to your docs site, so you
-  don't need to manage deployments yourself. You can find the link to install on
-  your [dashboard](https://dashboard.mintlify.com). Once the bot has been
-  successfully installed, there should be a check mark next to the commit hash
-  of the repo.
-</Accordion>
-<Accordion icon="rocket" title="Push your changes">
-  [Commit and push your changes to
-  Git](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository#about-git-push)
-  for your changes to update in your docs site. If you push and don't see that
-  the Github app successfully deployed your changes, you can also manually
-  update your docs through our [dashboard](https://dashboard.mintlify.com).
-</Accordion>
-
-</AccordionGroup>
-
-## Update your docs
-
-Add content directly in your files with MDX syntax and React components. You can use any of our components, or even build your own.
-
-<CardGroup>
-
-<Card title="Add Content With MDX" icon="file" href="/essentials/markdown">
-  Add content to your docs with MDX syntax.
-</Card>
-
-<Card
-  title="Add Code Blocks"
-  icon="square-code"
-  href="/essentials/code"
->
-  Add code directly to your docs with syntax highlighting.
-</Card>
-
-<Card
-  title="Add Images"
-  icon="image"
-  href="/essentials/images"
->
-  Add images to your docs to make them more engaging.
-</Card>
-
-<Card
-  title="Add Custom Components"
-  icon="puzzle-piece"
-  href="/essentials/reusable-snippets"
->
-  Add templates to your docs to make them more reusable.
-</Card>
-
+<CardGroup cols={2}>
+  <Card title="Device Requirements" icon="mobile">
+    **iOS 15.0+** or **Android 10+** (API level 29+)
+    At least 500MB free storage space
+  </Card>
+  <Card title="Permissions Needed" icon="key">
+    Location services, camera access, microphone, and notification permissions for full functionality
+  </Card>
 </CardGroup>
+
+<Warning>
+**Location Permissions:** Shelther requires location access to provide safety monitoring. We recommend selecting "Always Allow" for optimal protection, but "While Using App" will work for basic features.
+</Warning>
+
+## Step 1: Download & Install
+
+<Steps>
+  <Step title="Download the App">
+    **iOS:** Download from the [App Store](https://apps.apple.com/app/shelther)
+    **Android:** Download from [Google Play Store](https://play.google.com/store/apps/details?id=com.shelther.app)
+  </Step>
+  <Step title="Install & Open">
+    Install the app and open it. You'll see the welcome screen with setup options.
+  </Step>
+  <Step title="Grant Initial Permissions">
+    Allow notifications when prompted - these are critical for emergency alerts.
+  </Step>
+</Steps>
+
+## Step 2: Create Your Account
+
+<CodeGroup>
+```typescript Account Creation Options
+// Multiple secure sign-up methods
+const signUpMethods = [
+  'email_password',      // Traditional email registration
+  'google_oauth',        // Sign in with Google
+  'apple_id',           // Sign in with Apple (iOS)
+  'phone_verification'   // SMS-based verification
+];
+
+// All methods include:
+const securityFeatures = {
+  twoFactorAuth: 'optional_but_recommended',
+  biometricLogin: 'fingerprint_face_id',
+  emergencyBypass: 'access_without_biometrics'
+};
+```
+</CodeGroup>
+
+<Steps>
+  <Step title="Choose Sign-Up Method">
+    Select your preferred registration method. We recommend Sign in with Apple or Google for fastest setup.
+  </Step>
+  <Step title="Verify Your Identity">
+    Complete email or phone verification to secure your account.
+  </Step>
+  <Step title="Set Up Biometric Access">
+    Enable Face ID, Touch ID, or fingerprint for quick access while maintaining emergency bypass options.
+  </Step>
+</Steps>
+
+<Note>
+**Privacy Note:** Your email is only used for account recovery and critical security notifications. We never send marketing emails or share your information.
+</Note>
+
+## Step 3: Essential Permissions Setup
+
+<Info>
+**Why These Permissions Matter:** Each permission enables specific safety features. We'll explain exactly what each one does and why it's important.
+</Info>
+
+### Location Services (Required)
+
+<Accordion title="Location Permission Setup">
+**iOS Setup:**
+1. When prompted, tap "Allow While Using App" initially
+2. Go to Settings > Privacy & Security > Location Services > Shelther
+3. Select "Always" for full protection
+4. Enable "Precise Location" for accurate emergency response
+
+**Android Setup:**
+1. When prompted, tap "Allow all the time"
+2. Or go to Settings > Apps > Shelther > Permissions > Location
+3. Select "Allow all the time"
+4. Enable "Use precise location"
+
+**What This Enables:**
+- Real-time location sharing with your Circle of Trust
+- Automatic geofence detection (entering/leaving safe areas)
+- Accurate emergency location reporting
+- Journey monitoring and deviation alerts
+</Accordion>
+
+### Camera & Microphone (Recommended)
+
+<Accordion title="Media Permissions">
+**What This Enables:**
+- **Camera:** Profile photos, evidence capture during emergencies
+- **Microphone:** Voice-activated emergency triggers, audio evidence recording
+
+**Privacy Protection:**
+- Recording only happens during active emergencies or with explicit consent
+- All audio/video is encrypted and stored locally until you choose to share
+- You can revoke these permissions anytime while keeping core safety features
+</Accordion>
+
+### Notifications (Critical)
+
+<Accordion title="Notification Setup">
+**iPhone:**
+- Allow notifications for alerts, reminders, and emergency responses
+- Enable Critical Alerts for emergency override of Do Not Disturb
+- Configure Lock Screen notifications for emergency access
+
+**Android:**
+- Allow notifications for all categories
+- Set Shelther as "Not optimized" in Battery Optimization
+- Enable notification channels for different alert types
+
+**Notification Types:**
+- **Critical:** Emergency alerts and missed check-in warnings
+- **Important:** Check-in reminders and safety updates
+- **Informational:** Tips, community updates, and feature announcements
+</Accordion>
+
+## Step 4: Create Your Circle of Trust
+
+<Warning>
+**Most Important Step:** Your Circle of Trust are the people who will be contacted in emergencies. Choose people who are reliable, typically available, and know how to respond to safety situations.
+</Warning>
+
+### Add Your Primary Contact
+
+<Steps>
+  <Step title="Choose Your Primary Contact">
+    This should be your most trusted person - typically a family member or very close friend who is usually reachable.
+  </Step>
+  <Step title="Enter Contact Information">
+    Add their name, phone number, and email address. Double-check for accuracy.
+  </Step>
+  <Step title="Set Their Role">
+    Primary contacts get immediate alerts and have access to your real-time location during emergencies.
+  </Step>
+  <Step title="Send Verification Invitation">
+    Shelther will send them a text and email explaining the system and asking them to verify the connection.
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Contact Verification Process
+// How contact verification works
+const verificationProcess = {
+  step1: {
+    action: 'send_invitation',
+    methods: ['sms', 'email'],
+    expires: '48_hours',
+    includes: ['explanation', 'app_download_link', 'verification_code']
+  },
+  
+  step2: {
+    action: 'contact_response',
+    options: ['accept_and_install_app', 'accept_sms_only', 'decline'],
+    creates: 'verified_connection'
+  },
+  
+  step3: {
+    action: 'test_notification',
+    purpose: 'ensure_system_works',
+    frequency: 'optional_monthly_test'
+  }
+};
+```
+
+```typescript Contact Permissions
+// What contacts can see and do
+const contactPermissions = {
+  primary_contact: {
+    emergency_alerts: 'immediate',
+    location_access: 'real_time_during_emergencies',
+    check_in_status: 'always',
+    emergency_override: 'can_trigger_help_on_your_behalf'
+  },
+  
+  secondary_contacts: {
+    emergency_alerts: 'if_primary_no_response_5min',
+    location_access: 'emergency_only',
+    check_in_status: 'when_shared',
+    emergency_override: 'limited'
+  }
+};
+```
+</CodeGroup>
+
+### Add Secondary Contacts (Optional but Recommended)
+
+<CardGroup cols={2}>
+  <Card title="Secondary Contact 1" icon="user">
+    Another family member or close friend as backup to your primary contact
+  </Card>
+  <Card title="Secondary Contact 2" icon="users">
+    A third person for redundancy - perhaps someone in a different time zone or with different availability
+  </Card>
+</CardGroup>
+
+<Note>
+**Contact Advice:** Choose contacts who:
+- Are typically responsive to their phone
+- Know your routine and would recognize unusual behavior
+- Live in a location where they can help or coordinate help
+- Understand the importance of emergency response
+</Note>
+
+## Step 5: Configure Your Safety Settings
+
+### Basic Safety Preferences
+
+<Accordion title="Emergency Trigger Settings">
+**Physical Triggers:**
+- Volume + Power button hold time (default: 3 seconds)
+- Shake intensity for emergency activation (low/medium/high)
+- Triple-tap power button (iOS only)
+
+**Voice Activation:**
+- Enable "Hey Shelther" wake phrase
+- Set custom emergency phrases
+- Choose between alert and silent activation modes
+
+**App-Based Triggers:**
+- Widget emergency button configuration
+- Lock screen shortcut setup
+- Apple Watch / smartwatch integration
+</Accordion>
+
+<Accordion title="Check-in Preferences">
+**Automatic Suggestions:**
+- Enable smart check-in reminders based on your schedule
+- Set default check-in intervals (30 min, 1 hour, 2 hours)
+- Configure grace periods for late check-ins
+
+**Custom Protocols:**
+- Different settings for different activities (dates, nights out, travel)
+- Location-based automatic check-ins (arriving home, work)
+- Integration with calendar apps for event-based check-ins
+</Accordion>
+
+### Privacy & Data Settings
+
+<Steps>
+  <Step title="Location Sharing Preferences">
+    Choose default location sharing duration and accuracy levels for different contact types
+  </Step>
+  <Step title="Data Retention">
+    Set how long location history and check-in data is stored (30 days to 1 year)
+  </Step>
+  <Step title="Emergency Data">
+    Configure what information is shared during emergencies (location, audio, photos)
+  </Step>
+</Steps>
+
+## Step 6: Test Your Setup
+
+<Info>
+**Critical Step:** Testing ensures everything works when you need it most. This is not optional - your safety depends on a working system.
+</Info>
+
+### Test Emergency Alerts
+
+<Steps>
+  <Step title="Inform Your Contacts">
+    Let your Circle of Trust know you're testing the system so they don't panic
+  </Step>
+  <Step title="Trigger Test Alert">
+    Use the "Test Emergency System" button in Settings > Emergency > Test System
+  </Step>
+  <Step title="Verify Notifications">
+    Confirm all contacts receive test notifications and can see your location
+  </Step>
+  <Step title="Test Response">
+    Have contacts test their response process - knowing how to acknowledge alerts and coordinate help
+  </Step>
+</Steps>
+
+<Warning>
+**Testing Best Practices:**
+- Always warn contacts before testing
+- Use only the designated test function, never real emergency triggers
+- Test at least once per month to ensure continued functionality
+- Update contacts immediately if someone doesn't receive test notifications
+</Warning>
+
+### Test Physical Triggers
+
+<CodeGroup>
+```typescript Testing Checklist
+// Physical trigger testing
+const testPhysicalTriggers = [
+  {
+    trigger: 'volume_power_hold',
+    test: 'Hold volume up + power for 3 seconds',
+    expect: 'Vibration feedback and countdown screen',
+    cancel: 'Release buttons or tap cancel'
+  },
+  {
+    trigger: 'shake_pattern',
+    test: 'Shake phone with configured intensity',
+    expect: 'Haptic feedback and activation prompt',
+    cancel: 'Stop shaking or tap cancel'
+  },
+  {
+    trigger: 'voice_command',
+    test: 'Say "Hey Shelther, test emergency"',
+    expect: 'Voice confirmation and test mode activation',
+    cancel: 'Say "cancel" or tap cancel button'
+  }
+];
+```
+</CodeGroup>
+
+## Step 7: Set Up the Home Screen Widget
+
+<CardGroup cols={2}>
+  <Card title="iOS Widget Setup" icon="mobile">
+    Long-press home screen → Add Widget → Search "Shelther" → Choose size → Add Widget
+  </Card>
+  <Card title="Android Widget Setup" icon="phone">
+    Long-press home screen → Widgets → Find Shelther → Drag to home screen → Configure
+  </Card>
+</CardGroup>
+
+### Widget Configuration
+
+<Accordion title="Widget Customization Options">
+**Size Options:**
+- **Small:** Emergency button only
+- **Medium:** Emergency button + safety status + quick check-in
+- **Large:** Full dashboard with recent activity and contact status
+
+**Display Options:**
+- Emergency button prominence and color
+- Safety status indicators (active monitoring, battery level)
+- Quick action buttons (check-in, share location, safe mode)
+- Contact availability indicators
+
+**Privacy Options:**
+- Hide sensitive information on lock screen
+- Require Face ID/fingerprint for widget actions
+- Emergency bypass for widget access
+</Accordion>
+
+## Step 8: Optional Advanced Setup
+
+### Location Intelligence
+
+<Steps>
+  <Step title="Mark Safe Locations">
+    Add your home, work, and frequently visited safe locations for automatic check-ins
+  </Step>
+  <Step title="Set Geofences">
+    Create custom safe zones that trigger automatic notifications when you arrive
+  </Step>
+  <Step title="Route Preferences">
+    Mark preferred safe routes for walking, driving, and public transportation
+  </Step>
+</Steps>
+
+### Third-Party Integrations
+
+<CardGroup cols={3}>
+  <Card title="Rideshare Apps" icon="car">
+    Connect Uber/Lyft for automatic trip monitoring
+  </Card>
+  <Card title="Calendar Integration" icon="calendar">
+    Sync with calendar for automatic check-in scheduling
+  </Card>
+  <Card title="Smart Watch" icon="watch">
+    Set up Apple Watch or Android wear integration
+  </Card>
+</CardGroup>
+
+## Your First Safety Activity
+
+<Info>
+**Practice Run:** Now that everything is set up, try using Shelther for a low-risk activity to get comfortable with the system.
+</Info>
+
+### Suggested First Use
+
+<Steps>
+  <Step title="Plan a Short Trip">
+    Choose a familiar short trip like going to a nearby store or restaurant
+  </Step>
+  <Step title="Activate Monitoring">
+    Use the widget or app to start location sharing with your primary contact
+  </Step>
+  <Step title="Set a Check-in">
+    Schedule a check-in for when you expect to return
+  </Step>
+  <Step title="Complete the Activity">
+    Go about your activity normally, letting Shelther work in the background
+  </Step>
+  <Step title="Confirm Safe Return">
+    Check in when you return to confirm everything worked correctly
+  </Step>
+</Steps>
+
+## Troubleshooting Quick Start Issues
+
+<Accordion title="Contact Verification Problems">
+**Contact not receiving invitations:**
+- Check spam/junk folders for emails
+- Verify phone number includes country code
+- Try sending invitation again after 30 minutes
+- Contact support if issues persist after 24 hours
+
+**Contact can't install app:**
+- They can still receive SMS alerts without the app
+- Send them direct download links for their device
+- Older devices may need SMS-only mode
+</Accordion>
+
+<Accordion title="Permission Issues">
+**Location not working:**
+- Check device location services are enabled
+- Verify Shelther has "Always" location permission
+- Restart app after changing permissions
+- Some devices require disabling battery optimization
+
+**Notifications not appearing:**
+- Check notification settings for Shelther
+- Verify Do Not Disturb allows critical alerts
+- Test with a non-critical notification first
+- Restart device if notifications still don't work
+</Accordion>
+
+<Accordion title="Battery & Performance">
+**App draining battery:**
+- Enable battery optimization (not battery saver)
+- Check background app refresh is enabled
+- Verify location accuracy is set to "High" not "Very High"
+- Update to latest app version
+
+**App running slowly:**
+- Close other location-heavy apps
+- Restart the device
+- Check available storage space
+- Contact support if performance doesn't improve
+</Accordion>
+
+## Next Steps
+
+<Note>
+**You're Protected!** Your basic safety setup is complete. You now have emergency contacts, alert systems, and monitoring capabilities active.
+</Note>
+
+### Recommended Next Actions
+
+<CardGroup cols={3}>
+  <Card title="Explore Features" icon="compass" href="/features">
+    Learn about advanced features like journey monitoring and venue safety
+  </Card>
+  <Card title="Join Community" icon="users" href="https://discord.gg/shelther">
+    Connect with other users for tips and support
+  </Card>
+  <Card title="Safety Education" icon="graduation-cap" href="/guides/emergency-system-setup">
+    Read our comprehensive safety guides and best practices
+  </Card>
+</CardGroup>
+
+### Monthly Maintenance
+
+<Steps>
+  <Step title="Test Emergency System">
+    Run a monthly test to ensure all contacts and systems are working
+  </Step>
+  <Step title="Update Contact Information">
+    Verify contact details are current and contacts are still appropriate
+  </Step>
+  <Step title="Review Safety Settings">
+    Adjust settings based on changes in your routine or living situation
+  </Step>
+  <Step title="Check App Updates">
+    Install app updates promptly for latest safety features and security
+  </Step>
+</Steps>
+
+---
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card title="Step 24:/7 Emergency Support" icon="headset">
+    For safety-critical issues: **support@shelther.app** or call emergency services
+  </Card>
+  <Card title="Community Support" icon="discord">
+    General questions and tips: [Discord Community](https://discord.gg/shelther)
+  </Card>
+</CardGroup>
+
+<Warning>
+**Emergency Reminder:** Shelther enhances your safety but should not be your only safety measure. Always trust your instincts and call emergency services (911, 999, 112) for immediate life-threatening situations.
+</Warning>

@@ -1,0 +1,1024 @@
+{
+  "startTime": "2025-06-05T11:35:36.950Z",
+  "endTime": "2025-06-05T11:35:37.522Z",
+  "duration": 572,
+  "totalLogs": 169,
+  "errorCount": 0,
+  "warningCount": 2,
+  "logs": [
+    {
+      "timestamp": "2025-06-05T11:35:36.950Z",
+      "level": "INFO",
+      "message": "Mintlify Docs Generator Started (ROOT DIRECTORY VERSION)",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.965Z",
+      "level": "DEBUG",
+      "message": "Configuration",
+      "data": "{\n  \"input\": \"C:\\\\Users\\\\USER\\\\Desktop\\\\2025 Web Projects\\\\shelther docs\\\\mintlify-docs\\\\docs.json\",\n  \"output\": \"C:\\\\Users\\\\USER\\\\Desktop\\\\2025 Web Projects\\\\shelther docs\\\\mintlify-docs\",\n  \"dryRun\": false,\n  \"force\": false,\n  \"verbose\": false,\n  \"logFile\": \"C:\\\\Users\\\\USER\\\\Desktop\\\\2025 Web Projects\\\\shelther docs\\\\mintlify-docs\\\\docs-generator.log\",\n  \"excludePatterns\": [\n    \"docs.json\",\n    \"package.json\",\n    \"package-lock.json\",\n    \"node_modules\",\n    \".git\",\n    \".gitignore\",\n    \"README.md\",\n    \"generate-docs.js\",\n    \"move-files.js\",\n    \"workflow.js\",\n    \"docs-generator.log\"\n  ],\n  \"templates\": {\n    \"basicPage\": {\n      \"frontmatter\": {\n        \"title\": \"\",\n        \"description\": \"\",\n        \"sidebarTitle\": null\n      },\n      \"content\": \"## Overview\\n\\nThis page is automatically generated from the Mintlify docs.json structure.\\n\\n<Info>\\nAdd your content here following Mintlify's MDX guidelines.\\n</Info>\\n\\n## Key Points\\n\\n- Add comprehensive content for this section\\n- Include code examples where relevant\\n- Add proper cross-references to related pages\\n\\n## Examples\\n\\n<CodeGroup>\\n\\n```typescript TypeScript\\n// Add relevant code examples\\ninterface ExampleInterface {\\n  id: string;\\n  name: string;\\n}\\n```\\n\\n```javascript JavaScript\\n// JavaScript example\\nconst example = {\\n  id: '1',\\n  name: 'Example'\\n};\\n```\\n\\n</CodeGroup>\\n\\n## Next Steps\\n\\n<CardGroup cols={2}>\\n  <Card title=\\\"Related Topic\\\" icon=\\\"link\\\" href=\\\"/related-page\\\">\\n    Description of related topic\\n  </Card>\\n  <Card title=\\\"Implementation Guide\\\" icon=\\\"code\\\" href=\\\"/implementation\\\">\\n    Step-by-step implementation guide\\n  </Card>\\n</CardGroup>\\n\\n---\\n\\n<Note>\\nThis page was generated automatically. Update the content to match your documentation requirements.\\n</Note>\"\n    },\n    \"apiPage\": {\n      \"frontmatter\": {\n        \"title\": \"\",\n        \"description\": \"\",\n        \"api\": \"\"\n      },\n      \"content\": \"## Endpoint Description\\n\\nDetailed description of this API endpoint and its purpose in the Shelther safety platform.\\n\\n## Authentication\\n\\n<Info>\\nThis endpoint requires authentication using a valid JWT token.\\n</Info>\\n\\n```bash\\nAuthorization: Bearer YOUR_JWT_TOKEN\\n```\\n\\n## Parameters\\n\\n<ParamField path=\\\"parameter_name\\\" type=\\\"string\\\" required>\\n  Description of the required parameter\\n</ParamField>\\n\\n<ParamField path=\\\"optional_param\\\" type=\\\"number\\\">\\n  Description of the optional parameter\\n</ParamField>\\n\\n## Request Body\\n\\n<ParamField body=\\\"field_name\\\" type=\\\"string\\\" required>\\n  Description of the request body field\\n</ParamField>\\n\\n## Response\\n\\n<ResponseField name=\\\"success\\\" type=\\\"boolean\\\">\\n  Indicates if the request was successful\\n</ResponseField>\\n\\n<ResponseField name=\\\"data\\\" type=\\\"object\\\">\\n  The response data object\\n</ResponseField>\\n\\n## Code Examples\\n\\n<CodeGroup>\\n\\n```bash cURL\\ncurl -X POST \\\"https://api.shelther.app/v1/endpoint\\\" \\\\\\n  -H \\\"Authorization: Bearer YOUR_TOKEN\\\" \\\\\\n  -H \\\"Content-Type: application/json\\\" \\\\\\n  -d '{\\n    \\\"parameter_name\\\": \\\"value\\\"\\n  }'\\n```\\n\\n```javascript JavaScript\\nconst response = await fetch('https://api.shelther.app/v1/endpoint', {\\n  method: 'POST',\\n  headers: {\\n    'Authorization': 'Bearer YOUR_TOKEN',\\n    'Content-Type': 'application/json'\\n  },\\n  body: JSON.stringify({\\n    parameter_name: 'value'\\n  })\\n});\\n\\nconst data = await response.json();\\n```\\n\\n```typescript TypeScript\\ninterface RequestBody {\\n  parameter_name: string;\\n}\\n\\ninterface ResponseData {\\n  success: boolean;\\n  data: any;\\n}\\n\\nconst response = await api.post<ResponseData>('/endpoint', {\\n  parameter_name: 'value'\\n} as RequestBody);\\n```\\n\\n</CodeGroup>\\n\\n## Error Responses\\n\\n| Status Code | Description |\\n|-------------|-------------|\\n| 400 | Bad Request - Invalid parameters |\\n| 401 | Unauthorized - Invalid or missing token |\\n| 403 | Forbidden - Insufficient permissions |\\n| 404 | Not Found - Resource not found |\\n| 500 | Internal Server Error |\\n\\n<ResponseExample>\\n```json Error Response\\n{\\n  \\\"success\\\": false,\\n  \\\"error\\\": {\\n    \\\"code\\\": \\\"INVALID_REQUEST\\\",\\n    \\\"message\\\": \\\"Parameter validation failed\\\",\\n    \\\"details\\\": \\\"parameter_name is required\\\"\\n  }\\n}\\n```\\n</ResponseExample>\"\n    }\n  }\n}"
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.966Z",
+      "level": "INFO",
+      "message": "Starting Mintlify docs generation...",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.966Z",
+      "level": "INFO",
+      "message": "Mode: LIVE",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.967Z",
+      "level": "INFO",
+      "message": "Output directory: C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs (ROOT DIRECTORY)",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.967Z",
+      "level": "INFO",
+      "message": "Loading docs.json from: C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\docs.json",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.971Z",
+      "level": "SUCCESS",
+      "message": "Loaded docs.json with 15 groups",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.972Z",
+      "level": "DEBUG",
+      "message": "Docs structure",
+      "data": "{\n  \"groupCount\": 15,\n  \"groups\": [\n    \"Getting Started\",\n    \"Quick Setup\",\n    \"Architecture\",\n    \"Data Models\",\n    \"Core Features\",\n    \"Advanced Features\",\n    \"Development\",\n    \"Testing\",\n    \"API Reference\",\n    \"Security & Privacy\",\n    \"Security Best Practices\",\n    \"Deployment\",\n    \"Infrastructure\",\n    \"Guides\",\n    \"Resources\"\n  ]\n}"
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.972Z",
+      "level": "INFO",
+      "message": "Processing navigation structure...",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.973Z",
+      "level": "INFO",
+      "message": "Processing group 1/15: Getting Started",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.979Z",
+      "level": "SUCCESS",
+      "message": "Created: introduction.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.984Z",
+      "level": "SUCCESS",
+      "message": "Created: features.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.988Z",
+      "level": "SUCCESS",
+      "message": "Created: why-shelther.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:36.992Z",
+      "level": "WARN",
+      "message": "File already exists (use --force to overwrite): quickstart.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.005Z",
+      "level": "INFO",
+      "message": "Processing group 2/15: Quick Setup",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.026Z",
+      "level": "INFO",
+      "message": "Created directory: quickstart",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.031Z",
+      "level": "SUCCESS",
+      "message": "Created: quickstart/installation.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.033Z",
+      "level": "SUCCESS",
+      "message": "Created: quickstart/expo-setup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.036Z",
+      "level": "SUCCESS",
+      "message": "Created: quickstart/supabase-setup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.048Z",
+      "level": "SUCCESS",
+      "message": "Created: quickstart/first-app.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.072Z",
+      "level": "SUCCESS",
+      "message": "Created: quickstart/configuration.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.078Z",
+      "level": "INFO",
+      "message": "Processing group 3/15: Architecture",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.079Z",
+      "level": "INFO",
+      "message": "Created directory: architecture",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.082Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/overview.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.086Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/tech-stack.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.095Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/client-architecture.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.098Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/backend-architecture.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.101Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/data-flow.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.104Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/security-design.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.110Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/offline-capabilities.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.112Z",
+      "level": "INFO",
+      "message": "Processing group 4/15: Data Models",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.114Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/database-schema.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.121Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/user-model.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.124Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/safety-model.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.127Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/location-model.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.129Z",
+      "level": "SUCCESS",
+      "message": "Created: architecture/emergency-model.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.130Z",
+      "level": "INFO",
+      "message": "Processing group 5/15: Core Features",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.131Z",
+      "level": "INFO",
+      "message": "Created directory: features",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.136Z",
+      "level": "SUCCESS",
+      "message": "Created: features/authentication.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.138Z",
+      "level": "SUCCESS",
+      "message": "Created: features/emergency-alerts.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.143Z",
+      "level": "SUCCESS",
+      "message": "Created: features/location-tracking.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.145Z",
+      "level": "SUCCESS",
+      "message": "Created: features/circle-of-trust.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.147Z",
+      "level": "SUCCESS",
+      "message": "Created: features/check-ins.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.149Z",
+      "level": "SUCCESS",
+      "message": "Created: features/safety-triggers.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.149Z",
+      "level": "INFO",
+      "message": "Processing group 6/15: Advanced Features",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.151Z",
+      "level": "SUCCESS",
+      "message": "Created: features/journey-monitoring.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.153Z",
+      "level": "SUCCESS",
+      "message": "Created: features/venue-safety.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.155Z",
+      "level": "SUCCESS",
+      "message": "Created: features/community-reports.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.164Z",
+      "level": "SUCCESS",
+      "message": "Created: features/ai-insights.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.181Z",
+      "level": "SUCCESS",
+      "message": "Created: features/wearable-integration.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.185Z",
+      "level": "SUCCESS",
+      "message": "Created: features/app-widget.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.196Z",
+      "level": "SUCCESS",
+      "message": "Created: features/offline-mode.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.199Z",
+      "level": "SUCCESS",
+      "message": "Created: features/accessibility.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.202Z",
+      "level": "SUCCESS",
+      "message": "Created: features/notifications.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.202Z",
+      "level": "INFO",
+      "message": "Processing group 7/15: Development",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.204Z",
+      "level": "INFO",
+      "message": "Created directory: development",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.207Z",
+      "level": "SUCCESS",
+      "message": "Created: development/environment-setup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.211Z",
+      "level": "SUCCESS",
+      "message": "Created: development/project-structure.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.214Z",
+      "level": "SUCCESS",
+      "message": "Created: development/expo-configuration.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.219Z",
+      "level": "SUCCESS",
+      "message": "Created: development/supabase-integration.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.229Z",
+      "level": "SUCCESS",
+      "message": "Created: development/component-development.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.233Z",
+      "level": "SUCCESS",
+      "message": "Created: development/state-management.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.238Z",
+      "level": "SUCCESS",
+      "message": "Created: development/navigation.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.245Z",
+      "level": "SUCCESS",
+      "message": "Created: development/location-services.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.262Z",
+      "level": "SUCCESS",
+      "message": "Created: development/push-notifications.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.266Z",
+      "level": "SUCCESS",
+      "message": "Created: development/background-tasks.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.268Z",
+      "level": "INFO",
+      "message": "Processing group 8/15: Testing",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.277Z",
+      "level": "SUCCESS",
+      "message": "Created: development/testing-strategy.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.280Z",
+      "level": "SUCCESS",
+      "message": "Created: development/unit-testing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.282Z",
+      "level": "SUCCESS",
+      "message": "Created: development/integration-testing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.283Z",
+      "level": "SUCCESS",
+      "message": "Created: development/e2e-testing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.286Z",
+      "level": "SUCCESS",
+      "message": "Created: development/performance-testing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.286Z",
+      "level": "INFO",
+      "message": "Processing group 9/15: API Reference",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.287Z",
+      "level": "WARN",
+      "message": "File already exists (use --force to overwrite): api-reference/introduction.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.287Z",
+      "level": "INFO",
+      "message": "Processing group: Authentication",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.288Z",
+      "level": "INFO",
+      "message": "Created directory: api-reference\\authentication",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.291Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/authentication/overview.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.294Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/authentication/signup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.296Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/authentication/login.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.298Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/authentication/refresh-token.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.299Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/authentication/logout.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.300Z",
+      "level": "INFO",
+      "message": "Processing group: User Management",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.301Z",
+      "level": "INFO",
+      "message": "Created directory: api-reference\\users",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.303Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/users/profile.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.305Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/users/preferences.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.307Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/users/contacts.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.311Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/users/devices.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.312Z",
+      "level": "INFO",
+      "message": "Processing group: Safety Services",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.313Z",
+      "level": "INFO",
+      "message": "Created directory: api-reference\\safety",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.317Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/safety/emergency-trigger.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.319Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/safety/check-ins.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.330Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/safety/location-sharing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.334Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/safety/safety-status.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.336Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/safety/reports.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.337Z",
+      "level": "INFO",
+      "message": "Processing group: Location Services",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.338Z",
+      "level": "INFO",
+      "message": "Created directory: api-reference\\location",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.344Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/location/tracking.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.355Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/location/geofencing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.365Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/location/venue-data.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.369Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/location/safety-scores.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.369Z",
+      "level": "INFO",
+      "message": "Processing group: Real-time",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.370Z",
+      "level": "INFO",
+      "message": "Created directory: api-reference\\realtime",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.375Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/realtime/websockets.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.378Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/realtime/subscriptions.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.381Z",
+      "level": "SUCCESS",
+      "message": "Created: api-reference/realtime/push-notifications.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.381Z",
+      "level": "INFO",
+      "message": "Processing group 10/15: Security & Privacy",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.382Z",
+      "level": "INFO",
+      "message": "Created directory: security",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.383Z",
+      "level": "SUCCESS",
+      "message": "Created: security/overview.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.385Z",
+      "level": "SUCCESS",
+      "message": "Created: security/data-protection.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.387Z",
+      "level": "SUCCESS",
+      "message": "Created: security/privacy-controls.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.390Z",
+      "level": "SUCCESS",
+      "message": "Created: security/encryption.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.393Z",
+      "level": "SUCCESS",
+      "message": "Created: security/authentication-security.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.395Z",
+      "level": "SUCCESS",
+      "message": "Created: security/privacy-policy.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.397Z",
+      "level": "SUCCESS",
+      "message": "Created: security/data-collection.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.398Z",
+      "level": "SUCCESS",
+      "message": "Created: security/user-rights.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.400Z",
+      "level": "SUCCESS",
+      "message": "Created: security/compliance.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.400Z",
+      "level": "INFO",
+      "message": "Processing group 11/15: Security Best Practices",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.402Z",
+      "level": "SUCCESS",
+      "message": "Created: security/development-guidelines.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.404Z",
+      "level": "SUCCESS",
+      "message": "Created: security/code-review.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.407Z",
+      "level": "SUCCESS",
+      "message": "Created: security/incident-response.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.409Z",
+      "level": "SUCCESS",
+      "message": "Created: security/audit-procedures.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.409Z",
+      "level": "INFO",
+      "message": "Processing group 12/15: Deployment",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.411Z",
+      "level": "INFO",
+      "message": "Created directory: deployment",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.412Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/overview.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.414Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/expo-builds.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.416Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/app-store-deployment.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.421Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/google-play-deployment.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.426Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/ota-updates.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.428Z",
+      "level": "INFO",
+      "message": "Processing group 13/15: Infrastructure",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.437Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/supabase-deployment.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.444Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/environment-management.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.446Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/monitoring.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.450Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/scaling.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.453Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/ci-cd.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.457Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/automated-testing.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.461Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/code-quality.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.463Z",
+      "level": "SUCCESS",
+      "message": "Created: deployment/release-management.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.464Z",
+      "level": "INFO",
+      "message": "Processing group 14/15: Guides",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.465Z",
+      "level": "INFO",
+      "message": "Created directory: guides",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.468Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/emergency-system-setup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.471Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/location-tracking-implementation.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.477Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/offline-functionality.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.480Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/push-notifications-setup.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.482Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/testing-emergency-features.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.483Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/performance-optimization.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.486Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/security-hardening.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.488Z",
+      "level": "SUCCESS",
+      "message": "Created: guides/troubleshooting.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.488Z",
+      "level": "INFO",
+      "message": "Processing group 15/15: Resources",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.490Z",
+      "level": "INFO",
+      "message": "Created directory: resources",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.492Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/examples.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.496Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/code-samples.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.498Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/expo-plugins.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.500Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/supabase-extensions.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.502Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/postman-collection.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.504Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/openapi-spec.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.511Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/status-codes.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.513Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/rate-limits.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.515Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/glossary.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.518Z",
+      "level": "SUCCESS",
+      "message": "Created: resources/changelog.mdx",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.518Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.519Z",
+      "level": "INFO",
+      "message": "GENERATION SUMMARY",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.519Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.519Z",
+      "level": "INFO",
+      "message": "Output location: ROOT DIRECTORY (C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs)",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.520Z",
+      "level": "INFO",
+      "message": "Files created: 115",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.520Z",
+      "level": "INFO",
+      "message": "Directories created: 13",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.521Z",
+      "level": "INFO",
+      "message": "Files skipped: 2",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.521Z",
+      "level": "INFO",
+      "message": "Errors: 0",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.521Z",
+      "level": "INFO",
+      "message": "Unique paths processed: 117",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-05T11:35:37.521Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    }
+  ]
+}

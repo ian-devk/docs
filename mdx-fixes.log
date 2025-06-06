@@ -1,0 +1,5185 @@
+{
+  "timestamp": "2025-06-06T06:29:39.770Z",
+  "totalFixes": 123,
+  "fixes": [
+    {
+      "message": "Fixed 3 issues in login.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\login.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.479Z"
+    },
+    {
+      "message": "Fixed 3 issues in logout.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\logout.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.481Z"
+    },
+    {
+      "message": "Fixed 3 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.483Z"
+    },
+    {
+      "message": "Fixed 3 issues in refresh-token.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\refresh-token.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.485Z"
+    },
+    {
+      "message": "Fixed 3 issues in signup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\signup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.486Z"
+    },
+    {
+      "message": "Fixed 2 issues in introduction.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\introduction.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.492Z"
+    },
+    {
+      "message": "Fixed 3 issues in geofencing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\geofencing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.496Z"
+    },
+    {
+      "message": "Fixed 3 issues in safety-scores.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\safety-scores.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.500Z"
+    },
+    {
+      "message": "Fixed 3 issues in tracking.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\tracking.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.502Z"
+    },
+    {
+      "message": "Fixed 3 issues in venue-data.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\venue-data.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.504Z"
+    },
+    {
+      "message": "Fixed 3 issues in push-notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\push-notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.507Z"
+    },
+    {
+      "message": "Fixed 3 issues in subscriptions.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\subscriptions.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.509Z"
+    },
+    {
+      "message": "Fixed 3 issues in websockets.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\websockets.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.510Z"
+    },
+    {
+      "message": "Fixed 3 issues in check-ins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\check-ins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.516Z"
+    },
+    {
+      "message": "Fixed 3 issues in emergency-trigger.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\emergency-trigger.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.518Z"
+    },
+    {
+      "message": "Fixed 3 issues in location-sharing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\location-sharing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.520Z"
+    },
+    {
+      "message": "Fixed 3 issues in reports.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\reports.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.524Z"
+    },
+    {
+      "message": "Fixed 3 issues in safety-status.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\safety-status.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.525Z"
+    },
+    {
+      "message": "Fixed 3 issues in contacts.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\contacts.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.528Z"
+    },
+    {
+      "message": "Fixed 3 issues in devices.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\devices.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.535Z"
+    },
+    {
+      "message": "Fixed 3 issues in preferences.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\preferences.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.537Z"
+    },
+    {
+      "message": "Fixed 3 issues in profile.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\profile.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.539Z"
+    },
+    {
+      "message": "Fixed 6 issues in backend-architecture.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\backend-architecture.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.541Z"
+    },
+    {
+      "message": "Fixed 6 issues in client-architecture.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\client-architecture.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.542Z"
+    },
+    {
+      "message": "Fixed 6 issues in data-flow.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\data-flow.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.544Z"
+    },
+    {
+      "message": "Fixed 6 issues in database-schema.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\database-schema.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.548Z"
+    },
+    {
+      "message": "Fixed 6 issues in emergency-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\emergency-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.550Z"
+    },
+    {
+      "message": "Fixed 6 issues in location-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\location-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.551Z"
+    },
+    {
+      "message": "Fixed 6 issues in offline-capabilities.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\offline-capabilities.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.552Z"
+    },
+    {
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.553Z"
+    },
+    {
+      "message": "Fixed 6 issues in safety-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\safety-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.556Z"
+    },
+    {
+      "message": "Fixed 6 issues in security-design.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\security-design.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.558Z"
+    },
+    {
+      "message": "Fixed 6 issues in tech-stack.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\tech-stack.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.559Z"
+    },
+    {
+      "message": "Fixed 6 issues in user-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\user-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.561Z"
+    },
+    {
+      "message": "Fixed 6 issues in app-store-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\app-store-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.564Z"
+    },
+    {
+      "message": "Fixed 6 issues in automated-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\automated-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.566Z"
+    },
+    {
+      "message": "Fixed 6 issues in ci-cd.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\ci-cd.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.569Z"
+    },
+    {
+      "message": "Fixed 6 issues in code-quality.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\code-quality.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.570Z"
+    },
+    {
+      "message": "Fixed 6 issues in environment-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\environment-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.571Z"
+    },
+    {
+      "message": "Fixed 6 issues in expo-builds.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\expo-builds.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.573Z"
+    },
+    {
+      "message": "Fixed 6 issues in google-play-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\google-play-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.575Z"
+    },
+    {
+      "message": "Fixed 6 issues in monitoring.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\monitoring.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.578Z"
+    },
+    {
+      "message": "Fixed 6 issues in ota-updates.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\ota-updates.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.591Z"
+    },
+    {
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.593Z"
+    },
+    {
+      "message": "Fixed 6 issues in release-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\release-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.595Z"
+    },
+    {
+      "message": "Fixed 6 issues in scaling.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\scaling.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.600Z"
+    },
+    {
+      "message": "Fixed 6 issues in supabase-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\supabase-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.602Z"
+    },
+    {
+      "message": "Fixed 6 issues in background-tasks.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\background-tasks.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.603Z"
+    },
+    {
+      "message": "Fixed 6 issues in component-development.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\component-development.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.605Z"
+    },
+    {
+      "message": "Fixed 6 issues in e2e-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\e2e-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.608Z"
+    },
+    {
+      "message": "Fixed 6 issues in environment-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\environment-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.610Z"
+    },
+    {
+      "message": "Fixed 6 issues in expo-configuration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\expo-configuration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.611Z"
+    },
+    {
+      "message": "Fixed 6 issues in integration-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\integration-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.614Z"
+    },
+    {
+      "message": "Fixed 6 issues in location-services.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\location-services.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.616Z"
+    },
+    {
+      "message": "Fixed 6 issues in navigation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\navigation.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.617Z"
+    },
+    {
+      "message": "Fixed 6 issues in performance-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\performance-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.619Z"
+    },
+    {
+      "message": "Fixed 6 issues in project-structure.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\project-structure.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.622Z"
+    },
+    {
+      "message": "Fixed 6 issues in push-notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\push-notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.625Z"
+    },
+    {
+      "message": "Fixed 6 issues in state-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\state-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.627Z"
+    },
+    {
+      "message": "Fixed 6 issues in supabase-integration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\supabase-integration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.628Z"
+    },
+    {
+      "message": "Fixed 6 issues in testing-strategy.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\testing-strategy.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.634Z"
+    },
+    {
+      "message": "Fixed 6 issues in unit-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\unit-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.636Z"
+    },
+    {
+      "message": "Fixed 9 issues in development.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 2
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 6
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.638Z"
+    },
+    {
+      "message": "Fixed 8 issues in images.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\images.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 7
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.639Z"
+    },
+    {
+      "message": "Fixed 12 issues in markdown.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\markdown.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 10
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.641Z"
+    },
+    {
+      "message": "Fixed 11 issues in reusable-snippets.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\reusable-snippets.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 6
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.643Z"
+    },
+    {
+      "message": "Fixed 2 issues in settings.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\settings.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.645Z"
+    },
+    {
+      "message": "Fixed 6 issues in accessibility.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\accessibility.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.650Z"
+    },
+    {
+      "message": "Fixed 6 issues in ai-insights.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\ai-insights.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.652Z"
+    },
+    {
+      "message": "Fixed 6 issues in app-widget.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\app-widget.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.654Z"
+    },
+    {
+      "message": "Fixed 6 issues in authentication.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\authentication.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.655Z"
+    },
+    {
+      "message": "Fixed 6 issues in check-ins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\check-ins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.656Z"
+    },
+    {
+      "message": "Fixed 6 issues in circle-of-trust.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\circle-of-trust.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.657Z"
+    },
+    {
+      "message": "Fixed 6 issues in community-reports.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\community-reports.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.658Z"
+    },
+    {
+      "message": "Fixed 6 issues in emergency-alerts.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\emergency-alerts.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.660Z"
+    },
+    {
+      "message": "Fixed 6 issues in journey-monitoring.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\journey-monitoring.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.661Z"
+    },
+    {
+      "message": "Fixed 6 issues in location-tracking.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\location-tracking.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.666Z"
+    },
+    {
+      "message": "Fixed 6 issues in notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.669Z"
+    },
+    {
+      "message": "Fixed 6 issues in offline-mode.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\offline-mode.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.671Z"
+    },
+    {
+      "message": "Fixed 6 issues in safety-triggers.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\safety-triggers.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.672Z"
+    },
+    {
+      "message": "Fixed 6 issues in venue-safety.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\venue-safety.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.673Z"
+    },
+    {
+      "message": "Fixed 6 issues in wearable-integration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\wearable-integration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.674Z"
+    },
+    {
+      "message": "Fixed 5 issues in features.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features.mdx",
+        "fixes": [
+          {
+            "name": "Component names starting with numbers",
+            "description": "Add \"Step\" prefix to component names starting with numbers",
+            "matchCount": 1
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 3
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.679Z"
+    },
+    {
+      "message": "Fixed 6 issues in emergency-system-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\emergency-system-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.684Z"
+    },
+    {
+      "message": "Fixed 6 issues in location-tracking-implementation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\location-tracking-implementation.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.685Z"
+    },
+    {
+      "message": "Fixed 6 issues in offline-functionality.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\offline-functionality.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.687Z"
+    },
+    {
+      "message": "Fixed 6 issues in performance-optimization.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\performance-optimization.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.690Z"
+    },
+    {
+      "message": "Fixed 6 issues in push-notifications-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\push-notifications-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.692Z"
+    },
+    {
+      "message": "Fixed 6 issues in security-hardening.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\security-hardening.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.693Z"
+    },
+    {
+      "message": "Fixed 6 issues in testing-emergency-features.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\testing-emergency-features.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.694Z"
+    },
+    {
+      "message": "Fixed 6 issues in troubleshooting.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\troubleshooting.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.697Z"
+    },
+    {
+      "message": "Fixed 4 issues in index.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\index.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 3
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.703Z"
+    },
+    {
+      "message": "Fixed 3 issues in introduction.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\introduction.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.705Z"
+    },
+    {
+      "message": "Fixed 6 issues in configuration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\configuration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.706Z"
+    },
+    {
+      "message": "Fixed 9 issues in expo-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\expo-setup.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 4
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.709Z"
+    },
+    {
+      "message": "Fixed 6 issues in first-app.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\first-app.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.711Z"
+    },
+    {
+      "message": "Fixed 17 issues in installation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\installation.mdx",
+        "fixes": [
+          {
+            "name": "Missing quotes in attributes",
+            "description": "Add quotes around string attribute values",
+            "matchCount": 12
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.717Z"
+    },
+    {
+      "message": "Fixed 5 issues in supabase-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\supabase-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.721Z"
+    },
+    {
+      "message": "Fixed 5 issues in quickstart.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.723Z"
+    },
+    {
+      "message": "Fixed 6 issues in changelog.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\changelog.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.724Z"
+    },
+    {
+      "message": "Fixed 6 issues in code-samples.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\code-samples.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.725Z"
+    },
+    {
+      "message": "Fixed 6 issues in examples.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\examples.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.726Z"
+    },
+    {
+      "message": "Fixed 6 issues in expo-plugins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\expo-plugins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.727Z"
+    },
+    {
+      "message": "Fixed 6 issues in glossary.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\glossary.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.732Z"
+    },
+    {
+      "message": "Fixed 6 issues in openapi-spec.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\openapi-spec.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.737Z"
+    },
+    {
+      "message": "Fixed 6 issues in postman-collection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\postman-collection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.739Z"
+    },
+    {
+      "message": "Fixed 6 issues in rate-limits.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\rate-limits.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.740Z"
+    },
+    {
+      "message": "Fixed 6 issues in status-codes.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\status-codes.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.741Z"
+    },
+    {
+      "message": "Fixed 6 issues in supabase-extensions.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\supabase-extensions.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.742Z"
+    },
+    {
+      "message": "Fixed 6 issues in audit-procedures.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\audit-procedures.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.743Z"
+    },
+    {
+      "message": "Fixed 6 issues in authentication-security.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\authentication-security.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.744Z"
+    },
+    {
+      "message": "Fixed 6 issues in code-review.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\code-review.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.747Z"
+    },
+    {
+      "message": "Fixed 6 issues in compliance.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\compliance.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.749Z"
+    },
+    {
+      "message": "Fixed 6 issues in data-collection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\data-collection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.751Z"
+    },
+    {
+      "message": "Fixed 6 issues in data-protection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\data-protection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.752Z"
+    },
+    {
+      "message": "Fixed 6 issues in development-guidelines.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\development-guidelines.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.753Z"
+    },
+    {
+      "message": "Fixed 6 issues in encryption.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\encryption.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.754Z"
+    },
+    {
+      "message": "Fixed 6 issues in incident-response.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\incident-response.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.756Z"
+    },
+    {
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.757Z"
+    },
+    {
+      "message": "Fixed 6 issues in privacy-controls.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\privacy-controls.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.758Z"
+    },
+    {
+      "message": "Fixed 6 issues in privacy-policy.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\privacy-policy.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.759Z"
+    },
+    {
+      "message": "Fixed 6 issues in user-rights.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\user-rights.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.760Z"
+    },
+    {
+      "message": "Fixed 5 issues in why-shelther.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\why-shelther.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      },
+      "timestamp": "2025-06-06T06:29:39.765Z"
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": "2025-06-06T06:29:39.460Z",
+      "level": "INFO",
+      "message": "MDX Syntax Fixer Started",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.472Z",
+      "level": "INFO",
+      "message": "Mode: DRY RUN",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.474Z",
+      "level": "INFO",
+      "message": "Skipping excluded directory: .git",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.479Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in login.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\login.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.481Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in logout.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\logout.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.482Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.484Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in refresh-token.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\refresh-token.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.486Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in signup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\authentication\\signup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.491Z",
+      "level": "FIX",
+      "message": "Fixed 2 issues in introduction.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\introduction.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.495Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in geofencing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\geofencing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.499Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in safety-scores.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\safety-scores.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.502Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in tracking.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\tracking.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.504Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in venue-data.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\location\\venue-data.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.506Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in push-notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\push-notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.508Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in subscriptions.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\subscriptions.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.510Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in websockets.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\realtime\\websockets.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.512Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in check-ins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\check-ins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.517Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in emergency-trigger.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\emergency-trigger.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.519Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in location-sharing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\location-sharing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.523Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in reports.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\reports.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.525Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in safety-status.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\safety\\safety-status.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.526Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in contacts.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\contacts.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.534Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in devices.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\devices.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.537Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in preferences.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\preferences.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.538Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in profile.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\api-reference\\users\\profile.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.540Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in backend-architecture.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\backend-architecture.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.542Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in client-architecture.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\client-architecture.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.543Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in data-flow.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\data-flow.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.548Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in database-schema.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\database-schema.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.549Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in emergency-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\emergency-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.551Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in location-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\location-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.552Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in offline-capabilities.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\offline-capabilities.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.553Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.555Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in safety-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\safety-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.558Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in security-design.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\security-design.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.559Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in tech-stack.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\tech-stack.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.560Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in user-model.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\architecture\\user-model.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.562Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in app-store-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\app-store-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.565Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in automated-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\automated-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.568Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in ci-cd.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\ci-cd.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.570Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in code-quality.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\code-quality.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.571Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in environment-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\environment-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.572Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in expo-builds.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\expo-builds.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.573Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in google-play-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\google-play-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.576Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in monitoring.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\monitoring.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.587Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in ota-updates.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\ota-updates.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.593Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.595Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in release-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\release-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.600Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in scaling.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\scaling.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.601Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in supabase-deployment.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\deployment\\supabase-deployment.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.603Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in background-tasks.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\background-tasks.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.604Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in component-development.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\component-development.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.607Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in e2e-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\e2e-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.609Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in environment-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\environment-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.610Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in expo-configuration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\expo-configuration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.612Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in integration-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\integration-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.615Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in location-services.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\location-services.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.617Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in navigation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\navigation.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.618Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in performance-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\performance-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.620Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in project-structure.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\project-structure.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.624Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in push-notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\push-notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.626Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in state-management.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\state-management.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.628Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in supabase-integration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\supabase-integration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.633Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in testing-strategy.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\testing-strategy.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.635Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in unit-testing.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development\\unit-testing.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.637Z",
+      "level": "FIX",
+      "message": "Fixed 9 issues in development.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\development.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 2
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 6
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.639Z",
+      "level": "FIX",
+      "message": "Fixed 8 issues in images.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\images.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 7
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.640Z",
+      "level": "FIX",
+      "message": "Fixed 12 issues in markdown.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\markdown.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 10
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.643Z",
+      "level": "FIX",
+      "message": "Fixed 11 issues in reusable-snippets.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\reusable-snippets.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 6
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.644Z",
+      "level": "FIX",
+      "message": "Fixed 2 issues in settings.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\essentials\\settings.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 1
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.649Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in accessibility.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\accessibility.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.652Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in ai-insights.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\ai-insights.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.653Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in app-widget.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\app-widget.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.655Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in authentication.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\authentication.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.656Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in check-ins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\check-ins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.657Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in circle-of-trust.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\circle-of-trust.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.658Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in community-reports.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\community-reports.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.660Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in emergency-alerts.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\emergency-alerts.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.661Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in journey-monitoring.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\journey-monitoring.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.662Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in location-tracking.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\location-tracking.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.669Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in notifications.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\notifications.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.670Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in offline-mode.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\offline-mode.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.672Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in safety-triggers.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\safety-triggers.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.673Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in venue-safety.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\venue-safety.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.674Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in wearable-integration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features\\wearable-integration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.678Z",
+      "level": "FIX",
+      "message": "Fixed 5 issues in features.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\features.mdx",
+        "fixes": [
+          {
+            "name": "Component names starting with numbers",
+            "description": "Add \"Step\" prefix to component names starting with numbers",
+            "matchCount": 1
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 3
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.683Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in emergency-system-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\emergency-system-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.685Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in location-tracking-implementation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\location-tracking-implementation.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.686Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in offline-functionality.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\offline-functionality.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.689Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in performance-optimization.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\performance-optimization.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.691Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in push-notifications-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\push-notifications-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.693Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in security-hardening.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\security-hardening.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.694Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in testing-emergency-features.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\testing-emergency-features.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.695Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in troubleshooting.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\guides\\troubleshooting.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.702Z",
+      "level": "FIX",
+      "message": "Fixed 4 issues in index.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\index.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 3
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.704Z",
+      "level": "FIX",
+      "message": "Fixed 3 issues in introduction.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\introduction.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 2
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.706Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in configuration.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\configuration.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.709Z",
+      "level": "FIX",
+      "message": "Fixed 9 issues in expo-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\expo-setup.mdx",
+        "fixes": [
+          {
+            "name": "Component names with dashes or lowercase",
+            "description": "Convert component names to PascalCase and remove dashes",
+            "matchCount": 4
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.710Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in first-app.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\first-app.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.716Z",
+      "level": "FIX",
+      "message": "Fixed 17 issues in installation.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\installation.mdx",
+        "fixes": [
+          {
+            "name": "Missing quotes in attributes",
+            "description": "Add quotes around string attribute values",
+            "matchCount": 12
+          },
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.720Z",
+      "level": "FIX",
+      "message": "Fixed 5 issues in supabase-setup.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart\\supabase-setup.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.723Z",
+      "level": "FIX",
+      "message": "Fixed 5 issues in quickstart.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\quickstart.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.724Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in changelog.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\changelog.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.725Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in code-samples.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\code-samples.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.726Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in examples.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\examples.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.727Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in expo-plugins.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\expo-plugins.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.728Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in glossary.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\glossary.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.734Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in openapi-spec.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\openapi-spec.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.738Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in postman-collection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\postman-collection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.739Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in rate-limits.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\rate-limits.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.741Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in status-codes.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\status-codes.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.742Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in supabase-extensions.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\resources\\supabase-extensions.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.743Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in audit-procedures.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\audit-procedures.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.744Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in authentication-security.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\authentication-security.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.746Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in code-review.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\code-review.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.748Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in compliance.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\compliance.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.751Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in data-collection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\data-collection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.752Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in data-protection.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\data-protection.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.753Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in development-guidelines.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\development-guidelines.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.754Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in encryption.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\encryption.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.755Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in incident-response.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\incident-response.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.757Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in overview.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\overview.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.758Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in privacy-controls.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\privacy-controls.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.759Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in privacy-policy.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\privacy-policy.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.760Z",
+      "level": "FIX",
+      "message": "Fixed 6 issues in user-rights.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\security\\user-rights.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 5
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.765Z",
+      "level": "FIX",
+      "message": "Fixed 5 issues in why-shelther.mdx",
+      "data": {
+        "file": "C:\\Users\\USER\\Desktop\\2025 Web Projects\\shelther docs\\mintlify-docs\\why-shelther.mdx",
+        "fixes": [
+          {
+            "name": "Unescaped quotes in attribute values",
+            "description": "Escape quotes in attribute values",
+            "matchCount": 1
+          },
+          {
+            "name": "Unclosed tags",
+            "description": "Auto-close simple unclosed tags",
+            "matchCount": 4
+          }
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.765Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.766Z",
+      "level": "INFO",
+      "message": "MDX SYNTAX FIX SUMMARY",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.767Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.767Z",
+      "level": "INFO",
+      "message": "Total files processed: 130",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.768Z",
+      "level": "INFO",
+      "message": "Files with issues fixed: 123",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.768Z",
+      "level": "INFO",
+      "message": "Total issues found: 2",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.768Z",
+      "level": "INFO",
+      "message": "Total issues fixed: 688",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.768Z",
+      "level": "INFO",
+      "message": "Mode: DRY RUN",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.769Z",
+      "level": "WARN",
+      "message": "This was a dry run. No files were actually modified.",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.769Z",
+      "level": "INFO",
+      "message": "Run without --dry-run to apply fixes.",
+      "data": null
+    },
+    {
+      "timestamp": "2025-06-06T06:29:39.769Z",
+      "level": "INFO",
+      "message": "============================================================",
+      "data": null
+    }
+  ]
+}

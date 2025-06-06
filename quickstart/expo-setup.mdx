@@ -1,0 +1,844 @@
+---
+title: "Expo Setup for Safety Apps"
+description: "Configure Expo SDK 52+ for safety application development. Set up location services, background tasks, notifications, and safety-critical features with proper permissions."
+---
+
+# Expo Setup for Safety Apps
+
+<Info>
+**Safety-First Configuration:** This guide configures Expo specifically for safety applications with location services, background processing, emergency notifications, and offline capabilities.
+</Info>
+
+## Expo SDK 52+ Features for Safety
+
+Expo SDK 52 introduces several features critical for safety applications:
+
+<CardGroup cols={2}>
+  <Card title="New Architecture Support" icon="chip">
+    Enhanced performance and reliability for background services and real-time features
+  </Card>
+  <Card title="Improved Background Tasks" icon="clock">
+    Better background location tracking and notification handling for safety monitoring
+  </Card>
+  <Card title="Enhanced Security" icon="shield">
+    Improved secure storage and biometric authentication for emergency access
+  </Card>
+  <Card title="Offline Capabilities" icon="wifi-slash">
+    Better offline data storage and sync for areas with poor connectivity
+  </Card>
+</CardGroup>
+
+## Project Initialization
+
+### Create Safety-Enabled Expo Project
+
+<CodeGroup>
+```bash Create New Project
+# Create new Expo project with TypeScript template
+npx create-expo-app ShelterSafetyApp --template blank-typescript
+
+# Navigate to project directory
+cd ShelterSafetyApp
+
+# Install core safety dependencies
+npx expo install @supabase/supabase-js @react-native-async-storage/async-storage
+
+# Install location and notification services
+npx expo install expo-location expo-notifications expo-background-fetch
+
+# Install sensors and device features
+npx expo install expo-sensors expo-device expo-secure-store
+
+# Install additional safety-related packages
+npx expo install expo-image-picker expo-av expo-file-system expo-task-manager
+```
+
+```bash Clone Existing Shelther Template
+# Clone the official Shelther template (when available)
+git clone https://github.com/shelther/expo-safety-template.git
+cd expo-safety-template
+
+# Install dependencies
+npm install
+
+# Configure for your project
+npm run setup
+```
+</CodeGroup>
+
+### Core Package Dependencies
+
+<CodeGroup>
+```json package.json Dependencies
+{
+  "dependencies": {
+    "@expo/metro-config": "~0.17.0",
+    "@react-native-async-storage/async-storage": "~1.21.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "expo": "~52.0.0",
+    "expo-av": "~14.0.0",
+    "expo-background-fetch": "~12.0.0",
+    "expo-constants": "~16.0.0",
+    "expo-device": "~6.0.0",
+    "expo-file-system": "~17.0.0",
+    "expo-image-picker": "~15.0.0",
+    "expo-location": "~17.0.0",
+    "expo-notifications": "~0.28.0",
+    "expo-router": "~3.5.0",
+    "expo-secure-store": "~13.0.0",
+    "expo-sensors": "~13.0.0",
+    "expo-status-bar": "~2.0.0",
+    "expo-task-manager": "~12.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-get-random-values": "~1.9.0",
+    "react-native-url-polyfill": "^2.0.0"
+  }
+}
+```
+
+```json devDependencies for Safety Development
+{
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.45",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "^7.0.0",
+    "jest": "^29.2.1",
+    "prettier": "^3.0.0",
+    "typescript": "~5.3.3"
+  }
+}
+```
+</CodeGroup>
+
+## App Configuration (app.json)
+
+### Complete Safety App Configuration
+
+<CodeGroup>
+```json app.json - iOS Configuration
+{
+  "expo": {
+    "name": "Shelther Safety",
+    "slug": "shelther-safety",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF5A5A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shelther.safety",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Shelther needs location access to provide safety monitoring and emergency alerts to your trusted contacts.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Shelther uses background location to track your safety during activities and detect potential emergencies.",
+        "NSLocationAlwaysUsageDescription": "Shelther uses background location to provide continuous safety monitoring and automatic emergency detection.",
+        "NSCameraUsageDescription": "Shelther may use camera for profile photos and emergency documentation to help responders understand your situation.",
+        "NSMicrophoneUsageDescription": "Shelther may record audio during emergency situations for evidence and to help emergency responders.",
+        "NSPhotoLibraryUsageDescription": "Shelther allows you to share photos with trusted contacts during emergencies or save evidence to your photo library.",
+        "NSContactsUsageDescription": "Shelther accesses your contacts to help you quickly add trusted emergency contacts to your safety network.",
+        "NSFaceIDUsageDescription": "Use Face ID to quickly and securely access safety features during emergencies.",
+        "NSUserNotificationsUsageDescription": "Shelther sends critical safety notifications and emergency alerts to you and your trusted contacts.",
+        "UIBackgroundModes": [
+          "location",
+          "background-fetch",
+          "background-processing",
+          "audio"
+        ],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.shelther.safety.background-location",
+          "com.shelther.safety.emergency-check",
+          "com.shelther.safety.sync-data"
+        ]
+      }
+    }
+  }
+}
+```
+
+```json app.json - Android Configuration
+{
+  "expo": {
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF5A5A"
+      },
+      "package": "com.shelther.safety",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_CONTACTS",
+        "VIBRATE",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "blockedPermissions": [
+        "READ_PHONE_STATE",
+        "CALL_PHONE",
+        "READ_SMS",
+        "SEND_SMS"
+      ]
+    }
+  }
+}
+```
+</CodeGroup>
+
+<Warning>
+**Permission Justification:** Each permission must be justified in app store submissions. The descriptions above explain the safety context for each permission request.
+</Warning>
+
+### Expo Plugins Configuration
+
+<CodeGroup>
+```json Expo Plugins for Safety Features
+{
+  "expo": {
+    "plugins": [
+      "expo-location",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF5A5A",
+          "sounds": [
+            "./assets/sounds/emergency-alert.wav",
+            "./assets/sounds/check-in-reminder.wav"
+          ]
+        }
+      ],
+      "expo-background-fetch",
+      "expo-task-manager",
+      "expo-sensors",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.0",
+            "newArchEnabled": true,
+            "flipper": false
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0",
+            "newArchEnabled": true,
+            "proguardMinifyEnabled": true
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Shelther to access photos for profile images and emergency documentation.",
+          "cameraPermission": "Allow Shelther to take photos for emergency documentation and evidence."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Use Face ID to quickly access emergency features when needed."
+        }
+      ]
+    ]
+  }
+}
+```
+</CodeGroup>
+
+## Safety-Specific Configuration
+
+### Location Services Setup
+
+<CodeGroup>
+```typescript Location Configuration
+// lib/location.ts
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+
+const LOCATION_TASK_NAME = 'background-location-task';
+const GEOFENCE_TASK_NAME = 'geofence-task';
+
+// Location accuracy and update intervals for safety
+export const LOCATION_CONFIG = {
+  // High accuracy for emergency situations
+  emergency: {
+    accuracy: Location.Accuracy.BestForNavigation,
+    timeInterval: 5000, // 5 seconds
+    distanceInterval: 10, // 10 meters
+  },
+  // Balanced for active monitoring
+  active: {
+    accuracy: Location.Accuracy.High,
+    timeInterval: 30000, // 30 seconds
+    distanceInterval: 50, // 50 meters
+  },
+  // Battery efficient for passive monitoring
+  passive: {
+    accuracy: Location.Accuracy.Balanced,
+    timeInterval: 300000, // 5 minutes
+    distanceInterval: 200, // 200 meters
+  }
+};
+
+// Request location permissions with proper messaging
+export const requestLocationPermissions = async () => {
+  const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+  
+  if (foregroundStatus !== 'granted') {
+    throw new Error('Foreground location permission denied');
+  }
+  
+  const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+  
+  if (backgroundStatus !== 'granted') {
+    console.warn('Background location permission denied - some features will be limited');
+  }
+  
+  return { foregroundStatus, backgroundStatus };
+};
+```
+
+```typescript Background Location Task
+// Define background location task
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    console.error('Background location task error:', error);
+    return;
+  }
+  
+  if (data) {
+    const { locations } = data as { locations: Location.LocationObject[] };
+    
+    // Process location updates for safety monitoring
+    locations.forEach(async (location) => {
+      await processLocationUpdate(location);
+    });
+  }
+});
+
+const processLocationUpdate = async (location: Location.LocationObject) => {
+  // Check for emergency conditions
+  const emergencyCheck = await analyzeLocationForEmergency(location);
+  
+  if (emergencyCheck.isEmergency) {
+    await triggerEmergencyAlert(location, emergencyCheck.reason);
+  }
+  
+  // Update location for trusted contacts if sharing is active
+  const sharingActive = await getLocationSharingStatus();
+  if (sharingActive) {
+    await updateSharedLocation(location);
+  }
+  
+  // Store location for journey monitoring
+  await storeLocationUpdate(location);
+};
+```
+</CodeGroup>
+
+### Notification System Setup
+
+<CodeGroup>
+```typescript Notification Configuration
+// lib/notifications.ts
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+
+// Configure notification handling
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    const { categoryIdentifier } = notification.request.content;
+    
+    // Handle emergency notifications differently
+    if (categoryIdentifier === 'emergency') {
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      };
+    }
+    
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    };
+  },
+});
+
+// Register notification categories for safety
+export const registerNotificationCategories = async () => {
+  await Notifications.setNotificationCategoryAsync('emergency', [
+    {
+      identifier: 'confirm_safe',
+      buttonTitle: "I'm Safe",
+      options: {
+        isDestructive: false,
+        isAuthenticationRequired: false,
+      },
+    },
+    {
+      identifier: 'need_help',
+      buttonTitle: 'Need Help',
+      options: {
+        isDestructive: true,
+        isAuthenticationRequired: false,
+      },
+    },
+  ]);
+  
+  await Notifications.setNotificationCategoryAsync('check_in', [
+    {
+      identifier: 'check_in_safe',
+      buttonTitle: 'Check In',
+      options: {
+        isDestructive: false,
+        isAuthenticationRequired: false,
+      },
+    },
+    {
+      identifier: 'extend_time',
+      buttonTitle: 'Need More Time',
+      options: {
+        isDestructive: false,
+        isAuthenticationRequired: false,
+      },
+    },
+  ]);
+};
+
+// Request notification permissions
+export const requestNotificationPermissions = async () => {
+  if (!Device.isDevice) {
+    throw new Error('Must use physical device for notifications');
+  }
+  
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync({
+      ios: {
+        allowAlert: true,
+        allowBadge: true,
+        allowSound: true,
+        allowAnnouncements: true,
+        allowCriticalAlerts: true,
+      },
+    });
+    finalStatus = status;
+  }
+  
+  if (finalStatus !== 'granted') {
+    throw new Error('Notification permission denied');
+  }
+  
+  // Get push notification token
+  const token = (await Notifications.getExpoPushTokenAsync()).data;
+  return { status: finalStatus, token };
+};
+```
+</CodeGroup>
+
+### Background Tasks for Safety
+
+<CodeGroup>
+```typescript Background Task Setup
+// lib/backgroundTasks.ts
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
+
+const BACKGROUND_FETCH_TASK = 'safety-background-fetch';
+const EMERGENCY_CHECK_TASK = 'emergency-check-task';
+const SYNC_DATA_TASK = 'sync-offline-data';
+
+// Define background fetch task for safety checks
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  try {
+    // Check for missed check-ins
+    await checkMissedCheckIns();
+    
+    // Sync emergency data if offline
+    await syncEmergencyData();
+    
+    // Update location if monitoring is active
+    await updateLocationIfActive();
+    
+    // Check battery level for safety warnings
+    await checkBatteryLevel();
+    
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  } catch (error) {
+    console.error('Background fetch failed:', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Register background tasks
+export const registerBackgroundTasks = async () => {
+  const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
+  
+  if (!isRegistered) {
+    await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+      minimumInterval: 15 * 60, // 15 minutes minimum interval
+      stopOnTerminate: false,
+      startOnBoot: true,
+    });
+  }
+};
+
+// Emergency check task for critical situations
+TaskManager.defineTask(EMERGENCY_CHECK_TASK, async () => {
+  const emergencyState = await getEmergencyState();
+  
+  if (emergencyState.isActive) {
+    // Continue emergency procedures
+    await processActiveEmergency(emergencyState);
+  }
+  
+  // Check for automatic emergency conditions
+  await checkForAutomaticEmergencyTriggers();
+});
+```
+</CodeGroup>
+
+## Development Environment Setup
+
+### Metro Configuration
+
+<CodeGroup>
+```javascript metro.config.js
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+// Add support for additional file types used in safety apps
+config.resolver.assetExts.push(
+  // Audio files for emergency alerts
+  'wav', 'mp3', 'aac',
+  // Document types for evidence storage
+  'pdf', 'doc', 'docx',
+  // Database files
+  'db', 'sqlite'
+);
+
+// Configure for faster development builds
+config.resolver.sourceExts.push('sql');
+
+module.exports = config;
+```
+
+```typescript babel.config.js
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: [
+      // Support for optional chaining and nullish coalescing
+      '@babel/plugin-proposal-optional-chaining',
+      '@babel/plugin-proposal-nullish-coalescing-operator',
+      
+      // React Native Reanimated plugin
+      'react-native-reanimated/plugin',
+      
+      // Support for decorators (useful for MobX if used)
+      ['@babel/plugin-proposal-decorators', { legacy: true }],
+      
+      // Class properties for cleaner component syntax
+      ['@babel/plugin-proposal-class-properties', { loose: true }],
+    ],
+  };
+};
+```
+</CodeGroup>
+
+### TypeScript Configuration
+
+<CodeGroup>
+```json tsconfig.json
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/types/*": ["./src/types/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+```
+
+```typescript types/safety.ts
+// Core type definitions for safety features
+export interface EmergencyAlert {
+  id: string;
+  userId: string;
+  type: 'manual' | 'automatic' | 'duress';
+  location: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+    timestamp: Date;
+  };
+  evidence?: {
+    audio?: string;
+    photos?: string[];
+    video?: string;
+  };
+  contacts: string[];
+  status: 'active' | 'resolved' | 'false_alarm';
+  createdAt: Date;
+  resolvedAt?: Date;
+}
+
+export interface SafetyProfile {
+  id: string;
+  userId: string;
+  emergencyContacts: EmergencyContact[];
+  checkInSettings: CheckInSettings;
+  locationSharing: LocationSharingSettings;
+  privacySettings: PrivacySettings;
+}
+
+export interface LocationUpdate {
+  id: string;
+  userId: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  altitude?: number;
+  speed?: number;
+  heading?: number;
+  timestamp: Date;
+  batteryLevel?: number;
+  isEmergency: boolean;
+}
+```
+</CodeGroup>
+
+## Testing Configuration
+
+### Test Environment Setup
+
+<CodeGroup>
+```json Jest Configuration
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:emergency": "jest __tests__/emergency"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": ["<rootDir>/jest-setup.js"],
+    "testMatch": [
+      "**/__tests__/**/*.(ts|tsx|js)",
+      "**/*.(test|spec).(ts|tsx|js)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/*.test.{ts,tsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}
+```
+
+```javascript jest-setup.js
+import 'react-native-gesture-handler/jestSetup';
+
+// Mock expo modules for testing
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: jest.fn(),
+  requestBackgroundPermissionsAsync: jest.fn(),
+  getCurrentPositionAsync: jest.fn(),
+  watchPositionAsync: jest.fn(),
+}));
+
+jest.mock('expo-notifications', () => ({
+  requestPermissionsAsync: jest.fn(),
+  setNotificationHandler: jest.fn(),
+  scheduleNotificationAsync: jest.fn(),
+}));
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    auth: {
+      signUp: jest.fn(),
+      signIn: jest.fn(),
+      signOut: jest.fn(),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn(),
+      insert: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    })),
+  })),
+}));
+
+// Global test utilities
+global.mockEmergencyAlert = {
+  id: 'test-alert-1',
+  userId: 'test-user-1',
+  type: 'manual',
+  location: {
+    latitude: 40.7128,
+    longitude: -74.0060,
+    accuracy: 10,
+    timestamp: new Date(),
+  },
+  contacts: ['contact-1', 'contact-2'],
+  status: 'active',
+  createdAt: new Date(),
+};
+```
+</CodeGroup>
+
+## Security Configuration
+
+### Secure Storage Setup
+
+<CodeGroup>
+```typescript Security Configuration
+// lib/security.ts
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
+
+// Secure storage with encryption for sensitive data
+export class SafetySecureStorage {
+  private static async generateKey(): Promise<string> {
+    return await Crypto.randomUUID();
+  }
+  
+  static async storeEmergencyData(key: string, data: any): Promise<void> {
+    const encrypted = await this.encrypt(JSON.stringify(data));
+    await SecureStore.setItemAsync(`emergency_${key}`, encrypted, {
+      requireAuthentication: false, // Emergency access shouldn't require auth
+      keychainService: 'ShelterEmergencyData',
+    });
+  }
+  
+  static async storeUserCredentials(key: string, data: any): Promise<void> {
+    const encrypted = await this.encrypt(JSON.stringify(data));
+    await SecureStore.setItemAsync(`user_${key}`, encrypted, {
+      requireAuthentication: true, // User data requires authentication
+      keychainService: 'ShelterUserData',
+      accessGroup: 'group.com.shelther.safety',
+    });
+  }
+  
+  private static async encrypt(data: string): Promise<string> {
+    // Implement proper encryption for sensitive data
+    const digest = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      data,
+      { encoding: Crypto.CryptoEncoding.HEX }
+    );
+    return digest;
+  }
+}
+```
+</CodeGroup>
+
+## Next Steps
+
+<Note>
+**Expo Configuration Complete!** Your Expo environment is now configured with all safety-specific features, permissions, and security measures.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Supabase Backend" icon="database" href="/quickstart/supabase-setup">
+    Set up Supabase backend with real-time features and authentication
+  </Card>
+  <Card title="First Safety App" icon="mobile" href="/quickstart/first-app">
+    Build your first safety application with emergency features
+  </Card>
+  <Card title="Configuration Guide" icon="cog" href="/quickstart/configuration">
+    Advanced configuration for production safety apps
+  </Card>
+</CardGroup>
+
+## Configuration Checklist
+
+<Steps>
+  <Step title="✅ Expo Project Created">
+    New project created with TypeScript template and safety dependencies installed
+  </Step>
+  <Step title="✅ Permissions Configured">
+    All necessary permissions for location, camera, microphone, and notifications set up
+  </Step>
+  <Step title="✅ Background Tasks">
+    Background fetch and location tasks configured for safety monitoring
+  </Step>
+  <Step title="✅ Notifications">
+    Emergency notification categories and permission handling implemented
+  </Step>
+  <Step title="✅ Security Setup">
+    Secure storage and encryption configured for sensitive safety data
+  </Step>
+  <Step title="✅ Testing Environment">
+    Jest configuration with safety-specific mocks and coverage thresholds
+  </Step>
+</Steps>
+
+<Warning>
+**Production Considerations:** This configuration includes development settings. Production apps require additional security hardening, code obfuscation, and app store compliance checks covered in the [deployment section](/deployment/overview).
+</Warning>

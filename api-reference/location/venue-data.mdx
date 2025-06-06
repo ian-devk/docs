@@ -1,0 +1,115 @@
+---
+title: "Venue Data"
+description: "Venue Data documentation for API Reference > Location Services. Learn about implementation, configuration, and best practices."
+api: "POST https://api.shelther.app/v1/location/venue-data"
+---
+
+# Venue Data
+
+## Endpoint Description
+
+Detailed description of this API endpoint and its purpose in the Shelther safety platform.
+
+## Authentication
+
+<Info>
+This endpoint requires authentication using a valid JWT token.
+</Info>
+
+```bash
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+## Parameters
+
+<ParamField path="parameter_name" type="string" required>
+  Description of the required parameter
+</ParamField>
+
+<ParamField path="optional_param" type="number">
+  Description of the optional parameter
+</ParamField>
+
+## Request Body
+
+<ParamField body="field_name" type="string" required>
+  Description of the request body field
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The response data object
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.shelther.app/v1/endpoint" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parameter_name": "value"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.shelther.app/v1/endpoint', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    parameter_name: 'value'
+  })
+});
+
+const data = await response.json();
+```
+
+```typescript TypeScript
+interface RequestBody {
+  parameter_name: string;
+}
+
+interface ResponseData {
+  success: boolean;
+  data: any;
+}
+
+const response = await api.post<ResponseData>('/endpoint', {
+  parameter_name: 'value'
+} as RequestBody);
+```
+
+</CodeGroup>
+
+## Error Responses
+
+| Status Code | Description |
+|-------------|-------------|
+| 400 | Bad Request - Invalid parameters |
+| 401 | Unauthorized - Invalid or missing token |
+| 403 | Forbidden - Insufficient permissions |
+| 404 | Not Found - Resource not found |
+| 500 | Internal Server Error |
+
+<ResponseExample>
+```json Error Response
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "Parameter validation failed",
+    "details": "parameter_name is required"
+  }
+}
+```
+</ResponseExample>

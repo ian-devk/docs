@@ -1,0 +1,797 @@
+---
+title: "Supabase Backend Setup"
+description: "Complete guide to setting up Supabase backend for Shelther safety applications. Configure authentication, real-time subscriptions, Row Level Security, and safety-specific database features."
+---
+
+# Supabase Backend Setup
+
+<Info>
+**Supabase for Safety Apps:** This guide configures Supabase specifically for safety applications with real-time location sharing, emergency alerts, secure authentication, and offline-first capabilities.
+</Info>
+
+## Why Supabase for Safety Applications?
+
+Supabase provides several critical features essential for safety applications:
+
+<CardGroup cols={2}>
+  <Card title="Real-time Subscriptions" icon="bolt">
+    Instant location updates and emergency notifications to trusted contacts
+  </Card>
+  <Card title="Row Level Security" icon="shield">
+    Database-level privacy controls ensuring users only see their own data
+  </Card>
+  <Card title="Built-in Authentication" icon="key">
+    Secure user management with MFA support and social login options
+  </Card>
+  <Card title="Edge Functions" icon="server">
+    Server-side logic for emergency processing and third-party integrations
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before setting up Supabase, ensure you have:
+
+<Steps>
+  <Step title="Supabase Account">
+    Create a free account at [supabase.com](https://supabase.com)
+  </Step>
+  <Step title="Expo Project">
+    Complete the [Expo setup](/quickstart/expo-setup) from the previous guide
+  </Step>
+  <Step title="Database Knowledge">
+    Basic understanding of PostgreSQL and SQL queries
+  </Step>
+</Steps>
+
+## Project Setup
+
+### Create New Supabase Project
+
+<Steps>
+  <Step title="Create Project">
+    1. Log in to [Supabase Dashboard](https://app.supabase.com)
+    2. Click "New Project"
+    3. Choose your organization or create a new one
+    4. Fill in project details:
+       - **Name:** `shelther-safety-app`
+       - **Database Password:** Use a strong password (save this!)
+       - **Region:** Choose closest to your users
+       - **Pricing Plan:** Start with Free tier
+  </Step>
+  <Step title="Wait for Setup">
+    Project creation takes 2-3 minutes. You'll see a progress indicator.
+  </Step>
+  <Step title="Access Dashboard">
+    Once ready, you'll see the project dashboard with your database URL and API keys
+  </Step>
+</Steps>
+
+<Warning>
+**Save Your Credentials:** Copy and securely store your project URL, anon key, and service role key. You'll need these for your application configuration.
+</Warning>
+
+## Database Schema Setup
+
+### Core Safety Tables
+
+Let's create the database schema optimized for safety applications:
+
+<CodeGroup>
+```sql User Management
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
+-- Users table (extends Supabase auth.users)
+CREATE TABLE public.users (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email VARCHAR NOT NULL,
+  phone_number VARCHAR,
+  full_name VARCHAR,
+  avatar_url VARCHAR,
+  timezone VARCHAR DEFAULT 'UTC',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User profiles with safety-specific information
+CREATE TABLE public.user_profiles (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  emergency_contact_1 JSONB,
+  emergency_contact_2 JSONB,
+  emergency_contact_3 JSONB,
+  safety_preferences JSONB DEFAULT '{}',
+  privacy_settings JSONB DEFAULT '{}',
+  notification_settings JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+```sql Location & Safety Tables
+-- Location updates for real-time tracking
+CREATE TABLE public.location_updates (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  location GEOGRAPHY(POINT, 4326) NOT NULL,
+  accuracy REAL,
+  battery_level INTEGER,
+  speed REAL,
+  heading REAL,
+  is_emergency BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Emergency alerts and incidents
+CREATE TABLE public.emergency_alerts (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  alert_type VARCHAR NOT NULL CHECK (alert_type IN ('manual', 'automatic', 'duress', 'panic')),
+  status VARCHAR DEFAULT 'active' CHECK (status IN ('active', 'resolved', 'false_alarm')),
+  location GEOGRAPHY(POINT, 4326),
+  message TEXT,
+  evidence JSONB DEFAULT '{}',
+  contacts_notified JSONB DEFAULT '[]',
+  contact_responses JSONB DEFAULT '{}',
+  triggered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Check-in system
+CREATE TABLE public.check_ins (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  grace_period INTEGER DEFAULT 300, -- 5 minutes in seconds
+  status VARCHAR DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'missed', 'extended')),
+  location GEOGRAPHY(POINT, 4326),
+  message TEXT,
+  contacts_to_notify JSONB DEFAULT '[]',
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+```sql Venue & Community Tables
+-- Venue safety information
+CREATE TABLE public.venues (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  location GEOGRAPHY(POINT, 4326) NOT NULL,
+  address TEXT,
+  venue_type VARCHAR,
+  safety_rating DECIMAL(3,2),
+  safety_features JSONB DEFAULT '{}',
+  verified BOOLEAN DEFAULT FALSE,
+  hours_of_operation JSONB,
+  contact_info JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Venue reviews and reports
+CREATE TABLE public.venue_reports (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  venue_id UUID REFERENCES public.venues(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  report_type VARCHAR NOT NULL CHECK (report_type IN ('safety_concern', 'positive_experience', 'incident')),
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  description TEXT,
+  evidence JSONB DEFAULT '{}',
+  anonymous BOOLEAN DEFAULT FALSE,
+  verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Location sharing sessions
+CREATE TABLE public.location_shares (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  shared_with_user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  shared_with_phone VARCHAR, -- For non-users
+  permissions JSONB DEFAULT '{}',
+  expires_at TIMESTAMP WITH TIME ZONE,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+</CodeGroup>
+
+### Indexes for Performance
+
+<CodeGroup>
+```sql Performance Indexes
+-- Location-based queries
+CREATE INDEX idx_location_updates_user_time ON public.location_updates(user_id, created_at DESC);
+CREATE INDEX idx_location_updates_spatial ON public.location_updates USING GIST(location);
+CREATE INDEX idx_location_updates_emergency ON public.location_updates(user_id, is_emergency, created_at DESC);
+
+-- Emergency alerts
+CREATE INDEX idx_emergency_alerts_user_status ON public.emergency_alerts(user_id, status, triggered_at DESC);
+CREATE INDEX idx_emergency_alerts_active ON public.emergency_alerts(status, triggered_at DESC) WHERE status = 'active';
+
+-- Check-ins
+CREATE INDEX idx_check_ins_user_scheduled ON public.check_ins(user_id, scheduled_time DESC);
+CREATE INDEX idx_check_ins_pending ON public.check_ins(status, scheduled_time) WHERE status = 'pending';
+
+-- Venues
+CREATE INDEX idx_venues_spatial ON public.venues USING GIST(location);
+CREATE INDEX idx_venues_type_rating ON public.venues(venue_type, safety_rating DESC);
+
+-- Venue reports
+CREATE INDEX idx_venue_reports_venue_created ON public.venue_reports(venue_id, created_at DESC);
+CREATE INDEX idx_venue_reports_user ON public.venue_reports(user_id, created_at DESC);
+
+-- Location shares
+CREATE INDEX idx_location_shares_user_active ON public.location_shares(user_id, is_active, expires_at);
+CREATE INDEX idx_location_shares_recipient ON public.location_shares(shared_with_user_id, is_active);
+```
+</CodeGroup>
+
+## Row Level Security (RLS)
+
+Critical for privacy in safety applications - users should only access their own data:
+
+<CodeGroup>
+```sql Enable RLS
+-- Enable RLS on all tables
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.location_updates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.emergency_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.check_ins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.venues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.venue_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.location_shares ENABLE ROW LEVEL SECURITY;
+```
+
+```sql User Data Policies
+-- Users can only see and modify their own data
+CREATE POLICY "Users can view their own profile" ON public.users
+  FOR ALL USING (auth.uid() = id);
+
+CREATE POLICY "Users can manage their profile" ON public.user_profiles
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Location updates - users can only see their own
+CREATE POLICY "Users can manage their location updates" ON public.location_updates
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Emergency alerts - users can see their own alerts
+CREATE POLICY "Users can manage their emergency alerts" ON public.emergency_alerts
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Check-ins - users can manage their own check-ins
+CREATE POLICY "Users can manage their check-ins" ON public.check_ins
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+```sql Shared Data Policies
+-- Venues are publicly readable, but only verified users can write
+CREATE POLICY "Anyone can view venues" ON public.venues
+  FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can add venues" ON public.venues
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- Venue reports - users can see public reports and their own
+CREATE POLICY "Users can view public venue reports" ON public.venue_reports
+  FOR SELECT USING (NOT anonymous OR auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their venue reports" ON public.venue_reports
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Location sharing - complex policies for shared access
+CREATE POLICY "Users can manage their location shares" ON public.location_shares
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view location shares shared with them" ON public.location_shares
+  FOR SELECT USING (
+    auth.uid() = shared_with_user_id 
+    AND is_active = true 
+    AND (expires_at IS NULL OR expires_at > NOW())
+  );
+```
+</CodeGroup>
+
+## Authentication Setup
+
+### Configure Auth Settings
+
+<Steps>
+  <Step title="Navigate to Authentication">
+    In Supabase Dashboard: Authentication > Settings
+  </Step>
+  <Step title="Configure Site URL">
+    Set your site URL for redirects:
+    - **Development:** `exp://localhost:19000`
+    - **Production:** Your app's deep link scheme
+  </Step>
+  <Step title="Enable Auth Providers">
+    Configure authentication methods:
+    - ✅ Email (enabled by default)
+    - ✅ Phone (for SMS verification)
+    - ✅ Google OAuth (optional)
+    - ✅ Apple OAuth (optional)
+  </Step>
+  <Step title="Configure Email Templates">
+    Customize confirmation and recovery email templates for your brand
+  </Step>
+</Steps>
+
+### Auth Policies and Triggers
+
+<CodeGroup>
+```sql Auth Triggers
+-- Function to create user profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', '')
+  );
+  
+  INSERT INTO public.user_profiles (user_id)
+  VALUES (NEW.id);
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to execute function on new user signup
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add updated_at triggers to relevant tables
+CREATE TRIGGER update_users_updated_at 
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at 
+  BEFORE UPDATE ON public.user_profiles
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+```
+</CodeGroup>
+
+## Real-time Subscriptions
+
+Enable real-time features for safety monitoring:
+
+<Steps>
+  <Step title="Enable Realtime">
+    In Supabase Dashboard: Database > Replication
+  </Step>
+  <Step title="Add Tables to Replication">
+    Enable replication for safety-critical tables:
+    - ✅ `location_updates`
+    - ✅ `emergency_alerts` 
+    - ✅ `check_ins`
+    - ✅ `location_shares`
+  </Step>
+  <Step title="Configure Filters">
+    Set up RLS-compliant filters for real-time subscriptions
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Realtime Configuration
+-- Enable realtime for safety tables
+ALTER PUBLICATION supabase_realtime ADD TABLE public.location_updates;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.emergency_alerts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.check_ins;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.location_shares;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.venue_reports;
+```
+</CodeGroup>
+
+## Environment Configuration
+
+### Get API Credentials
+
+<Steps>
+  <Step title="Navigate to Settings">
+    In Supabase Dashboard: Settings > API
+  </Step>
+  <Step title="Copy Credentials">
+    Copy these values for your environment configuration:
+    - **Project URL:** `https://your-project.supabase.co`
+    - **Anon Public Key:** `eyJ...` (safe for client-side use)
+    - **Service Role Key:** `eyJ...` (server-side only, keep secret!)
+  </Step>
+</Steps>
+
+### Update Expo Configuration
+
+<CodeGroup>
+```bash Environment Variables
+# Create .env file in your Expo project root
+EXPO_PUBLIC_SUPABASE_URL="https"://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"...
+
+# For server-side operations (keep secret!)
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"...
+```
+
+```typescript Supabase Client Configuration
+// lib/supabase.ts
+import 'react-native-url-polyfill/auto';
+import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+
+// Enhanced secure storage for sensitive data
+const ExpoSecureStoreAdapter = {
+  getItem: (key: string) => {
+    return SecureStore.getItemAsync(key);
+  },
+  setItem: (key: string, value: string) => {
+    SecureStore.setItemAsync(key, value);
+  },
+  removeItem: (key: string) => {
+    SecureStore.deleteItemAsync(key);
+  },
+};
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: ExpoSecureStoreAdapter as any,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2, // Optimized for battery life
+    },
+  },
+  global: {
+    headers: {
+      'x-application-name': 'shelther-safety-app',
+    },
+  },
+});
+
+// Helper function to check connection
+export const checkSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    
+    // Test database connection
+    const { data: testData, error: testError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1);
+    
+    return { success: true, connected: true };
+  } catch (error) {
+    console.error('Supabase connection error:', error);
+    return { success: false, error };
+  }
+};
+```
+</CodeGroup>
+
+## Safety-Specific Functions
+
+### Edge Functions for Emergency Processing
+
+<Steps>
+  <Step title="Create Edge Functions">
+    Set up server-side functions for emergency processing
+  </Step>
+  <Step title="Deploy Functions">
+    Use Supabase CLI to deploy emergency handling functions
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Emergency Processing Functions
+-- Function to process emergency alerts
+CREATE OR REPLACE FUNCTION public.process_emergency_alert(
+  alert_id UUID,
+  notification_payload JSONB
+)
+RETURNS JSONB AS $$
+DECLARE
+  alert_record public.emergency_alerts%ROWTYPE;
+  user_profile public.user_profiles%ROWTYPE;
+  notification_result JSONB;
+BEGIN
+  -- Get alert details
+  SELECT * INTO alert_record 
+  FROM public.emergency_alerts 
+  WHERE id = alert_id;
+  
+  IF NOT FOUND THEN
+    RETURN '{"success": false, "error": "Alert not found"}'::JSONB;
+  END IF;
+  
+  -- Get user profile with emergency contacts
+  SELECT * INTO user_profile 
+  FROM public.user_profiles 
+  WHERE user_id = alert_record.user_id;
+  
+  -- Update alert with processing timestamp
+  UPDATE public.emergency_alerts 
+  SET 
+    contacts_notified = notification_payload,
+    updated_at = NOW()
+  WHERE id = alert_id;
+  
+  -- Return success with contact information
+  RETURN jsonb_build_object(
+    'success', true,
+    'alert_id', alert_id,
+    'contacts_to_notify', user_profile.emergency_contact_1 || user_profile.emergency_contact_2 || user_profile.emergency_contact_3,
+    'processed_at', NOW()
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to calculate location safety score
+CREATE OR REPLACE FUNCTION public.calculate_location_safety_score(
+  lat DECIMAL,
+  lng DECIMAL,
+  radius_meters INTEGER DEFAULT 500
+)
+RETURNS JSONB AS $$
+DECLARE
+  safety_score INTEGER := 100;
+  incident_count INTEGER;
+  venue_ratings DECIMAL;
+  result JSONB;
+BEGIN
+  -- Count recent incidents in area
+  SELECT COUNT(*) INTO incident_count
+  FROM public.venue_reports
+  WHERE 
+    report_type = 'incident'
+    AND ST_DWithin(
+      ST_Point(lng, lat)::geography,
+      (SELECT location FROM public.venues WHERE id = venue_id),
+      radius_meters
+    )
+    AND created_at > NOW() - INTERVAL '30 days';
+  
+  -- Get average venue ratings in area
+  SELECT AVG(safety_rating) INTO venue_ratings
+  FROM public.venues
+  WHERE ST_DWithin(
+    location,
+    ST_Point(lng, lat)::geography,
+    radius_meters
+  );
+  
+  -- Calculate composite score
+  safety_score := safety_score - (incident_count * 10);
+  IF venue_ratings IS NOT NULL THEN
+    safety_score := (safety_score + (venue_ratings * 20)) / 2;
+  END IF;
+  
+  -- Ensure score is between 0 and 100
+  safety_score := GREATEST(0, LEAST(100, safety_score));
+  
+  RETURN jsonb_build_object(
+    'safety_score', safety_score,
+    'incident_count', incident_count,
+    'average_venue_rating', venue_ratings,
+    'calculated_at', NOW()
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+</CodeGroup>
+
+## Testing the Setup
+
+### Verify Database Connection
+
+<CodeGroup>
+```typescript Connection Test
+// utils/testSupabase.ts
+import { supabase, checkSupabaseConnection } from '../lib/supabase';
+
+export const testSupabaseSetup = async () => {
+  console.log('🔍 Testing Supabase setup...');
+  
+  try {
+    // Test connection
+    const connectionResult = await checkSupabaseConnection();
+    console.log('Connection test:', connectionResult);
+    
+    // Test user creation (signup)
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: 'test@example.com',
+      password: 'testpassword123',
+    });
+    
+    if (signUpError) {
+      console.log('Signup test (expected if user exists):', signUpError.message);
+    } else {
+      console.log('✅ Signup test successful');
+    }
+    
+    // Test database query
+    const { data: venuesData, error: venuesError } = await supabase
+      .from('venues')
+      .select('id, name')
+      .limit(1);
+    
+    if (venuesError) {
+      console.error('❌ Database query failed:', venuesError);
+    } else {
+      console.log('✅ Database query successful');
+    }
+    
+    // Test real-time subscription
+    const subscription = supabase
+      .channel('test-channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'emergency_alerts'
+      }, (payload) => {
+        console.log('📡 Real-time event received:', payload);
+      })
+      .subscribe();
+    
+    console.log('✅ Real-time subscription created');
+    
+    // Cleanup
+    setTimeout(() => {
+      subscription.unsubscribe();
+      console.log('🧹 Real-time subscription cleaned up');
+    }, 5000);
+    
+  } catch (error) {
+    console.error('❌ Supabase setup test failed:', error);
+  }
+};
+```
+</CodeGroup>
+
+## Common Issues & Troubleshooting
+
+<Accordion title="Connection Issues">
+**Problem:** Cannot connect to Supabase
+**Solutions:**
+1. Verify project URL and API keys are correct
+2. Check if project is paused (free tier limitation)
+3. Verify network connectivity
+4. Check for typos in environment variables
+
+```bash
+# Test connection from command line
+curl -H "apikey: YOUR_ANON_KEY" https://your-project.supabase.co/rest/v1/users
+```
+</Accordion>
+
+<Accordion title="RLS Policy Issues">
+**Problem:** "Row level security policy violated" errors
+**Solutions:**
+1. Check if RLS policies are correctly configured
+2. Verify user authentication state
+3. Test policies in Supabase SQL editor
+4. Check if user has required permissions
+
+```sql
+-- Test RLS policy
+SELECT * FROM public.users WHERE auth.uid() = id;
+```
+</Accordion>
+
+<Accordion title="Real-time Subscription Issues">
+**Problem:** Real-time updates not working
+**Solutions:**
+1. Verify tables are added to replication
+2. Check RLS policies allow subscription access
+3. Verify subscription channel names
+4. Check network connectivity and WebSocket support
+
+```typescript
+// Debug real-time connection
+supabase.realtime.onOpen(() => console.log('Connected'))
+supabase.realtime.onClose(() => console.log('Disconnected'))
+supabase.realtime.onError((error) => console.error(error))
+```
+</Accordion>
+
+## Security Best Practices
+
+<Warning>
+**Production Security Checklist:**
+- ✅ Use environment variables for all API keys
+- ✅ Never commit API keys to version control
+- ✅ Implement proper RLS policies for all tables
+- ✅ Use service role key only on secure servers
+- ✅ Regularly rotate API keys
+- ✅ Monitor authentication logs for suspicious activity
+</Warning>
+
+### Additional Security Measures
+
+<Steps>
+  <Step title="Enable Database Webhooks">
+    Set up webhooks for critical events like emergency alerts
+  </Step>
+  <Step title="Configure Rate Limiting">
+    Implement rate limiting to prevent abuse
+  </Step>
+  <Step title="Set Up Monitoring">
+    Monitor database performance and security events
+  </Step>
+  <Step title="Backup Strategy">
+    Configure automated backups for production
+  </Step>
+</Steps>
+
+## Next Steps
+
+<Note>
+**Supabase Setup Complete!** Your backend is now configured with authentication, real-time capabilities, and safety-specific database schema.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Create First App" icon="mobile" href="/quickstart/first-app">
+    Build your first safety-enabled application using this Supabase backend
+  </Card>
+  <Card title="Configuration Guide" icon="cog" href="/quickstart/configuration">
+    Advanced configuration for production safety applications
+  </Card>
+  <Card title="Architecture Overview" icon="building" href="/architecture/overview">
+    Understand the complete system architecture and data flow
+  </Card>
+</CardGroup>
+
+## Setup Checklist
+
+<Steps>
+  <Step title="✅ Supabase Project Created">
+    Project created with appropriate region and configuration
+  </Step>
+  <Step title="✅ Database Schema">
+    All safety tables created with proper indexes and relationships
+  </Step>
+  <Step title="✅ Row Level Security">
+    RLS policies implemented for user data privacy
+  </Step>
+  <Step title="✅ Authentication">
+    Auth configured with email/phone and optional social providers
+  </Step>
+  <Step title="✅ Real-time Features">
+    Real-time subscriptions enabled for safety-critical tables
+  </Step>
+  <Step title="✅ Edge Functions">
+    Emergency processing functions deployed and tested
+  </Step>
+  <Step title="✅ Client Integration">
+    Supabase client configured in Expo project with secure storage
+  </Step>
+  <Step title="✅ Testing Complete">
+    Connection, authentication, and real-time features verified
+  </Step>
+</Steps>
+
+<Warning>
+**Production Deployment:** This setup is optimized for development and testing. Production deployment requires additional security hardening, monitoring, and backup configurations covered in the [deployment guides](/deployment/overview).
+</Warning>

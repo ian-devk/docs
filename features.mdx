@@ -1,0 +1,540 @@
+---
+title: "Shelther Features"
+description: "Comprehensive overview of all Shelther safety features including emergency alerts, location tracking, Circle of Trust, check-ins, venue safety, and AI-powered insights."
+---
+
+# Shelther Features
+
+<Info>
+Shelther combines cutting-edge technology with thoughtful design to create a comprehensive safety ecosystem. Every feature is built with privacy, reliability, and ease of use as core principles.
+</Info>
+
+## Core Safety Features
+
+### 🚨 Emergency Alert System
+
+The heart of Shelther's protection - multiple ways to trigger instant help when you need it most.
+
+<CardGroup cols={2}>
+  <Card title="Manual Triggers" icon="hand">
+    Physical buttons, shake patterns, and voice commands for immediate activation
+  </Card>
+  <Card title="Automated Detection" icon="robot">
+    AI-powered monitoring that detects potential threats and automatically alerts your network
+  </Card>
+  <Card title="Duress Signals" icon="eye-slash">
+    Discreet ways to signal distress without alerting potential threats nearby
+  </Card>
+  <Card title="Escalation System" icon="triangle-exclamation">
+    Tiered alert system that escalates to emergency services if contacts don't respond
+  </Card>
+</CardGroup>
+
+#### Trigger Methods
+
+<Accordion title="Physical Triggers">
+**Button Combinations:**
+- Volume up + power button (3-second hold)
+- Triple-tap power button
+- Custom shake pattern (configurable intensity)
+
+**Requirements:**
+- Works even when phone is locked
+- Haptic feedback confirms activation
+- Visual countdown prevents accidental triggers
+</Accordion>
+
+<Accordion title="Voice Activation">
+**Voice Commands:**
+- "Hey Shelther, emergency" - immediate alert
+- "Hey Shelther, help me" - silent alert mode
+- Custom phrases for different alert types
+
+**Features:**
+- Works in background
+- Offline voice processing for privacy
+- Multiple language support
+</Accordion>
+
+<Accordion title="Automatic Detection">
+**Pattern Recognition:**
+- Sudden movement stops (potential abduction)
+- Audio pattern anomalies (screaming, aggressive voices)
+- Location deviation from planned routes
+- Extended periods without phone interaction
+
+**AI Features:**
+- Learns your normal behavior patterns
+- Reduces false positives over time
+- Contextual awareness (time, location, activity)
+</Accordion>
+
+### 📍 Smart Location Services
+
+Advanced location capabilities designed for safety and privacy.
+
+<CodeGroup>
+```typescript Real-time Tracking
+// Adaptive location polling
+const locationConfig = {
+  accuracy: LocationAccuracy.BestForNavigation,
+  timeInterval: 30000, // 30 seconds during active monitoring
+  distanceInterval: 50, // 50 meters
+  backgroundPermissions: true,
+  batteryOptimization: true
+};
+
+// Privacy-first location sharing
+const shareLocation = async (contactId: string, duration: number) => {
+  const encryptedLocation = await encryptLocationData(currentLocation);
+  return supabase.from('location_shares').insert({
+    contact_id: contactId,
+    encrypted_location: encryptedLocation,
+    expires_at: new Date(Date.now() + duration * 1000)
+  });
+};
+```
+
+```typescript Geofencing
+// Smart geofence management
+const createSafeZone = async (location: Location, radius: number) => {
+  return await Location.startGeofencingAsync('safe-zones', [{
+    identifier: generateId(),
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    radius: radius,
+    notifyOnEnter: true,
+    notifyOnExit: true
+  }]);
+};
+
+// Automatic check-ins when entering/exiting zones
+const handleGeofenceEvent = (event: GeofencingEvent) => {
+  if (event.eventType === GeofencingEventType.Enter) {
+    triggerAutoCheckIn('entered_safe_zone');
+  } else {
+    scheduleExitReminder();
+  }
+};
+```
+</CodeGroup>
+
+#### Location Features
+
+<Steps>
+  <Step title="Precision Tracking">
+    High-accuracy GPS with network and sensor fusion for &lt;10m accuracy in urban environments
+  </Step>
+  <Step title="Battery Optimization">
+    Adaptive polling rates and smart power management extend battery life by up to 40%
+  </Step>
+  <Step title="Offline Capability">
+    Location caching and offline maps ensure functionality in areas with poor connectivity
+  </Step>
+  <Step title="Privacy Controls">
+    Granular sharing permissions with automatic data expiration and encryption
+  </Step>
+</Steps>
+
+### 👥 Circle of Trust Network
+
+Sophisticated contact management system for your safety network.
+
+<CardGroup cols={3}>
+  <Card title="Primary Contact" icon="crown">
+    Your most trusted person - receives immediate alerts and has full location access
+  </Card>
+  <Card title="Secondary Contacts" icon="users">
+    Close friends/family who receive alerts if primary doesn't respond within 5 minutes
+  </Card>
+  <Card title="Emergency Contacts" icon="phone">
+    Final escalation tier - contacted if no response from trusted network within 15 minutes
+  </Card>
+</CardGroup>
+
+#### Contact Verification System
+
+<Warning>
+**Security Note:** All contacts must be verified through a two-way process to prevent unauthorized access to your safety information.
+</Warning>
+
+<Accordion title="Verification Process">
+**Step 1: Invitation**
+- Send invitation via SMS or email
+- Include verification code and app download link
+- Invitation expires after 48 hours
+
+**Step 2: Acceptance**
+- Contact downloads app and creates account
+- Enters verification code to link accounts
+- Sets their own notification preferences
+
+**Step 3: Confirmation**
+- Both parties confirm the relationship
+- Set permission levels and alert preferences
+- Test notification system
+</Accordion>
+
+### ⏰ Intelligent Check-in System
+
+Proactive safety through smart scheduling and automated monitoring.
+
+<CodeGroup>
+```typescript Check-in Scheduling
+// Adaptive check-in suggestions
+const suggestCheckIn = (activity: Activity, location: Location) => {
+  const baseInterval = getBaseInterval(activity.type);
+  const riskFactor = calculateLocationRisk(location);
+  const timeOfDay = new Date().getHours();
+  
+  return {
+    interval: adjustForRisk(baseInterval, riskFactor),
+    reminder: calculateReminderTime(timeOfDay),
+    escalation: getEscalationProtocol(activity.type)
+  };
+};
+
+// Smart reminder system
+const scheduleReminder = async (checkIn: CheckIn) => {
+  const reminderTime = checkIn.scheduledTime - (5 * 60 * 1000); // 5 min before
+  
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Check-in Reminder",
+      body: "Don't forget to check in - tap to confirm you're safe",
+      data: { checkInId: checkIn.id }
+    },
+    trigger: { date: new Date(reminderTime) }
+  });
+};
+```
+
+```typescript Escalation Protocol
+// Missed check-in handling
+const handleMissedCheckIn = async (checkIn: CheckIn) => {
+  // Grace period - send gentle reminder
+  setTimeout(() => {
+    sendPushNotification("Running late? Tap to extend your check-in time");
+  }, 2 * 60 * 1000); // 2 minutes
+  
+  // Primary alert - notify Circle of Trust
+  setTimeout(() => {
+    notifyPrimaryContacts(checkIn);
+    startLocationSharing();
+  }, 5 * 60 * 1000); // 5 minutes
+  
+  // Secondary alert - escalate to broader network
+  setTimeout(() => {
+    notifySecondaryContacts(checkIn);
+    enableContinuousTracking();
+  }, 15 * 60 * 1000); // 15 minutes
+};
+```
+</CodeGroup>
+
+## Advanced Features
+
+### 🎯 Journey Monitoring
+
+Real-time tracking and safety monitoring for specific trips and activities.
+
+<Steps>
+  <Step title="Route Planning">
+    Set your destination and preferred route. Shelther analyzes the path for safety considerations.
+  </Step>
+  <Step title="Live Tracking">
+    Your Circle of Trust can follow your journey in real-time with ETA updates.
+  </Step>
+  <Step title="Deviation Alerts">
+    Automatic notifications if you deviate significantly from your planned route.
+  </Step>
+  <Step title="Arrival Confirmation">
+    Automatic check-in when you reach your destination safely.
+  </Step>
+</Steps>
+
+#### Journey Types
+
+<CardGroup cols={2}>
+  <Card title="Rideshare Monitoring" icon="car">
+    Track Uber, Lyft, and taxi rides with driver verification and route monitoring
+  </Card>
+  <Card title="Walking Routes" icon="walking">
+    Safe path suggestions for pedestrian travel with well-lit, populated routes
+  </Card>
+  <Card title="Public Transit" icon="bus">
+    Monitor bus, train, and subway journeys with station-based check-ins
+  </Card>
+  <Card title="Date Locations" icon="heart">
+    Special monitoring for first dates and meetups with new people
+  </Card>
+</CardGroup>
+
+### 🏢 Venue Safety Intelligence
+
+Community-powered safety information and venue verification system.
+
+<Info>
+**Community-Driven:** Venue safety data comes from verified user reviews, official safety certifications, and local incident reports to provide comprehensive location intelligence.
+</Info>
+
+#### Safety Rating System
+
+<Accordion title="Rating Categories">
+**Overall Safety Score (1-5 stars):**
+- Lighting and visibility
+- Security presence and cameras
+- Staff training and responsiveness
+- Incident history and response
+- Emergency exit accessibility
+
+**Specific Safety Features:**
+- ✅ Security cameras visible
+- ✅ Well-lit parking/entrance
+- ✅ Trained security personnel
+- ✅ Emergency procedures posted
+- ✅ Safe ride coordination
+</Accordion>
+
+<Accordion title="Verification Process">
+**User Reviews:**
+- Verified user accounts only
+- Photo/video evidence encouraged
+- Community moderation system
+- Weighted by reviewer credibility
+
+**Official Certifications:**
+- Partnership with local safety organizations
+- Regular on-site safety audits
+- Compliance with safety standards
+- Staff training verification
+</Accordion>
+
+### 🤖 AI-Powered Insights
+
+Machine learning and artificial intelligence features that enhance your safety.
+
+<CardGroup cols={2}>
+  <Card title="Pattern Recognition" icon="chart-line">
+    Learn your routines to detect anomalies and suggest safety improvements
+  </Card>
+  <Card title="Risk Assessment" icon="calculator">
+    Analyze locations, times, and activities to provide personalized safety scores
+  </Card>
+  <Card title="Predictive Alerts" icon="crystal-ball">
+    Proactive notifications about potential safety concerns before they become issues
+  </Card>
+  <Card title="Behavior Analysis" icon="brain">
+    Understand your safety habits and provide personalized recommendations
+  </Card>
+</CardGroup>
+
+#### AI Features in Detail
+
+<CodeGroup>
+```typescript Pattern Recognition
+// Behavioral pattern analysis
+const analyzeUserPatterns = async (userId: string) => {
+  const patterns = await ml.analyzeUserBehavior({
+    locationHistory: getUserLocations(userId, 30), // 30 days
+    checkInHistory: getCheckInHistory(userId, 30),
+    emergencyHistory: getEmergencyHistory(userId),
+    timeOfDay: extractTimePatterns(),
+    activityTypes: categorizeActivities()
+  });
+  
+  return {
+    normalBehavior: patterns.baseline,
+    anomalyThresholds: patterns.thresholds,
+    riskFactors: patterns.risks,
+    recommendations: generateSafetyTips(patterns)
+  };
+};
+```
+
+```typescript Risk Assessment
+// Real-time safety scoring
+const calculateSafetyScore = async (location: Location, context: Context) => {
+  const factors = {
+    timeOfDay: getTimeRiskFactor(context.timestamp),
+    crimeData: await getCrimeStatistics(location, 500), // 500m radius
+    lighting: getLightingData(location, context.timestamp),
+    population: getPopulationDensity(location, context.timestamp),
+    venueRating: getVenueSafetyRating(location),
+    userHistory: getUserExperienceAtLocation(location)
+  };
+  
+  return ml.calculateSafetyScore(factors);
+};
+```
+</CodeGroup>
+
+### 📱 App Widget & Quick Access
+
+Home screen widget and quick access features for instant safety activation.
+
+<Note>
+**Always Available:** The Shelther widget works even when your phone is locked, ensuring safety features are accessible in any situation.
+</Note>
+
+#### Widget Features
+
+<CardGroup cols={2}>
+  <Card title="One-Tap Emergency" icon="exclamation-circle">
+    Large emergency button for instant alert activation
+  </Card>
+  <Card title="Safety Status" icon="shield-check">
+    Current monitoring status and active check-ins
+  </Card>
+  <Card title="Quick Actions" icon="zap">
+    Fast access to check-in, location sharing, and safe mode
+  </Card>
+  <Card title="Battery Monitor" icon="battery-half">
+    Battery level indicator with low-power mode suggestions
+  </Card>
+</CardGroup>
+
+### 🔌 Offline Mode & Reliability
+
+Ensuring safety features work even without internet connectivity.
+
+<Steps>
+  <Step title="Offline Core Functions">
+    Emergency alerts, location recording, and audio capture work without internet
+  </Step>
+  <Step title="Smart Sync">
+    Automatic synchronization when connectivity returns with conflict resolution
+  </Step>
+  <Step title="Local Storage">
+    Critical safety data stored securely on device with encryption
+  </Step>
+  <Step title="Fallback Communication">
+    SMS-based alerts when data connectivity is unavailable
+  </Step>
+</Steps>
+
+## User Experience Features
+
+### ♿ Accessibility & Inclusion
+
+Comprehensive accessibility features ensuring Shelther works for everyone.
+
+<CardGroup cols={3}>
+  <Card title="Visual Accessibility" icon="eye">
+    VoiceOver/TalkBack support, high contrast modes, and dynamic text sizing
+  </Card>
+  <Card title="Motor Accessibility" icon="hand">
+    Alternative input methods including voice control and simplified gestures
+  </Card>
+  <Card title="Cognitive Accessibility" icon="brain">
+    Clear interfaces, consistent navigation, and reduced cognitive load during stress
+  </Card>
+</CardGroup>
+
+### 🔔 Smart Notifications
+
+Intelligent notification system that adapts to your preferences and context.
+
+<Accordion title="Notification Types">
+**Emergency Alerts:**
+- Critical: Immediate full-screen alerts with sound/vibration
+- High: Standard notification with custom alert tone
+- Medium: Visual notification without sound
+
+**Safety Reminders:**
+- Check-in reminders with snooze options
+- Location updates for Circle of Trust
+- Safety tips based on current location/time
+
+**System Notifications:**
+- Battery warnings for safety-critical features
+- Connectivity status updates
+- Feature usage tips and tutorials
+</Accordion>
+
+### 🎨 Customization & Settings
+
+Personalize Shelther to match your lifestyle and safety preferences.
+
+<CardGroup cols={2}>
+  <Card title="Safety Preferences" icon="sliders">
+    Customize alert thresholds, check-in intervals, and emergency protocols
+  </Card>
+  <Card title="Privacy Controls" icon="shield">
+    Granular control over data sharing, location accuracy, and contact permissions
+  </Card>
+  <Card title="Interface Options" icon="palette">
+    Dark/light modes, widget layouts, and accessibility settings
+  </Card>
+  <Card title="Notification Settings" icon="bell">
+    Fine-tune alert types, sounds, and delivery methods for each contact
+  </Card>
+</CardGroup>
+
+## Integration Features
+
+### 📞 Emergency Services Integration
+
+Direct integration with local emergency services where available.
+
+<Warning>
+**Regional Availability:** Emergency services integration varies by location. Always call local emergency numbers (911, 999, 112) for immediate life-threatening situations.
+</Warning>
+
+### 🚗 Third-party Integrations
+
+Seamless integration with other safety and transportation apps.
+
+<CardGroup cols={2}>
+  <Card title="Rideshare Apps" icon="car">
+    Uber, Lyft integration for automatic trip monitoring
+  </Card>
+  <Card title="Smart Wearables" icon="watch">
+    Apple Watch, Fitbit, and Garmin device support
+  </Card>
+  <Card title="Home Security" icon="house">
+    Integration with smart home systems for arrival confirmations
+  </Card>
+  <Card title="Calendar Apps" icon="calendar">
+    Automatic check-in scheduling based on calendar events
+  </Card>
+</CardGroup>
+
+## Premium Features
+
+<Info>
+**Free vs Premium:** Core safety features are always free. Premium features enhance the experience with advanced AI, additional integrations, and extended storage.
+</Info>
+
+### 🌟 Premium Plan Benefits
+
+<CardGroup cols={2}>
+  <Card title="Advanced AI Features" icon="robot">
+    Enhanced pattern recognition, predictive alerts, and personalized safety insights
+  </Card>
+  <Card title="Extended History" icon="clock">
+    Unlimited location history, extended check-in logs, and detailed safety analytics
+  </Card>
+  <Card title="Priority Support" icon="headset">
+    24/7 premium support with faster response times for safety-critical issues
+  </Card>
+  <Card title="Advanced Integrations" icon="link">
+    Additional third-party app integrations and custom API access
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Get Started" icon="rocket" href="/quickstart">
+    Ready to enhance your safety? Start with our quick setup guide
+  </Card>
+  <Card title="Technical Details" icon="code" href="/architecture/overview">
+    Developers can explore our technical architecture and integration options
+  </Card>
+  <Card title="Support & Community" icon="users" href="https://discord.gg/shelther">
+    Join our community for tips, support, and feature discussions
+  </Card>
+</CardGroup>
