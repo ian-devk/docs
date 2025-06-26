@@ -1,59 +1,2403 @@
 ---
 title: "Configuration"
-description: "Configuration documentation for Quick Setup. Learn about implementation, configuration, and best practices."
+description: "Complete configuration guide for Shelther safety platform including Expo, Supabase, Express.js, and production deployment settings. Learn environment setup, security configuration, and performance optimization."
 ---
 
 # Configuration
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+This comprehensive configuration guide covers all aspects of setting up the Shelther safety platform, from development environment to production deployment. Follow these configurations to ensure optimal performance, security, and reliability.
 </Info>
 
-## Key Points
+## Configuration Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther uses a modern tech stack requiring specific configuration for each component:
 
-## Examples
+<CardGroup cols={3}>
+  <Card title="Frontend Configuration" icon="mobile">
+    Expo SDK 52+ with React Native New Architecture for optimal performance
+  </Card>
+  <Card title="Backend Configuration" icon="server">
+    Express.js on Railway with production-ready security and monitoring
+  </Card>
+  <Card title="Database Configuration" icon="database">
+    Supabase PostgreSQL with Row Level Security and real-time capabilities
+  </Card>
+</CardGroup>
+
+## Environment Setup
+
+### Development vs Production Environments
+
+<Steps>
+  <Step title="Development Environment">
+    Local development with hot reload, debugging tools, and development-specific configurations
+  </Step>
+  <Step title="Staging Environment">
+    Production-like environment for testing deployments and integrations
+  </Step>
+  <Step title="Production Environment">
+    Live environment with optimized performance, security hardening, and monitoring
+  </Step>
+</Steps>
+
+### Environment Variables
+
+Create environment configuration files for each environment:
 
 <CodeGroup>
+```bash .env.development
+# Development Environment Variables
+NODE_ENV=development
+LOG_LEVEL=debug
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+# Expo Configuration
+EXPO_PUBLIC_ENVIRONMENT=development
+EXPO_PUBLIC_API_URL=http://localhost:3000/api
+EXPO_PUBLIC_WS_URL=ws://localhost:3000
+
+# Supabase Configuration
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Development API Keys (use test keys)
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your-dev-maps-key
+EXPO_PUBLIC_SENTRY_DSN=your-dev-sentry-dsn
+
+# Feature Flags
+EXPO_PUBLIC_ENABLE_DEBUG_PANEL=true
+EXPO_PUBLIC_ENABLE_MOCK_LOCATION=true
+```
+
+```bash .env.production
+# Production Environment Variables
+NODE_ENV=production
+LOG_LEVEL=info
+
+# Expo Configuration
+EXPO_PUBLIC_ENVIRONMENT=production
+EXPO_PUBLIC_API_URL=https://api.shelther.app/api
+EXPO_PUBLIC_WS_URL=wss://api.shelther.app
+
+# Supabase Configuration
+EXPO_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-prod-anon-key
+
+# Production API Keys
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your-prod-maps-key
+EXPO_PUBLIC_SENTRY_DSN=your-prod-sentry-dsn
+
+# Security Settings
+EXPO_PUBLIC_ENABLE_DEBUG_PANEL=false
+EXPO_PUBLIC_ENABLE_MOCK_LOCATION=false
+EXPO_PUBLIC_FORCE_HTTPS=true
+```
+
+```bash .env.server
+# Express.js Server Configuration
+NODE_ENV=production
+PORT=3000
+LOG_LEVEL=info
+
+# Database Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+DATABASE_URL=postgresql://...
+
+# Authentication & Security
+JWT_SECRET=your-jwt-secret-256-bit
+SESSION_SECRET=your-session-secret
+CORS_ORIGIN=https://shelther.app,https://admin.shelther.app
+
+# External Service APIs
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+TWILIO_PHONE_NUMBER=+1234567890
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=noreply@shelther.app
+EMAIL_PASS=your-app-password
+
+# Monitoring & Analytics
+SENTRY_DSN=your-server-sentry-dsn
+DATADOG_API_KEY=your-datadog-key
+
+# Feature Configuration
+ENABLE_RATE_LIMITING=true
+ENABLE_REQUEST_LOGGING=true
+EMERGENCY_ESCALATION_TIMEOUT=300000
+```
+</CodeGroup>
+
+## Expo Configuration
+
+### App Configuration (app.config.js)
+
+<CodeGroup>
+```javascript app.config.js - Production Configuration
+import { ExpoConfig } from '@expo/config-types';
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const IS_PREVIEW = process.env.EAS_BUILD_PROFILE === 'preview';
+
+const config: ExpoConfig = {
+  name: IS_PRODUCTION ? 'Shelther' : 'Shelther Dev',
+  slug: 'shelther-safety',
+  version: '1.0.0',
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  userInterfaceStyle: 'automatic',
+  
+  // Expo SDK 52+ with New Architecture
+  sdkVersion: '52.0.0',
+  platforms: ['ios', 'android'],
+  
+  // New Architecture enabled by default
+  expo: {
+    newArchEnabled: true,
+    install: {
+      exclude: [
+        // Exclude packages from version validation if needed
+        'react-native-reanimated'
+      ]
+    }
+  },
+
+  // Splash screen configuration
+  splash: {
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#8B5CF6'
+  },
+
+  // Asset bundling configuration
+  assetBundlePatterns: ['**/*'],
+
+  // iOS Configuration
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: IS_PRODUCTION 
+      ? 'com.shelther.safety' 
+      : 'com.shelther.safety.dev',
+    
+    // iOS 15.1+ required for SDK 52
+    deploymentTarget: '15.1',
+    
+    // Background modes for safety features
+    infoPlist: {
+      UIBackgroundModes: [
+        'background-fetch',
+        'background-processing',
+        'location'
+      ],
+      NSLocationAlwaysAndWhenInUseUsageDescription: 
+        'Shelther needs location access to provide emergency safety features and location sharing with your trusted contacts.',
+      NSLocationWhenInUseUsageDescription: 
+        'Shelther uses your location to enhance safety features and provide emergency assistance.',
+      NSCameraUsageDescription: 
+        'Camera access allows you to capture evidence or photos for safety reports.',
+      NSMicrophoneUsageDescription: 
+        'Microphone access enables voice commands for emergency activation.',
+      NSContactsUsageDescription: 
+        'Contact access helps you quickly add emergency contacts to your safety network.'
+    },
+    
+    // App Store configuration
+    buildNumber: '1'
+  },
+
+  // Android Configuration
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#8B5CF6'
+    },
+    package: IS_PRODUCTION 
+      ? 'com.shelther.safety' 
+      : 'com.shelther.safety.dev',
+    
+    // Android API 24+ required for SDK 52
+    minSdkVersion: 24,
+    compileSdkVersion: 35,
+    targetSdkVersion: 35,
+    
+    // Background permissions for safety features
+    permissions: [
+      'ACCESS_FINE_LOCATION',
+      'ACCESS_BACKGROUND_LOCATION',
+      'CAMERA',
+      'RECORD_AUDIO',
+      'READ_CONTACTS',
+      'SEND_SMS',
+      'CALL_PHONE',
+      'VIBRATE',
+      'WAKE_LOCK',
+      'RECEIVE_BOOT_COMPLETED'
+    ],
+    
+    // Google Play configuration
+    versionCode: 1
+  },
+
+  // Web configuration (for debugging)
+  web: {
+    favicon: './assets/favicon.png'
+  },
+
+  // Plugin configuration
+  plugins: [
+    'expo-router',
+    'expo-font',
+    'expo-location',
+    'expo-notifications',
+    'expo-contacts',
+    'expo-camera',
+    'expo-av',
+    'expo-secure-store',
+    'expo-background-fetch',
+    'expo-task-manager',
+    '@react-native-async-storage/async-storage',
+    
+    // Sentry for error tracking
+    [
+      '@sentry/react-native/expo',
+      {
+        url: 'https://sentry.io/',
+        project: IS_PRODUCTION ? 'shelther-prod' : 'shelther-dev',
+        organization: 'shelther'
+      }
+    ],
+    
+    // Google Maps integration
+    [
+      'expo-location',
+      {
+        locationAlwaysAndWhenInUsePermission: 
+          'Shelther needs location access to provide emergency safety features.'
+      }
+    ]
+  ],
+
+  // Over-the-air updates configuration
+  updates: {
+    fallbackToCacheTimeout: 0,
+    url: IS_PRODUCTION 
+      ? 'https://u.expo.dev/your-prod-id'
+      : 'https://u.expo.dev/your-dev-id'
+  },
+
+  // Runtime version for compatibility
+  runtimeVersion: {
+    policy: 'sdkVersion'
+  },
+
+  // Extra configuration
+  extra: {
+    eas: {
+      projectId: IS_PRODUCTION 
+        ? 'your-prod-project-id' 
+        : 'your-dev-project-id'
+    },
+    
+    // Environment-specific configuration
+    environment: process.env.NODE_ENV || 'development',
+    apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+  }
+};
+
+export default config;
+```
+
+```json eas.json - Build Configuration
+{
+  "cli": {
+    "version": ">= 5.9.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "ios": {
+        "resourceClass": "m-medium",
+        "simulator": true
+      },
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "staging"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "ios": {
+        "resourceClass": "m-large"
+      },
+      "android": {
+        "resourceClass": "large",
+        "buildType": "aab"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id",
+        "ascAppId": "your-app-store-connect-id",
+        "appleTeamId": "your-team-id"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production"
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+### TypeScript Configuration
+
+<CodeGroup>
+```json tsconfig.json - Strict Configuration
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    // Strict type checking for safety-critical application
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    
+    // Module configuration
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react-native",
+    
+    // Path mapping for clean imports
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/services/*": ["src/services/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/constants/*": ["src/constants/*"],
+      "@/types/*": ["src/types/*"]
+    },
+    
+    // Additional settings
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    
+    // Enable decorators for dependency injection
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "src/**/*",
+    "App.tsx",
+    "app.config.js",
+    "metro.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".expo"
+  ]
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```javascript metro.config.js - Metro Bundler Configuration
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+// Add support for additional file extensions
+config.resolver.assetExts = [
+  ...config.resolver.assetExts,
+  'bin',
+  'txt',
+  'jpg',
+  'png',
+  'json'
+];
+
+config.resolver.sourceExts = [
+  ...config.resolver.sourceExts,
+  'jsx',
+  'js',
+  'ts',
+  'tsx',
+  'json'
+];
+
+// Enable package.json exports (default in SDK 53+)
+config.resolver.unstable_enablePackageExports = true;
+
+// Transformer configuration for New Architecture
+config.transformer = {
+  ...config.transformer,
+  getTransformOptions: async () => ({
+    transform: {
+      experimentalImportSupport: false,
+      inlineRequires: true,
+    },
+  }),
 };
+
+// Exclude problematic packages if needed
+config.resolver.blacklistRE = /node_modules\/.*\/node_modules\/react-native\/.*/;
+
+module.exports = config;
+```
+</CodeGroup>
+
+## Supabase Configuration
+
+### Client Configuration
+
+<CodeGroup>
+```typescript src/lib/supabase.ts - Client Setup
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { AppState } from 'react-native';
+import { Database } from '@/types/database';
+
+// Environment-specific configuration
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+// Create Supabase client with optimized configuration
+export const supabase: SupabaseClient<Database> = createClient(
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      // Use AsyncStorage for session persistence
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+      
+      // Enhanced security settings
+      flowType: 'pkce',
+      
+      // Session configuration
+      storageKey: 'shelther-auth-token',
+    },
+    
+    // Database configuration
+    db: {
+      schema: 'public',
+    },
+    
+    // Real-time configuration
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+    
+    // Global headers
+    global: {
+      headers: {
+        'X-Client-Info': 'shelther-mobile-app',
+        'X-App-Version': process.env.EXPO_PUBLIC_APP_VERSION || '1.0.0',
+      },
+    },
+  }
+);
+
+// Automatic token refresh management
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
+
+// Error handling for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state change:', event, session?.user?.id);
+  
+  if (event === 'SIGNED_OUT') {
+    // Clear any cached data
+    AsyncStorage.multiRemove([
+      'shelther-user-preferences',
+      'shelther-emergency-contacts',
+      'shelther-cached-locations'
+    ]);
+  }
+  
+  if (event === 'TOKEN_REFRESHED') {
+    console.log('Token refreshed successfully');
+  }
+});
+
+// Helper functions for common operations
+export const authHelpers = {
+  getCurrentUser: async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
+  },
+  
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+  
+  resetPassword: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'com.shelther.safety://reset-password',
+    });
+    if (error) throw error;
+  },
+};
+
+export default supabase;
 ```
 
+```sql supabase/migrations/001_initial_schema.sql
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
+-- Create custom types
+CREATE TYPE emergency_alert_type AS ENUM ('manual', 'duress', 'check_in_missed');
+CREATE TYPE emergency_trigger_method AS ENUM ('button', 'shake', 'widget', 'auto');
+CREATE TYPE alert_status AS ENUM ('active', 'acknowledged', 'resolved', 'false_alarm');
+CREATE TYPE contact_verification_status AS ENUM ('pending', 'verified', 'declined');
+
+-- Users table (extends auth.users)
+CREATE TABLE public.users (
+  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  email VARCHAR NOT NULL,
+  phone_number VARCHAR,
+  full_name VARCHAR,
+  avatar_url VARCHAR,
+  preferences JSONB DEFAULT '{
+    "notifications": {
+      "push": true,
+      "sms": true,
+      "email": true
+    },
+    "privacy": {
+      "share_location": "contacts_only",
+      "data_retention_days": 30
+    },
+    "safety": {
+      "check_in_reminder": true,
+      "auto_escalation": true,
+      "duress_phrase": null
+    }
+  }'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  CONSTRAINT users_email_check CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+);
+
+-- Emergency contacts with verification
+CREATE TABLE public.emergency_contacts (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  contact_name VARCHAR NOT NULL,
+  contact_phone VARCHAR NOT NULL,
+  contact_email VARCHAR,
+  relationship VARCHAR NOT NULL,
+  priority_level INTEGER DEFAULT 1 CHECK (priority_level BETWEEN 1 AND 3),
+  verification_status contact_verification_status DEFAULT 'pending',
+  verification_token VARCHAR,
+  verification_expires_at TIMESTAMP WITH TIME ZONE,
+  notification_preferences JSONB DEFAULT '{
+    "sms": true,
+    "email": true,
+    "push": true
+  }'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(user_id, contact_phone)
+);
+
+-- Emergency alerts with comprehensive tracking
+CREATE TABLE public.emergency_alerts (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  alert_type emergency_alert_type NOT NULL,
+  trigger_method emergency_trigger_method,
+  status alert_status DEFAULT 'active',
+  location JSONB,
+  location_accuracy REAL,
+  message TEXT,
+  contacts_notified JSONB DEFAULT '[]'::jsonb,
+  escalation_level INTEGER DEFAULT 1,
+  escalation_history JSONB DEFAULT '[]'::jsonb,
+  response_tracking JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  acknowledged_at TIMESTAMP WITH TIME ZONE,
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  
+  CONSTRAINT emergency_alerts_location_check 
+    CHECK (location IS NULL OR (
+      (location->>'latitude')::numeric BETWEEN -90 AND 90 AND
+      (location->>'longitude')::numeric BETWEEN -180 AND 180
+    ))
+);
+
+-- Location tracking with privacy controls
+CREATE TABLE public.location_updates (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  accuracy REAL,
+  altitude REAL,
+  speed REAL,
+  heading REAL,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_emergency BOOLEAN DEFAULT FALSE,
+  session_id UUID,
+  
+  -- Auto-expire non-emergency locations after 24 hours
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '24 hours'),
+  
+  -- PostGIS geography column for spatial queries
+  geolocation GEOGRAPHY(POINT, 4326) GENERATED ALWAYS AS (
+    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+  ) STORED
+);
+
+-- Check-in system
+CREATE TABLE public.check_ins (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  actual_time TIMESTAMP WITH TIME ZONE,
+  status VARCHAR DEFAULT 'pending' CHECK (
+    status IN ('pending', 'completed', 'missed', 'cancelled')
+  ),
+  location_id UUID REFERENCES public.location_updates(id),
+  notes TEXT,
+  grace_period_minutes INTEGER DEFAULT 15,
+  reminder_sent_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  CONSTRAINT check_ins_future_time 
+    CHECK (scheduled_time > created_at)
+);
+
+-- Indexes for performance optimization
+CREATE INDEX idx_emergency_alerts_active 
+  ON public.emergency_alerts(user_id, status, created_at DESC) 
+  WHERE status = 'active';
+
+CREATE INDEX idx_emergency_alerts_recent 
+  ON public.emergency_alerts(created_at DESC) 
+  WHERE created_at > NOW() - INTERVAL '24 hours';
+
+CREATE INDEX idx_location_user_time 
+  ON public.location_updates(user_id, timestamp DESC);
+
+CREATE INDEX idx_location_emergency 
+  ON public.location_updates(user_id, is_emergency, timestamp DESC) 
+  WHERE is_emergency = TRUE;
+
+CREATE INDEX idx_location_geolocation 
+  ON public.location_updates USING GIST (geolocation);
+
+CREATE INDEX idx_checkin_pending 
+  ON public.check_ins(user_id, scheduled_time) 
+  WHERE status = 'pending';
+
+CREATE INDEX idx_emergency_contacts_user 
+  ON public.emergency_contacts(user_id, priority_level) 
+  WHERE verification_status = 'verified';
+
+-- Row Level Security (RLS) policies
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.emergency_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.location_updates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.check_ins ENABLE ROW LEVEL SECURITY;
+
+-- User policies
+CREATE POLICY "Users can access own data" 
+  ON public.users FOR ALL 
+  USING (auth.uid() = id);
+
+-- Emergency contacts policies
+CREATE POLICY "Users can manage own emergency contacts" 
+  ON public.emergency_contacts FOR ALL 
+  USING (auth.uid() = user_id);
+
+-- Emergency alerts policies
+CREATE POLICY "Users can manage own emergency alerts" 
+  ON public.emergency_alerts FOR ALL 
+  USING (auth.uid() = user_id);
+
+-- Allow emergency contacts to view alerts (read-only)
+CREATE POLICY "Emergency contacts can view user alerts" 
+  ON public.emergency_alerts FOR SELECT 
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.emergency_contacts ec
+      WHERE ec.user_id = emergency_alerts.user_id
+      AND ec.contact_phone = (
+        SELECT phone_number FROM public.users 
+        WHERE id = auth.uid()
+      )
+      AND ec.verification_status = 'verified'
+    )
+  );
+
+-- Location updates policies
+CREATE POLICY "Users can manage own location data" 
+  ON public.location_updates FOR ALL 
+  USING (auth.uid() = user_id);
+
+-- Check-ins policies
+CREATE POLICY "Users can manage own check-ins" 
+  ON public.check_ins FOR ALL 
+  USING (auth.uid() = user_id);
+
+-- Functions for automatic data cleanup
+CREATE OR REPLACE FUNCTION cleanup_expired_locations()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM public.location_updates 
+  WHERE expires_at < NOW() 
+    AND is_emergency = FALSE;
+  
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for updating updated_at timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_users_updated_at 
+  BEFORE UPDATE ON public.users 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_emergency_contacts_updated_at 
+  BEFORE UPDATE ON public.emergency_contacts 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+</CodeGroup>
+
+### Real-time Subscriptions Configuration
+
+<CodeGroup>
+```typescript src/services/RealtimeService.ts
+import { supabase } from '@/lib/supabase';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { EmergencyAlert, LocationUpdate } from '@/types/database';
+
+export class RealtimeService {
+  private channels: Map<string, RealtimeChannel> = new Map();
+  private isConnected = false;
+
+  // Subscribe to emergency alerts for user's network
+  subscribeToEmergencyAlerts(
+    userId: string, 
+    onAlert: (alert: EmergencyAlert) => void
+  ): RealtimeChannel {
+    const channelName = `emergency-alerts:${userId}`;
+    
+    if (this.channels.has(channelName)) {
+      return this.channels.get(channelName)!;
+    }
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'emergency_alerts',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('Emergency alert received:', payload);
+          onAlert(payload.new as EmergencyAlert);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'emergency_alerts',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('Emergency alert updated:', payload);
+          onAlert(payload.new as EmergencyAlert);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Emergency alerts subscription status:', status);
+        this.isConnected = status === 'SUBSCRIBED';
+      });
+
+    this.channels.set(channelName, channel);
+    return channel;
+  }
+
+  // Subscribe to location updates from trusted contacts
+  subscribeToContactLocations(
+    contactIds: string[],
+    onLocationUpdate: (update: LocationUpdate) => void
+  ): RealtimeChannel {
+    const channelName = `contact-locations:${contactIds.join(',')}`;
+    
+    if (this.channels.has(channelName)) {
+      return this.channels.get(channelName)!;
+    }
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'location_updates',
+          filter: `user_id=in.(${contactIds.join(',')})`,
+        },
+        (payload) => {
+          console.log('Contact location update:', payload);
+          onLocationUpdate(payload.new as LocationUpdate);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Contact locations subscription status:', status);
+      });
+
+    this.channels.set(channelName, channel);
+    return channel;
+  }
+
+  // Unsubscribe from specific channel
+  unsubscribe(channelName: string): void {
+    const channel = this.channels.get(channelName);
+    if (channel) {
+      supabase.removeChannel(channel);
+      this.channels.delete(channelName);
+    }
+  }
+
+  // Unsubscribe from all channels
+  unsubscribeAll(): void {
+    this.channels.forEach((channel, name) => {
+      supabase.removeChannel(channel);
+    });
+    this.channels.clear();
+    this.isConnected = false;
+  }
+
+  // Get connection status
+  getConnectionStatus(): boolean {
+    return this.isConnected;
+  }
+
+  // Presence tracking for online status
+  trackPresence(userId: string): RealtimeChannel {
+    const channelName = `presence:${userId}`;
+    
+    const channel = supabase
+      .channel(channelName)
+      .on('presence', { event: 'sync' }, () => {
+        console.log('Presence synced');
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        console.log('User joined:', key, newPresences);
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        console.log('User left:', key, leftPresences);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: userId,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    this.channels.set(channelName, channel);
+    return channel;
+  }
+}
+
+export const realtimeService = new RealtimeService();
+```
+</CodeGroup>
+
+## Express.js Backend Configuration
+
+### Server Configuration
+
+<CodeGroup>
+```typescript src/app.ts - Express Application Setup
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middleware/errorHandler';
+import { authMiddleware } from './middleware/auth';
+import { logger } from './utils/logger';
+import { setupMonitoring } from './utils/monitoring';
+
+// Import route handlers
+import authRoutes from './routes/auth';
+import emergencyRoutes from './routes/emergency';
+import locationRoutes from './routes/location';
+import contactsRoutes from './routes/contacts';
+import checkinRoutes from './routes/checkin';
+import healthRoutes from './routes/health';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Trust proxy for Railway deployment
+app.set('trust proxy', 1);
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        process.env.SUPABASE_URL || '',
+        'https://*.supabase.co',
+        'wss://*.supabase.co'
+      ],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS configuration
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (mobile apps)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:3000',
+      'http://localhost:8081',
+      'https://shelther.app',
+      'https://*.shelther.app'
+    ];
+    
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin.includes('*')) {
+        const pattern = allowedOrigin.replace('*', '.*');
+        return new RegExp(pattern).test(origin);
+      }
+      return allowedOrigin === origin;
+    });
+    
+    callback(null, isAllowed);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+app.use(cors(corsOptions));
+
+// Performance middleware
+app.use(compression({
+  level: NODE_ENV === 'production' ? 6 : 1,
+  threshold: 1024,
+}));
+
+// Body parsing middleware
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Store raw body for webhook verification
+    (req as any).rawBody = buf;
+  }
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10mb' 
+}));
+
+// Rate limiting with emergency bypass
+const createRateLimiter = (windowMs: number, max: number, skipEmergency = true) => {
+  return rateLimit({
+    windowMs,
+    max: (req) => {
+      // Higher limits for emergency endpoints
+      if (skipEmergency && req.path.includes('/emergency/')) {
+        return max * 10;
+      }
+      return max;
+    },
+    message: {
+      error: 'Too many requests from this IP',
+      retryAfter: Math.ceil(windowMs / 1000),
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      logger.warn('Rate limit exceeded', {
+        ip: req.ip,
+        path: req.path,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date().toISOString(),
+      });
+      res.status(429).json({
+        error: 'Rate limit exceeded',
+        retryAfter: Math.ceil(windowMs / 1000),
+      });
+    },
+    keyGenerator: (req) => {
+      // Use user ID if authenticated, otherwise IP
+      return (req as any).user?.id || req.ip;
+    },
+  });
+};
+
+// Apply rate limiting
+app.use('/api/', createRateLimiter(15 * 60 * 1000, 100)); // 100 requests per 15 minutes
+app.use('/api/auth/', createRateLimiter(5 * 60 * 1000, 20)); // 20 auth requests per 5 minutes
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
+    
+    logger.log(logLevel, 'HTTP Request', {
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      userId: (req as any).user?.id,
+    });
+  });
+  
+  next();
+});
+
+// Health check endpoint (before auth middleware)
+app.use('/health', healthRoutes);
+
+// API routes with authentication
+app.use('/api/auth', authRoutes);
+app.use('/api/emergency', authMiddleware, emergencyRoutes);
+app.use('/api/location', authMiddleware, locationRoutes);
+app.use('/api/contacts', authMiddleware, contactsRoutes);
+app.use('/api/checkin', authMiddleware, checkinRoutes);
+
+// 404 handler for unknown routes
+app.use('*', (req, res) => {
+  logger.warn('Route not found', {
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+  });
+  
+  res.status(404).json({
+    error: 'Route not found',
+    message: `${req.method} ${req.url} is not a valid endpoint`,
+  });
+});
+
+// Global error handler
+app.use(errorHandler);
+
+// Setup monitoring and graceful shutdown
+setupMonitoring(app);
+
+// Graceful shutdown handling
+const gracefulShutdown = (signal: string) => {
+  logger.info(`Received ${signal}, shutting down gracefully`);
+  
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start server
+const server = app.listen(PORT, () => {
+  logger.info(`Shelther API server running on port ${PORT}`, {
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Handle server errors
+server.on('error', (error: Error) => {
+  logger.error('Server error', error);
+  process.exit(1);
+});
+
+export default app;
+```
+
+```typescript src/config/database.ts - Database Configuration
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/database';
+
+// Validate required environment variables
+const requiredEnvVars = {
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+};
+
+for (const [key, value] of Object.entries(requiredEnvVars)) {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+}
+
+// Create Supabase client for server-side operations
+export const supabase = createClient<Database>(
+  requiredEnvVars.SUPABASE_URL!,
+  requiredEnvVars.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'shelther-server',
+        'X-Server-Version': process.env.npm_package_version || '1.0.0',
+      },
+    },
+  }
+);
+
+// Database health check function
+export const checkDatabaseHealth = async (): Promise<{
+  healthy: boolean;
+  responseTime: number;
+  error?: string;
+}> => {
+  const startTime = Date.now();
+  
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('count(*)')
+      .limit(1)
+      .single();
+    
+    const responseTime = Date.now() - startTime;
+    
+    if (error) {
+      return {
+        healthy: false,
+        responseTime,
+        error: error.message,
+      };
+    }
+    
+    return {
+      healthy: true,
+      responseTime,
+    };
+  } catch (error) {
+    return {
+      healthy: false,
+      responseTime: Date.now() - startTime,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
+// Connection pool configuration for high-traffic scenarios
+export const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  pool: {
+    min: 2,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  },
+};
+
+export default supabase;
+```
+</CodeGroup>
+
+### Railway Deployment Configuration
+
+<CodeGroup>
+```json railway.json - Deployment Configuration
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build",
+    "watchPatterns": [
+      "src/**/*.ts",
+      "package.json",
+      "package-lock.json"
+    ]
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3,
+    "sleepApplication": false
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "ENABLE_REQUEST_LOGGING": "true",
+        "ENABLE_RATE_LIMITING": "true"
+      }
+    },
+    "staging": {
+      "variables": {
+        "NODE_ENV": "staging",
+        "LOG_LEVEL": "debug",
+        "ENABLE_REQUEST_LOGGING": "true",
+        "ENABLE_RATE_LIMITING": "false"
+      }
+    }
+  }
+}
+```
+
+```dockerfile Dockerfile - Production Container
+FROM node:20-alpine AS builder
+
+# Install security updates
+RUN apk update && apk upgrade
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code
+COPY src/ ./src/
+
+# Build application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Install security updates
+RUN apk update && apk upgrade
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Create app directory
+WORKDIR /app
+
+# Copy built application and dependencies
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+
+# Create logs directory
+RUN mkdir -p logs && chown nodejs:nodejs logs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node dist/healthcheck.js
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Start application
+CMD ["node", "dist/server.js"]
+```
+
+```bash scripts/deploy.sh - Deployment Script
+#!/bin/bash
+
+set -e
+
+echo "🚀 Deploying Shelther Backend to Railway..."
+
+# Check if Railway CLI is installed
+if ! command -v railway &> /dev/null; then
+    echo "❌ Railway CLI is not installed. Please install it first."
+    exit 1
+fi
+
+# Validate environment variables
+required_vars=(
+    "SUPABASE_URL"
+    "SUPABASE_SERVICE_ROLE_KEY" 
+    "JWT_SECRET"
+    "TWILIO_ACCOUNT_SID"
+    "TWILIO_AUTH_TOKEN"
+)
+
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "❌ Missing required environment variable: $var"
+        exit 1
+    fi
+done
+
+# Run tests
+echo "🧪 Running tests..."
+npm test
+
+# Build application
+echo "🔨 Building application..."
+npm run build
+
+# Deploy to staging first
+echo "📦 Deploying to staging..."
+railway up --environment staging
+
+# Health check staging
+echo "🔍 Running health checks on staging..."
+sleep 30
+STAGING_URL=$(railway status --environment staging --json | jq -r '.deployments[0].url')
+if ! curl -f "$STAGING_URL/health" > /dev/null 2>&1; then
+    echo "❌ Staging health check failed"
+    exit 1
+fi
+
+echo "✅ Staging deployment successful"
+
+# Confirm production deployment
+read -p "Deploy to production? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Deploy to production
+    echo "🎯 Deploying to production..."
+    railway up --environment production
+    
+    # Final health check
+    echo "✅ Verifying production deployment..."
+    sleep 30
+    PROD_URL=$(railway status --environment production --json | jq -r '.deployments[0].url')
+    if ! curl -f "$PROD_URL/health" > /dev/null 2>&1; then
+        echo "❌ Production health check failed"
+        exit 1
+    fi
+    
+    echo "🎉 Production deployment completed successfully!"
+    echo "🌐 Production URL: $PROD_URL"
+else
+    echo "ℹ️ Production deployment skipped"
+fi
+```
+</CodeGroup>
+
+## Security Configuration
+
+### Authentication & Authorization
+
+<CodeGroup>
+```typescript src/middleware/auth.ts - Authentication Middleware
+import { Request, Response, NextFunction } from 'express';
+import { supabase } from '@/config/database';
+import { logger } from '@/utils/logger';
+import rateLimit from 'express-rate-limit';
+
+export interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    email: string;
+    role: string;
+    phone_number?: string;
+  };
+}
+
+// Rate limiting for auth endpoints
+export const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: {
+    error: 'Too many authentication attempts',
+    retryAfter: 900, // 15 minutes
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Rate limit by IP and email combination
+    const email = req.body?.email || '';
+    return `${req.ip}:${email}`;
+  },
+});
+
+// Main authentication middleware
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      logger.warn('Missing or invalid authorization header', {
+        ip: req.ip,
+        path: req.path,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.status(401).json({ 
+        error: 'Authentication required',
+        message: 'Please provide a valid authorization token'
+      });
+      return;
+    }
+
+    const token = authHeader.substring(7);
+    
+    if (!token || token.length < 10) {
+      res.status(401).json({ 
+        error: 'Invalid token format',
+        message: 'Authorization token is malformed'
+      });
+      return;
+    }
+
+    // Verify JWT with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      logger.warn('Authentication failed', {
+        error: error?.message,
+        ip: req.ip,
+        path: req.path,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.status(401).json({ 
+        error: 'Invalid or expired token',
+        message: 'Please log in again'
+      });
+      return;
+    }
+
+    // Get additional user data from our users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('email, phone_number')
+      .eq('id', user.id)
+      .single();
+
+    if (userError) {
+      logger.error('Failed to fetch user data', {
+        userId: user.id,
+        error: userError.message,
+      });
+    }
+
+    // Add user to request object
+    (req as AuthenticatedRequest).user = {
+      id: user.id,
+      email: userData?.email || user.email || '',
+      role: user.role || 'user',
+      phone_number: userData?.phone_number,
+    };
+
+    // Log successful authentication
+    logger.debug('User authenticated successfully', {
+      userId: user.id,
+      email: user.email,
+      path: req.path,
+      method: req.method,
+    });
+
+    next();
+  } catch (error) {
+    logger.error('Authentication middleware error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      ip: req.ip,
+      path: req.path,
+    });
+    
+    res.status(500).json({ 
+      error: 'Authentication service error',
+      message: 'Please try again later'
+    });
+  }
+};
+
+// Role-based access control
+export const requireRole = (requiredRole: string) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as AuthenticatedRequest).user;
+    
+    if (!user) {
+      res.status(401).json({ 
+        error: 'Authentication required' 
+      });
+      return;
+    }
+    
+    if (user.role !== requiredRole && user.role !== 'admin') {
+      logger.warn('Authorization failed - insufficient permissions', {
+        userId: user.id,
+        requiredRole,
+        userRole: user.role,
+        path: req.path,
+      });
+      
+      res.status(403).json({ 
+        error: 'Insufficient permissions',
+        message: `This action requires ${requiredRole} role`
+      });
+      return;
+    }
+
+    next();
+  };
+};
+
+// Admin-only access
+export const requireAdmin = requireRole('admin');
+
+// Emergency bypass for critical safety functions
+export const emergencyBypass = (req: Request, res: Response, next: NextFunction): void => {
+  // Check if this is an emergency situation
+  const isEmergencyRequest = req.path.includes('/emergency/trigger') || 
+                           req.path.includes('/emergency/escalate');
+  
+  if (isEmergencyRequest && req.body?.bypassCode) {
+    // Verify emergency bypass code
+    const validBypassCode = process.env.EMERGENCY_BYPASS_CODE;
+    
+    if (validBypassCode && req.body.bypassCode === validBypassCode) {
+      logger.warn('Emergency bypass activated', {
+        ip: req.ip,
+        path: req.path,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Create minimal user object for emergency context
+      (req as AuthenticatedRequest).user = {
+        id: 'emergency-bypass',
+        email: 'emergency@system',
+        role: 'emergency',
+      };
+      
+      return next();
+    }
+  }
+  
+  // Continue with normal authentication
+  authMiddleware(req, res, next);
+};
+
+export default authMiddleware;
+```
+
+```typescript src/utils/encryption.ts - Data Encryption Utilities
+import crypto from 'crypto';
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-dev-key-32-chars-exactly!';
+const ALGORITHM = 'aes-256-gcm';
+
+if (ENCRYPTION_KEY.length !== 32) {
+  throw new Error('ENCRYPTION_KEY must be exactly 32 characters');
+}
+
+export interface EncryptedData {
+  encrypted: string;
+  iv: string;
+  tag: string;
+}
+
+/**
+ * Encrypt sensitive data (e.g., location coordinates, personal information)
+ */
+export const encrypt = (text: string): EncryptedData => {
+  try {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
+    cipher.setAAD(Buffer.from('shelther-safety-data'));
+    
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const tag = cipher.getAuthTag();
+    
+    return {
+      encrypted,
+      iv: iv.toString('hex'),
+      tag: tag.toString('hex'),
+    };
+  } catch (error) {
+    throw new Error(`Encryption failed: ${error}`);
+  }
+};
+
+/**
+ * Decrypt sensitive data
+ */
+export const decrypt = (data: EncryptedData): string => {
+  try {
+    const decipher = crypto.createDecipher(ALGORITHM, ENCRYPTION_KEY);
+    decipher.setAAD(Buffer.from('shelther-safety-data'));
+    decipher.setAuthTag(Buffer.from(data.tag, 'hex'));
+    
+    let decrypted = decipher.update(data.encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch (error) {
+    throw new Error(`Decryption failed: ${error}`);
+  }
+};
+
+/**
+ * Hash sensitive data for comparison (e.g., emergency codes)
+ */
+export const hashData = (data: string): string => {
+  return crypto
+    .createHash('sha256')
+    .update(data + process.env.HASH_SALT || 'default-salt')
+    .digest('hex');
+};
+
+/**
+ * Generate secure random tokens
+ */
+export const generateSecureToken = (length = 32): string => {
+  return crypto.randomBytes(length).toString('hex');
+};
+
+/**
+ * Encrypt location data specifically
+ */
+export const encryptLocation = (latitude: number, longitude: number): EncryptedData => {
+  const locationString = `${latitude},${longitude}`;
+  return encrypt(locationString);
+};
+
+/**
+ * Decrypt location data specifically
+ */
+export const decryptLocation = (encryptedLocation: EncryptedData): { latitude: number; longitude: number } => {
+  const locationString = decrypt(encryptedLocation);
+  const [latitude, longitude] = locationString.split(',').map(Number);
+  
+  if (isNaN(latitude) || isNaN(longitude)) {
+    throw new Error('Invalid location data');
+  }
+  
+  return { latitude, longitude };
+};
+```
+</CodeGroup>
+
+### Input Validation & Sanitization
+
+<CodeGroup>
+```typescript src/middleware/validation.ts - Request Validation
+import { body, query, param, validationResult, ValidationChain } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
+import { logger } from '@/utils/logger';
+
+// Emergency alert validation
+export const validateEmergencyAlert: ValidationChain[] = [
+  body('alertType')
+    .isIn(['manual', 'duress', 'check_in_missed'])
+    .withMessage('Invalid alert type'),
+  
+  body('triggerMethod')
+    .optional()
+    .isIn(['button', 'shake', 'widget', 'auto'])
+    .withMessage('Invalid trigger method'),
+  
+  body('location.latitude')
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Invalid latitude (-90 to 90)'),
+  
+  body('location.longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Invalid longitude (-180 to 180)'),
+  
+  body('location.accuracy')
+    .optional()
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage('Invalid accuracy (0 to 10000 meters)'),
+  
+  body('message')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Message too long (max 500 characters)')
+    .customSanitizer((value) => {
+      // Remove potentially harmful content
+      return value?.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                   .replace(/<[^>]*>?/gm, ''); // Strip HTML tags
+    }),
+];
+
+// Contact validation
+export const validateEmergencyContact: ValidationChain[] = [
+  body('contactName')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Contact name required (1-100 characters)')
+    .matches(/^[a-zA-Z\s\-'\.]+$/)
+    .withMessage('Contact name contains invalid characters'),
+  
+  body('contactPhone')
+    .isMobilePhone('any', { strictMode: false })
+    .withMessage('Invalid phone number format')
+    .customSanitizer((value) => {
+      // Normalize phone number format
+      return value?.replace(/[^\d+]/g, '');
+    }),
+  
+  body('contactEmail')
+    .optional()
+    .isEmail()
+    .normalizeEmail({
+      gmail_lowercase: true,
+      gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
+    })
+    .withMessage('Invalid email address'),
+  
+  body('relationship')
+    .trim()
+    .isIn(['family', 'friend', 'partner', 'colleague', 'neighbor', 'other'])
+    .withMessage('Invalid relationship type'),
+  
+  body('priorityLevel')
+    .optional()
+    .isInt({ min: 1, max: 3 })
+    .withMessage('Priority level must be 1, 2, or 3'),
+];
+
+// Check-in validation
+export const validateCheckIn: ValidationChain[] = [
+  body('scheduledTime')
+    .isISO8601()
+    .withMessage('Invalid scheduled time format (ISO 8601 required)')
+    .custom((value) => {
+      const scheduledTime = new Date(value);
+      const now = new Date();
+      const maxFuture = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      
+      if (scheduledTime <= now) {
+        throw new Error('Scheduled time must be in the future');
+      }
+      
+      if (scheduledTime > maxFuture) {
+        throw new Error('Scheduled time cannot be more than 7 days in the future');
+      }
+      
+      return true;
+    }),
+  
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Notes too long (max 200 characters)')
+    .customSanitizer((value) => {
+      // Sanitize notes content
+      return value?.replace(/<[^>]*>?/gm, ''); // Strip HTML tags
+    }),
+  
+  body('gracePeriodMinutes')
+    .optional()
+    .isInt({ min: 5, max: 60 })
+    .withMessage('Grace period must be between 5 and 60 minutes'),
+];
+
+// Location update validation
+export const validateLocationUpdate: ValidationChain[] = [
+  body('latitude')
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Invalid latitude'),
+  
+  body('longitude')
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Invalid longitude'),
+  
+  body('accuracy')
+    .optional()
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage('Invalid accuracy'),
+  
+  body('timestamp')
+    .optional()
+    .isISO8601()
+    .withMessage('Invalid timestamp format'),
+  
+  body('isEmergency')
+    .optional()
+    .isBoolean()
+    .withMessage('isEmergency must be boolean'),
+];
+
+// Generic validation error handler
+export const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    const errorDetails = errors.array().map(error => ({
+      field: error.type === 'field' ? error.path : 'unknown',
+      message: error.msg,
+      value: error.type === 'field' ? error.value : undefined,
+    }));
+    
+    logger.warn('Validation failed', {
+      errors: errorDetails,
+      body: req.body,
+      path: req.path,
+      method: req.method,
+      userId: (req as any).user?.id,
+      ip: req.ip,
+    });
+    
+    res.status(400).json({
+      error: 'Validation failed',
+      message: 'Please check your input and try again',
+      details: errorDetails,
+    });
+    return;
+  }
+  
+  next();
+};
+
+// Combined validation middleware creator
+export const createValidationMiddleware = (validators: ValidationChain[]) => {
+  return [
+    ...validators,
+    handleValidationErrors,
+  ];
+};
+
+// Sanitize query parameters
+export const sanitizeQuery = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  // Sanitize common query parameters
+  const sanitizeValue = (value: any): any => {
+    if (typeof value === 'string') {
+      return value
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<[^>]*>?/gm, '')
+        .trim();
+    }
+    return value;
+  };
+  
+  for (const [key, value] of Object.entries(req.query)) {
+    req.query[key] = Array.isArray(value) 
+      ? value.map(sanitizeValue)
+      : sanitizeValue(value);
+  }
+  
+  next();
+};
+
+export default {
+  validateEmergencyAlert,
+  validateEmergencyContact,
+  validateCheckIn,
+  validateLocationUpdate,
+  handleValidationErrors,
+  createValidationMiddleware,
+  sanitizeQuery,
+};
+```
+</CodeGroup>
+
+## Performance Optimization
+
+### Monitoring & Logging
+
+<CodeGroup>
+```typescript src/utils/monitoring.ts - Performance Monitoring
+import { Express } from 'express';
+import { logger } from './logger';
+import { checkDatabaseHealth } from '@/config/database';
+
+export interface PerformanceMetrics {
+  responseTime: number;
+  memoryUsage: NodeJS.MemoryUsage;
+  cpuUsage: NodeJS.CpuUsage;
+  activeConnections: number;
+  requestsPerSecond: number;
+  timestamp: string;
+}
+
+class PerformanceMonitor {
+  private metrics: PerformanceMetrics[] = [];
+  private requestCount = 0;
+  private startTime = Date.now();
+  
+  recordMetric(responseTime: number): void {
+    const metric: PerformanceMetrics = {
+      responseTime,
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: process.cpuUsage(),
+      activeConnections: this.getActiveConnections(),
+      requestsPerSecond: this.calculateRequestsPerSecond(),
+      timestamp: new Date().toISOString(),
+    };
+    
+    this.metrics.push(metric);
+    
+    // Keep only last 1000 metrics
+    if (this.metrics.length > 1000) {
+      this.metrics.shift();
+    }
+    
+    // Check for performance issues
+    this.checkPerformanceThresholds(metric);
+  }
+  
+  private checkPerformanceThresholds(metric: PerformanceMetrics): void {
+    // Critical: Emergency response time threshold
+    if (metric.responseTime > 1000) {
+      logger.error('CRITICAL: Response time exceeded emergency threshold', {
+        responseTime: metric.responseTime,
+        threshold: 1000,
+        category: 'PERFORMANCE_CRITICAL',
+        memoryUsage: metric.memoryUsage,
+        cpuUsage: metric.cpuUsage,
+      });
+    }
+    
+    // Warning: General performance threshold
+    if (metric.responseTime > 500) {
+      logger.warn('Response time exceeds target threshold', {
+        responseTime: metric.responseTime,
+        threshold: 500,
+        category: 'PERFORMANCE_WARNING',
+      });
+    }
+    
+    // Memory usage warning
+    const memoryUsagePercent = metric.memoryUsage.heapUsed / metric.memoryUsage.heapTotal;
+    if (memoryUsagePercent > 0.8) {
+      logger.warn('High memory usage detected', {
+        memoryUsagePercent,
+        heapUsed: metric.memoryUsage.heapUsed,
+        heapTotal: metric.memoryUsage.heapTotal,
+        category: 'MEMORY_WARNING',
+      });
+    }
+  }
+  
+  private getActiveConnections(): number {
+    // This would be implemented based on your connection tracking
+    return 0; // Placeholder
+  }
+  
+  private calculateRequestsPerSecond(): number {
+    this.requestCount++;
+    const uptime = (Date.now() - this.startTime) / 1000;
+    return this.requestCount / uptime;
+  }
+  
+  getAverageResponseTime(): number {
+    if (this.metrics.length === 0) return 0;
+    
+    const sum = this.metrics.reduce((acc, m) => acc + m.responseTime, 0);
+    return sum / this.metrics.length;
+  }
+  
+  getHealthSummary(): {
+    averageResponseTime: number;
+    requestCount: number;
+    uptime: number;
+    memoryUsage: NodeJS.MemoryUsage;
+  } {
+    return {
+      averageResponseTime: this.getAverageResponseTime(),
+      requestCount: this.requestCount,
+      uptime: (Date.now() - this.startTime) / 1000,
+      memoryUsage: process.memoryUsage(),
+    };
+  }
+}
+
+const performanceMonitor = new PerformanceMonitor();
+
+export const setupMonitoring = (app: Express): void => {
+  // Performance middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+      const responseTime = Date.now() - start;
+      performanceMonitor.recordMetric(responseTime);
+    });
+    
+    next();
+  });
+  
+  // Health monitoring endpoint
+  app.get('/health/detailed', async (req, res) => {
+    try {
+      const [dbHealth, performanceHealth] = await Promise.all([
+        checkDatabaseHealth(),
+        Promise.resolve(performanceMonitor.getHealthSummary()),
+      ]);
+      
+      const health = {
+        status: dbHealth.healthy ? 'healthy' : 'unhealthy',
+        timestamp: new Date().toISOString(),
+        services: {
+          database: dbHealth,
+          performance: performanceHealth,
+        },
+        uptime: process.uptime(),
+        version: process.env.npm_package_version || '1.0.0',
+      };
+      
+      res.status(dbHealth.healthy ? 200 : 503).json(health);
+    } catch (error) {
+      logger.error('Health check failed', { error });
+      res.status(503).json({
+        status: 'unhealthy',
+        error: 'Health check failed',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+  
+  // Performance metrics endpoint
+  app.get('/metrics', (req, res) => {
+    const metrics = performanceMonitor.getHealthSummary();
+    res.json(metrics);
+  });
+  
+  // Start periodic health checks
+  setInterval(async () => {
+    try {
+      const dbHealth = await checkDatabaseHealth();
+      if (!dbHealth.healthy) {
+        logger.error('Database health check failed', {
+          error: dbHealth.error,
+          responseTime: dbHealth.responseTime,
+        });
+      }
+    } catch (error) {
+      logger.error('Health monitoring error', { error });
+    }
+  }, 60000); // Check every minute
+  
+  logger.info('Performance monitoring initialized');
+};
+
+export { performanceMonitor };
+```
+
+```typescript src/utils/logger.ts - Structured Logging
+import winston from 'winston';
+
+const logLevel = process.env.LOG_LEVEL || 'info';
+const nodeEnv = process.env.NODE_ENV || 'development';
+
+// Custom format for safety applications
+const safetyLogFormat = winston.format.combine(
+  winston.format.timestamp({
+    format: 'YYYY-MM-DD HH:mm:ss.SSS'
+  }),
+  winston.format.errors({ stack: true }),
+  winston.format.json(),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    const logEntry = {
+      '@timestamp': timestamp,
+      level: level.toUpperCase(),
+      message,
+      service: 'shelther-backend',
+      environment: nodeEnv,
+      version: process.env.npm_package_version || '1.0.0',
+      ...meta,
+    };
+
+    return JSON.stringify(logEntry);
+  })
+);
+
+// Create logger instance
+export const logger = winston.createLogger({
+  level: logLevel,
+  format: safetyLogFormat,
+  defaultMeta: {
+    service: 'shelther-backend',
+    environment: nodeEnv,
+  },
+  transports: [
+    // Console transport
+    new winston.transports.Console({
+      format: nodeEnv === 'development' 
+        ? winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple()
+          )
+        : safetyLogFormat,
+    }),
+
+    // File transports for production
+    ...(nodeEnv === 'production' 
+      ? [
+          new winston.transports.File({
+            filename: 'logs/error.log',
+            level: 'error',
+            maxsize: 5242880, // 5MB
+            maxFiles: 5,
+            tailable: true,
+          }),
+          new winston.transports.File({
+            filename: 'logs/combined.log',
+            maxsize: 5242880, // 5MB
+            maxFiles: 10,
+            tailable: true,
+          }),
+          new winston.transports.File({
+            filename: 'logs/emergency.log',
+            level: 'warn',
+            maxsize: 10485760, // 10MB
+            maxFiles: 20,
+            tailable: true,
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.json(),
+              winston.format.printf((info) => {
+                // Only log emergency-related events
+                if (info.category === 'EMERGENCY' || 
+                    info.category === 'SECURITY' ||
+                    info.level === 'error') {
+                  return JSON.stringify(info);
+                }
+                return '';
+              })
+            ),
+          }),
+        ]
+      : []
+    ),
+  ],
+
+  // Handle uncaught exceptions
+  exceptionHandlers: [
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+    ...(nodeEnv === 'production' 
+      ? [new winston.transports.File({ 
+          filename: 'logs/exceptions.log',
+          maxsize: 5242880,
+          maxFiles: 5,
+        })]
+      : []
+    ),
+  ],
+
+  // Handle unhandled promise rejections
+  rejectionHandlers: [
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+    ...(nodeEnv === 'production' 
+      ? [new winston.transports.File({ 
+          filename: 'logs/rejections.log',
+          maxsize: 5242880,
+          maxFiles: 5,
+        })]
+      : []
+    ),
+  ],
+});
+
+// Safety-specific logging functions
+export const logEmergencyEvent = (
+  event: string,
+  data: Record<string, any>
+): void => {
+  logger.error(event, {
+    category: 'EMERGENCY',
+    priority: 'CRITICAL',
+    timestamp: new Date().toISOString(),
+    ...data,
+  });
+};
+
+export const logSecurityEvent = (
+  event: string,
+  data: Record<string, any>
+): void => {
+  logger.warn(event, {
+    category: 'SECURITY',
+    priority: 'HIGH',
+    timestamp: new Date().toISOString(),
+    ...data,
+  });
+};
+
+export const logPerformanceEvent = (
+  operation: string,
+  duration: number,
+  data: Record<string, any>
+): void => {
+  const level = duration > 1000 ? 'error' : duration > 500 ? 'warn' : 'info';
+  
+  logger.log(level, `Performance: ${operation}`, {
+    category: 'PERFORMANCE',
+    duration,
+    threshold: duration > 1000 ? 'CRITICAL' : duration > 500 ? 'WARNING' : 'NORMAL',
+    timestamp: new Date().toISOString(),
+    ...data,
+  });
+};
+
+export const logUserActivity = (
+  activity: string,
+  userId: string,
+  data: Record<string, any>
+): void => {
+  logger.info(`User Activity: ${activity}`, {
+    category: 'USER_ACTIVITY',
+    userId,
+    timestamp: new Date().toISOString(),
+    ...data,
+  });
+};
+
+// Production logging initialization
+if (nodeEnv === 'production') {
+  // Create logs directory if it doesn't exist
+  const fs = require('fs');
+  const path = require('path');
+  
+  const logsDir = path.join(process.cwd(), 'logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+}
+
+export default logger;
+```
 </CodeGroup>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Environment Setup" icon="gear" href="/quickstart/expo-setup">
+    **Complete Setup:** Follow our step-by-step guide to implement these configurations in your development environment
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Production Deployment" icon="cloud" href="/deployment/overview">
+    **Go Live:** Deploy your configured Shelther platform to production with confidence
   </Card>
 </CardGroup>
 
 ---
 
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Configuration Validation:** Always test your configurations in a staging environment before deploying to production. Use the provided health check endpoints to verify all services are properly configured and communicating.
 </Note>
+
+## Summary
+
+This configuration guide provides:
+
+✅ **Complete environment setup** for development, staging, and production  
+✅ **Expo SDK 52+ configuration** with New Architecture optimization  
+✅ **Supabase integration** with security and performance tuning  
+✅ **Express.js production setup** with Railway deployment  
+✅ **Security hardening** with authentication, validation, and encryption  
+✅ **Performance monitoring** with comprehensive logging and metrics  
+
+Your Shelther safety platform is now configured for reliable, secure, and performant operation across all environments.

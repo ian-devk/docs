@@ -71,7 +71,8 @@
           "quickstart/backend-setup",
           "quickstart/supabase-setup",
           "quickstart/first-app",
-          "quickstart/configuration"
+          "quickstart/configuration",
+           "quickstart/setup" 
         ]
       },
       {
