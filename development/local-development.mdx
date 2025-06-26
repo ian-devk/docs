@@ -1,0 +1,1170 @@
+---
+title: "Local Development Environment"
+description: "Complete guide to setting up and optimizing your local development environment for Shelther safety applications. Includes Expo development server, Supabase local instance, debugging tools, and safety feature testing workflows."
+---
+
+# Local Development Environment
+
+<Info>
+**Development Safety:** Local development environment configured for rapid iteration while maintaining safety-critical feature reliability. Includes comprehensive debugging and testing tools for emergency scenarios.
+</Info>
+
+## Development Stack Overview
+
+Your local development environment integrates multiple components for seamless safety app development:
+
+<CardGroup cols={2}>
+  <Card title="Expo Development Server" icon="server">
+    Hot reload, debugging tools, and device testing with real-time updates
+  </Card>
+  <Card title="Local Supabase Instance" icon="database">
+    Complete backend with PostgreSQL, real-time subscriptions, and edge functions
+  </Card>
+  <Card title="Testing Framework" icon="test-tube">
+    Unit tests, integration tests, and safety scenario simulations
+  </Card>
+  <Card title="Debugging Tools" icon="bug">
+    React Native Debugger, Flipper, and custom safety monitoring dashboards
+  </Card>
+</CardGroup>
+
+## Prerequisites & Installation
+
+### System Requirements
+
+<Steps>
+  <Step title="Install Node.js 18+">
+    Download and install Node.js with npm/yarn package manager
+    
+    ```bash
+    # Verify Node.js installation
+    node --version  # Should be 18.17.0 or higher
+    npm --version   # Should be 9.0.0 or higher
+    
+    # Optional: Install Yarn for faster package management
+    npm install -g yarn
+    ```
+  </Step>
+  <Step title="Install Development Tools">
+    Essential tools for React Native and Expo development
+    
+    ```bash
+    # Expo CLI and EAS CLI
+    npm install -g @expo/cli eas-cli
+    
+    # Supabase CLI for local backend
+    npm install -g supabase
+    
+    # React Native debugging tools
+    npm install -g react-native-debugger
+    
+    # Optional: Install Flipper for advanced debugging
+    # Download from https://fbflipper.com/
+    ```
+  </Step>
+  <Step title="Platform-Specific Setup">
+    Configure development tools for your operating system
+    
+    **macOS (for iOS development):**
+    ```bash
+    # Install Xcode from App Store
+    # Install Xcode Command Line Tools
+    xcode-select --install
+    
+    # Install iOS Simulator
+    # Already included with Xcode
+    ```
+    
+    **All Platforms (for Android development):**
+    ```bash
+    # Install Android Studio
+    # Configure Android SDK and emulator
+    # Set ANDROID_HOME environment variable
+    ```
+  </Step>
+</Steps>
+
+### Project Setup
+
+<CodeGroup>
+```bash Quick Start
+# Clone the Shelther repository
+git clone https://github.com/your-org/shelther-app.git
+cd shelther-app
+
+# Install dependencies
+npm install
+# or
+yarn install
+
+# Install iOS dependencies (macOS only)
+cd ios && pod install && cd ..
+
+# Start development environment
+npm run dev
+```
+
+```bash Environment Configuration
+# Copy environment template
+cp .env.example .env.local
+
+# Configure development environment variables
+cat > .env.local << EOF
+# Expo Configuration
+EXPO_PUBLIC_ENV=development
+EXPO_PUBLIC_API_URL=http://localhost:54321
+
+# Supabase Local Configuration
+EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-local-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-local-service-role-key
+
+# External Services (Development Keys)
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your-dev-maps-key
+EXPO_PUBLIC_SENTRY_DSN=your-dev-sentry-dsn
+
+# Feature Flags for Development
+EXPO_PUBLIC_ENABLE_MOCK_LOCATION=true
+EXPO_PUBLIC_ENABLE_DEBUG_PANELS=true
+EXPO_PUBLIC_SKIP_ONBOARDING=true
+EOF
+```
+</CodeGroup>
+
+## Local Supabase Setup
+
+### Initialize Local Backend
+
+<Steps>
+  <Step title="Start Supabase Services">
+    Launch complete local backend with Docker
+    
+    ```bash
+    # Initialize Supabase in project (if not already done)
+    supabase init
+    
+    # Start all services (PostgreSQL, API, Dashboard, etc.)
+    supabase start
+    
+    # View service URLs and access tokens
+    supabase status
+    ```
+    
+    <Note>
+    **Service URLs:** Supabase will provide local URLs for API (http://localhost:54321), Dashboard (http://localhost:54323), and other services. Save these for your environment configuration.
+    </Note>
+  </Step>
+  <Step title="Apply Database Migrations">
+    Set up safety-optimized database schema
+    
+    ```bash
+    # Apply all existing migrations
+    supabase db reset
+    
+    # Or apply specific migration
+    supabase migration up
+    
+    # Generate types for TypeScript
+    supabase gen types typescript --local > types/supabase.ts
+    ```
+  </Step>
+  <Step title="Seed Development Data">
+    Populate database with test data for development
+    
+    ```bash
+    # Run seed script
+    supabase seed run
+    
+    # Or manually seed with SQL
+    psql postgresql://postgres:postgres@localhost:54322/postgres \
+      -f supabase/seed.sql
+    ```
+  </Step>
+</Steps>
+
+### Development Database Configuration
+
+<Accordion title="Sample Seed Data for Testing">
+```sql
+-- supabase/seed.sql
+-- Development users for testing
+INSERT INTO auth.users (id, email, email_confirmed_at, created_at, updated_at)
+VALUES 
+  ('00000000-0000-0000-0000-000000000001', 'alice@example.com', NOW(), NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000002', 'bob@example.com', NOW(), NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000003', 'charlie@example.com', NOW(), NOW(), NOW());
+
+-- User profiles with emergency contacts
+INSERT INTO users (id, email, full_name) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'alice@example.com', 'Alice Johnson'),
+  ('00000000-0000-0000-0000-000000000002', 'bob@example.com', 'Bob Smith'),
+  ('00000000-0000-0000-0000-000000000003', 'charlie@example.com', 'Charlie Brown');
+
+INSERT INTO user_profiles (user_id, emergency_contacts, safety_preferences) VALUES
+  ('00000000-0000-0000-0000-000000000001', 
+   '[{"name": "Bob Smith", "phone": "+1234567890", "relationship": "friend"}]'::jsonb,
+   '{"emergency_timeout": 300, "location_precision": "high"}'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 
+   '[{"name": "Alice Johnson", "phone": "+0987654321", "relationship": "friend"}]'::jsonb,
+   '{"emergency_timeout": 180, "auto_check_in": true}'::jsonb);
+
+-- Sample venues for testing
+INSERT INTO venues (name, address, location, safety_rating) VALUES
+  ('Safe Cafe Downtown', '123 Main St, City', ST_MakePoint(-74.006, 40.7128), 4.5),
+  ('Central Park Area', 'Central Park, NYC', ST_MakePoint(-73.9665, 40.7812), 4.8),
+  ('University Campus', '456 College Ave', ST_MakePoint(-73.9626, 40.8075), 4.2);
+
+-- Sample location sharing for testing real-time features
+INSERT INTO location_shares (user_id, shared_with_user_id, permissions, expires_at) VALUES
+  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 
+   '{"view_location": true, "view_history": false}'::jsonb, 
+   NOW() + INTERVAL '24 hours');
+```
+</Accordion>
+
+### Local Real-time Testing
+
+<CodeGroup>
+```typescript Real-time Development Helper
+// utils/dev-helpers.ts
+import { supabase } from '../lib/supabase';
+
+export class DevelopmentHelpers {
+  // Simulate emergency alert for testing
+  static async triggerTestEmergency(userId: string) {
+    if (__DEV__) {
+      const { data, error } = await supabase
+        .from('emergency_alerts')
+        .insert([{
+          user_id: userId,
+          alert_type: 'manual',
+          status: 'active',
+          location: 'POINT(-74.006 40.7128)', // NYC coordinates
+          message: 'Test emergency alert for development'
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating test emergency:', error);
+        return null;
+      }
+
+      console.log('✅ Test emergency created:', data.id);
+      return data;
+    }
+    
+    console.warn('Test emergency only available in development');
+    return null;
+  }
+
+  // Mock location updates for testing
+  static startMockLocationUpdates(userId: string, interval = 10000) {
+    if (!__DEV__) return;
+
+    const locations = [
+      { lat: 40.7128, lng: -74.0060 }, // NYC
+      { lat: 40.7589, lng: -73.9851 }, // Times Square
+      { lat: 40.7812, lng: -73.9665 }, // Central Park
+    ];
+
+    let currentIndex = 0;
+
+    const intervalId = setInterval(async () => {
+      const location = locations[currentIndex % locations.length];
+      
+      await supabase
+        .from('location_updates')
+        .insert([{
+          user_id: userId,
+          latitude: location.lat,
+          longitude: location.lng,
+          accuracy: 10,
+          battery_level: Math.floor(Math.random() * 100),
+          timestamp: new Date().toISOString()
+        }]);
+
+      console.log(`📍 Mock location update: ${location.lat}, ${location.lng}`);
+      currentIndex++;
+    }, interval);
+
+    return () => clearInterval(intervalId);
+  }
+
+  // Reset development data
+  static async resetDevData() {
+    if (__DEV__) {
+      const tables = ['emergency_alerts', 'location_updates', 'check_ins'];
+      
+      for (const table of tables) {
+        await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      }
+      
+      console.log('🧹 Development data reset');
+    }
+  }
+}
+```
+
+```typescript Development Dashboard Component
+// components/DevDashboard.tsx
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { DevelopmentHelpers } from '../utils/dev-helpers';
+
+export const DevDashboard = () => {
+  const [isVisible, setIsVisible] = useState(__DEV__);
+
+  if (!__DEV__ || !isVisible) return null;
+
+  return (
+    <View style={styles.dashboard}>
+      <TouchableOpacity 
+        style={styles.toggleButton}
+        onPress={() => setIsVisible(!isVisible)}
+      >
+        <Text>🛠️ Dev Tools</Text>
+      </TouchableOpacity>
+      
+      <ScrollView style={styles.content}>
+        <Text style={styles.title}>Development Dashboard</Text>
+        
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => DevelopmentHelpers.triggerTestEmergency('test-user-id')}
+        >
+          <Text>🚨 Trigger Test Emergency</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => DevelopmentHelpers.startMockLocationUpdates('test-user-id')}
+        >
+          <Text>📍 Start Mock Location</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => DevelopmentHelpers.resetDevData()}
+        >
+          <Text>🧹 Reset Dev Data</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = {
+  dashboard: {
+    position: 'absolute',
+    top: 50,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 8,
+    padding: 10,
+    zIndex: 1000,
+  },
+  // ... other styles
+};
+```
+</CodeGroup>
+
+## Expo Development Server
+
+### Development Server Configuration
+
+<Steps>
+  <Step title="Start Development Server">
+    Launch Expo development server with enhanced debugging
+    
+    ```bash
+    # Start with development build
+    npx expo start --dev-client
+    
+    # Or start with Expo Go (limited native features)
+    npx expo start
+    
+    # Clear cache if needed
+    npx expo start --clear
+    
+    # Enable tunnel for device testing
+    npx expo start --tunnel
+    ```
+  </Step>
+  <Step title="Device Connection">
+    Connect physical devices and simulators
+    
+    **iOS Simulator:**
+    ```bash
+    # Open iOS Simulator
+    npx expo start --ios
+    
+    # Specific simulator device
+    npx expo start --ios --simulator="iPhone 15 Pro"
+    ```
+    
+    **Android Emulator:**
+    ```bash
+    # Open Android emulator
+    npx expo start --android
+    
+    # List available devices
+    adb devices
+    ```
+    
+    **Physical Device:**
+    - Install Expo Go app or development build
+    - Scan QR code from terminal
+    - Ensure same WiFi network for local development
+  </Step>
+</Steps>
+
+### Hot Reload & Fast Refresh
+
+<Accordion title="Optimizing Development Experience">
+**Fast Refresh Configuration:**
+```typescript
+// metro.config.js - Optimized for safety app development
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+// Enable fast refresh for safety components
+config.resolver.alias = {
+  '@components': './src/components',
+  '@services': './src/services',
+  '@utils': './src/utils',
+  '@types': './src/types',
+};
+
+// Optimize for faster reloads
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: false,
+    inlineRequires: true,
+  },
+});
+
+// Development-specific optimizations
+if (process.env.NODE_ENV === 'development') {
+  config.watchFolders = [
+    './src',
+    './types',
+    './supabase/functions',
+  ];
+}
+
+module.exports = config;
+```
+
+**Performance Monitoring:**
+```typescript
+// utils/dev-performance.ts
+export const DevPerformance = {
+  measureComponentRender: (componentName: string) => {
+    if (__DEV__) {
+      const start = performance.now();
+      return () => {
+        const end = performance.now();
+        console.log(`🎭 ${componentName} render: ${(end - start).toFixed(2)}ms`);
+      };
+    }
+    return () => {};
+  },
+
+  measureAsyncOperation: async (operation: string, fn: () => Promise<any>) => {
+    if (__DEV__) {
+      const start = performance.now();
+      const result = await fn();
+      const end = performance.now();
+      console.log(`⚡ ${operation}: ${(end - start).toFixed(2)}ms`);
+      return result;
+    }
+    return await fn();
+  }
+};
+```
+</Accordion>
+
+## Debugging Tools & Techniques
+
+### React Native Debugger
+
+<CardGroup cols={2}>
+  <Card title="Network Inspector" icon="network-wired">
+    Monitor API calls, real-time subscriptions, and Supabase interactions
+  </Card>
+  <Card title="Redux DevTools" icon="layers">
+    Inspect state changes, actions, and emergency workflow debugging
+  </Card>
+  <Card title="Element Inspector" icon="search">
+    Examine component hierarchy and styling for safety UI components
+  </Card>
+  <Card title="Console Logs" icon="terminal">
+    Enhanced logging for safety-critical operations and error tracking
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Enhanced Logging System
+// utils/logger.ts
+import { __DEV__ } from 'react-native';
+
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  CRITICAL = 4,
+}
+
+class Logger {
+  private logLevel = __DEV__ ? LogLevel.DEBUG : LogLevel.WARN;
+
+  debug(message: string, data?: any) {
+    if (this.logLevel <= LogLevel.DEBUG) {
+      console.log(`🐛 [DEBUG] ${message}`, data || '');
+    }
+  }
+
+  info(message: string, data?: any) {
+    if (this.logLevel <= LogLevel.INFO) {
+      console.log(`ℹ️ [INFO] ${message}`, data || '');
+    }
+  }
+
+  emergency(message: string, data?: any) {
+    // Always log emergency-related messages
+    console.error(`🚨 [EMERGENCY] ${message}`, data || '');
+    
+    if (__DEV__) {
+      // Show alert in development
+      setTimeout(() => {
+        alert(`EMERGENCY LOG: ${message}`);
+      }, 100);
+    }
+  }
+
+  location(message: string, coords?: { lat: number; lng: number }) {
+    if (__DEV__) {
+      console.log(
+        `📍 [LOCATION] ${message}`,
+        coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : ''
+      );
+    }
+  }
+
+  realtime(event: string, data?: any) {
+    if (__DEV__) {
+      console.log(`📡 [REALTIME] ${event}`, data || '');
+    }
+  }
+}
+
+export const logger = new Logger();
+```
+
+```typescript Debugging Component Wrapper
+// components/DebugWrapper.tsx
+import React from 'react';
+import { View, Text } from 'react-native';
+import { logger } from '../utils/logger';
+
+interface DebugWrapperProps {
+  componentName: string;
+  showBounds?: boolean;
+  logRenders?: boolean;
+  children: React.ReactNode;
+}
+
+export const DebugWrapper: React.FC<DebugWrapperProps> = ({
+  componentName,
+  showBounds = false,
+  logRenders = false,
+  children,
+}) => {
+  const renderRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (logRenders && __DEV__) {
+      renderRef.current++;
+      logger.debug(`Component ${componentName} rendered`, {
+        renderCount: renderRef.current,
+      });
+    }
+  });
+
+  if (!__DEV__) {
+    return <>{children}</>;
+  }
+
+  return (
+    <View
+      style={[
+        showBounds && {
+          borderWidth: 1,
+          borderColor: 'red',
+          borderStyle: 'dashed',
+        },
+      ]}
+    >
+      {showBounds && (
+        <Text style={{
+          position: 'absolute',
+          top: -15,
+          left: 0,
+          fontSize: 10,
+          color: 'red',
+          backgroundColor: 'white',
+          zIndex: 1000,
+        }}>
+          {componentName} ({renderRef.current})
+        </Text>
+      )}
+      {children}
+    </View>
+  );
+};
+```
+</CodeGroup>
+
+### Safety Feature Testing
+
+<Steps>
+  <Step title="Mock Emergency Scenarios">
+    Test emergency workflows without real alerts
+    
+    ```typescript
+    // services/emergency/mock.ts
+    export const MockEmergencyService = {
+      async triggerMockEmergency(type: 'manual' | 'automated' | 'duress') {
+        if (!__DEV__) return;
+        
+        const mockAlert = {
+          id: `mock-${Date.now()}`,
+          type,
+          location: {
+            latitude: 40.7128 + (Math.random() - 0.5) * 0.01,
+            longitude: -74.0060 + (Math.random() - 0.5) * 0.01,
+          },
+          timestamp: new Date().toISOString(),
+        };
+        
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        logger.emergency('Mock emergency triggered', mockAlert);
+        return mockAlert;
+      },
+      
+      async mockContactNotification(contactIds: string[]) {
+        if (!__DEV__) return;
+        
+        logger.info('Mock notifications sent', { contactIds });
+        
+        // Simulate notification delivery
+        return contactIds.map(id => ({
+          contactId: id,
+          status: 'delivered',
+          timestamp: new Date().toISOString(),
+        }));
+      },
+    };
+    ```
+  </Step>
+  <Step title="Location Testing">
+    Simulate various location scenarios
+    
+    ```typescript
+    // services/location/mock.ts
+    export const MockLocationService = {
+      // Simulate location accuracy issues
+      getCurrentPosition: () => ({
+        latitude: 40.7128 + (Math.random() - 0.5) * 0.001,
+        longitude: -74.0060 + (Math.random() - 0.5) * 0.001,
+        accuracy: 5 + Math.random() * 15, // 5-20m accuracy
+        timestamp: Date.now(),
+      }),
+      
+      // Simulate poor GPS conditions
+      simulatePoorGPS: () => ({
+        latitude: 40.7128 + (Math.random() - 0.5) * 0.01,
+        longitude: -74.0060 + (Math.random() - 0.5) * 0.01,
+        accuracy: 50 + Math.random() * 100, // Poor accuracy
+        timestamp: Date.now(),
+      }),
+      
+      // Test indoor/underground scenarios
+      simulateIndoorLocation: () => ({
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        error: 'Location unavailable - indoor/underground',
+        timestamp: Date.now(),
+      }),
+    };
+    ```
+  </Step>
+</Steps>
+
+## Testing Workflows
+
+### Development Testing Strategy
+
+<Accordion title="Unit Testing with Safety Focus">
+```typescript
+// __tests__/emergency-service.test.ts
+import { EmergencyService } from '../services/emergency';
+import { MockLocationService } from '../services/location/mock';
+
+describe('EmergencyService', () => {
+  beforeEach(() => {
+    // Reset mock data before each test
+    jest.clearAllMocks();
+  });
+
+  it('should create emergency alert with accurate location', async () => {
+    const mockLocation = MockLocationService.getCurrentPosition();
+    const alert = await EmergencyService.createAlert({
+      type: 'manual',
+      location: mockLocation,
+    });
+
+    expect(alert.location.latitude).toBeCloseTo(mockLocation.latitude, 6);
+    expect(alert.location.longitude).toBeCloseTo(mockLocation.longitude, 6);
+    expect(alert.status).toBe('active');
+  });
+
+  it('should handle poor GPS gracefully', async () => {
+    const poorLocation = MockLocationService.simulatePoorGPS();
+    const alert = await EmergencyService.createAlert({
+      type: 'manual',
+      location: poorLocation,
+    });
+
+    // Should still create alert even with poor accuracy
+    expect(alert).toBeDefined();
+    expect(alert.location.accuracy).toBeGreaterThan(50);
+  });
+
+  it('should retry notifications on failure', async () => {
+    const mockFailure = jest.fn()
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce({ success: true });
+
+    // Test retry logic
+    const result = await EmergencyService.notifyContacts(['contact1'], {
+      retryAttempts: 3,
+      mockFunction: mockFailure,
+    });
+
+    expect(mockFailure).toHaveBeenCalledTimes(2);
+    expect(result.success).toBe(true);
+  });
+});
+```
+</Accordion>
+
+### Integration Testing
+
+<CodeGroup>
+```typescript Real-time Testing
+// __tests__/realtime-integration.test.ts
+import { supabase } from '../lib/supabase';
+import { waitFor } from '@testing-library/react-native';
+
+describe('Real-time Integration', () => {
+  it('should receive emergency alerts in real-time', async () => {
+    const receivedAlerts: any[] = [];
+    
+    // Set up subscription
+    const subscription = supabase
+      .channel('test-emergency')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'emergency_alerts',
+      }, (payload) => {
+        receivedAlerts.push(payload.new);
+      })
+      .subscribe();
+
+    // Wait for subscription to be ready
+    await waitFor(() => {
+      expect(subscription.state).toBe('SUBSCRIBED');
+    });
+
+    // Create test alert
+    const testAlert = {
+      user_id: 'test-user',
+      alert_type: 'manual',
+      status: 'active',
+    };
+
+    await supabase.from('emergency_alerts').insert([testAlert]);
+
+    // Verify real-time delivery
+    await waitFor(() => {
+      expect(receivedAlerts).toHaveLength(1);
+      expect(receivedAlerts[0].user_id).toBe('test-user');
+    });
+
+    subscription.unsubscribe();
+  });
+});
+```
+
+```bash Test Scripts
+# package.json scripts for development testing
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:safety": "jest --testPathPattern=safety",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "detox test",
+    "test:emergency": "jest __tests__/emergency --verbose"
+  }
+}
+```
+</CodeGroup>
+
+## Performance Monitoring
+
+### Development Performance Tools
+
+<CardGroup cols={2}>
+  <Card title="Bundle Analysis" icon="chart-bar">
+    Monitor bundle size and identify optimization opportunities
+  </Card>
+  <Card title="Memory Profiling" icon="memory">
+    Track memory usage and identify potential leaks in safety features
+  </Card>
+  <Card title="Battery Usage" icon="battery-half">
+    Monitor battery impact of location services and background tasks
+  </Card>
+  <Card title="Network Monitoring" icon="wifi">
+    Track API calls, real-time subscriptions, and data usage
+  </Card>
+</CardGroup>
+
+<Accordion title="Performance Monitoring Setup">
+```typescript
+// utils/performance-monitor.ts
+class PerformanceMonitor {
+  private static instance: PerformanceMonitor;
+  private measurements: Map<string, number> = new Map();
+
+  static getInstance() {
+    if (!PerformanceMonitor.instance) {
+      PerformanceMonitor.instance = new PerformanceMonitor();
+    }
+    return PerformanceMonitor.instance;
+  }
+
+  startMeasurement(name: string) {
+    this.measurements.set(name, performance.now());
+  }
+
+  endMeasurement(name: string): number {
+    const start = this.measurements.get(name);
+    if (!start) return 0;
+
+    const duration = performance.now() - start;
+    this.measurements.delete(name);
+
+    if (__DEV__) {
+      console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
+    }
+
+    return duration;
+  }
+
+  // Monitor emergency response time (critical metric)
+  measureEmergencyResponse<T>(operation: () => Promise<T>): Promise<T> {
+    return new Promise(async (resolve, reject) => {
+      const start = performance.now();
+      
+      try {
+        const result = await operation();
+        const duration = performance.now() - start;
+        
+        if (duration > 3000) { // &gt;3 seconds is too slow for emergency
+          console.error(`🚨 SLOW EMERGENCY RESPONSE: ${duration.toFixed(2)}ms`);
+        }
+        
+        resolve(result);
+      } catch (error) {
+        const duration = performance.now() - start;
+        console.error(`❌ Emergency operation failed after ${duration.toFixed(2)}ms`, error);
+        reject(error);
+      }
+    });
+  }
+}
+
+export const perfMonitor = PerformanceMonitor.getInstance();
+```
+</Accordion>
+
+## Development Workflow
+
+### Daily Development Routine
+
+<Steps>
+  <Step title="Environment Startup">
+    Standard development environment initialization
+    
+    ```bash
+    # Start all services
+    supabase start
+    npm run dev
+    
+    # Verify services are running
+    supabase status
+    curl http://localhost:54321/rest/v1/ \
+      -H "apikey: your-anon-key"
+    ```
+  </Step>
+  <Step title="Feature Development">
+    Iterative development with safety testing
+    
+    ```bash
+    # Create feature branch
+    git checkout -b feature/emergency-improvements
+    
+    # Run tests continuously
+    npm run test:watch
+    
+    # Test on device
+    npm run dev -- --tunnel
+    ```
+  </Step>
+  <Step title="Quality Checks">
+    Pre-commit validation and testing
+    
+    ```bash
+    # Run full test suite
+    npm run test:coverage
+    
+    # Check TypeScript
+    npm run type-check
+    
+    # Lint and format
+    npm run lint
+    npm run format
+    
+    # Test safety-critical features
+    npm run test:safety
+    ```
+  </Step>
+</Steps>
+
+### Git Workflow Integration
+
+<CodeGroup>
+```bash Git Hooks Setup
+# .husky/pre-commit
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Type checking
+npm run type-check || exit 1
+
+# Linting
+npm run lint || exit 1
+
+# Safety-critical tests (must pass)
+npm run test:safety || exit 1
+
+# Check for emergency console.logs in production code
+if grep -r "console.log.*emergency" src/ --exclude-dir=__tests__; then
+  echo "❌ Found console.log statements with 'emergency' - please remove or use logger"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed"
+```
+
+```bash Environment Validation
+# scripts/validate-env.sh
+#!/bin/bash
+
+echo "🔧 Validating development environment..."
+
+# Check Node.js version
+NODE_VERSION=$(node -v | sed 's/v//')
+REQUIRED_NODE="18.17.0"
+
+if [ "$(printf '%s\n' "$REQUIRED_NODE" "$NODE_VERSION" | sort -V | head -n1)" != "$REQUIRED_NODE" ]; then
+  echo "❌ Node.js version $NODE_VERSION is below required $REQUIRED_NODE"
+  exit 1
+fi
+
+# Check Supabase CLI
+if ! command -v supabase &> /dev/null; then
+  echo "❌ Supabase CLI not installed"
+  exit 1
+fi
+
+# Check if local Supabase is running
+if ! curl -s http://localhost:54321/rest/v1/ > /dev/null; then
+  echo "❌ Local Supabase not running. Run 'supabase start'"
+  exit 1
+fi
+
+# Verify environment variables
+if [ -z "$EXPO_PUBLIC_SUPABASE_URL" ]; then
+  echo "❌ EXPO_PUBLIC_SUPABASE_URL not set"
+  exit 1
+fi
+
+echo "✅ Development environment validated"
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Common Development Issues
+
+<Accordion title="Metro Bundler Issues">
+**Problem:** Bundle errors or slow reload times
+
+**Solutions:**
+```bash
+# Clear Metro cache
+npx expo start --clear
+
+# Reset Node modules
+rm -rf node_modules
+npm install
+
+# Clear iOS build cache (if needed)
+cd ios && xcodebuild clean && cd ..
+
+# Reset Supabase types
+supabase gen types typescript --local > types/supabase.ts
+```
+</Accordion>
+
+<Accordion title="Supabase Connection Problems">
+**Problem:** Can't connect to local Supabase
+
+**Solutions:**
+```bash
+# Check if Docker is running
+docker ps
+
+# Restart Supabase services
+supabase stop
+supabase start
+
+# Check service logs
+supabase logs
+
+# Verify environment variables
+echo $EXPO_PUBLIC_SUPABASE_URL
+echo $EXPO_PUBLIC_SUPABASE_ANON_KEY
+```
+</Accordion>
+
+<Accordion title="Real-time Subscription Issues">
+**Problem:** Real-time updates not working
+
+**Debug Steps:**
+```typescript
+// Add debug logging to subscriptions
+const subscription = supabase
+  .channel('debug-channel')
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public',
+    table: 'emergency_alerts'
+  }, (payload) => {
+    console.log('📡 Real-time payload:', payload);
+  })
+  .subscribe((status, err) => {
+    console.log('📡 Subscription status:', status);
+    if (err) console.error('📡 Subscription error:', err);
+  });
+
+// Check WebSocket connection
+console.log('WebSocket state:', supabase.realtime.connection.readyState);
+```
+</Accordion>
+
+## Development Tools Integration
+
+### VS Code Configuration
+
+<CodeGroup>
+```json VS Code Settings
+// .vscode/settings.json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "emmet.includeLanguages": {
+    "typescript": "typescriptreact"
+  },
+  "files.associations": {
+    "*.mdx": "markdown"
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.expo": true,
+    "**/dist": true
+  },
+  "[typescript]": {
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 2
+  },
+  "[typescriptreact]": {
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 2
+  }
+}
+```
+
+```json VS Code Extensions
+// .vscode/extensions.json
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "@typescript-eslint/eslint-plugin",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "expo.vscode-expo-tools",
+    "supabase.supabase-vscode",
+    "ms-vscode.vscode-react-native"
+  ]
+}
+```
+</CodeGroup>
+
+## Next Steps
+
+<Warning>
+**Safety Testing:** Always test emergency features in controlled environments. Never test real emergency triggers that could alert authorities or emergency contacts unnecessarily.
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Component Development" icon="puzzle-piece" href="/development/component-development">
+    Build React Native components with safety-first design principles
+  </Card>
+  <Card title="State Management" icon="layers" href="/development/state-management">
+    Implement Redux and local state management for emergency workflows
+  </Card>
+  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
+    Comprehensive testing approach for safety-critical features
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+**Development Productivity:** This environment setup optimizes for rapid development while maintaining safety feature reliability. Regular testing of emergency scenarios ensures production readiness.
+</Note>

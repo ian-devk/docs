@@ -1,59 +1,1559 @@
 ---
 title: "Expo Configuration"
-description: "Expo Configuration documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Complete guide to configuring Expo SDK 52+ for safety-critical applications. Learn about advanced features, build optimization, security settings, and platform-specific configurations for Shelther."
+sidebarTitle: "Expo Configuration"
 ---
 
 # Expo Configuration
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Modern Mobile Development:** Expo SDK 52+ provides cutting-edge React Native development with enhanced security, performance, and native capabilities essential for safety-critical applications.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+Expo SDK 52+ introduces significant improvements in performance, security, and developer experience. This guide covers comprehensive configuration for safety applications, including New Architecture support, advanced security features, and platform-specific optimizations.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="New Architecture Support" icon="cpu">
+    React Native's New Architecture with Fabric renderer and TurboModules for enhanced performance
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Enhanced Security" icon="shield">
+    Advanced security features including app attestation and secure storage
+  </Card>
+  <Card title="Background Capabilities" icon="activity">
+    Robust background processing for safety monitoring and emergency features
+  </Card>
+  <Card title="Platform Integration" icon="smartphone">
+    Deep integration with iOS and Android platform features
   </Card>
 </CardGroup>
 
----
+## Core Configuration Files
+
+### App Configuration (app.json)
+
+<Steps>
+  <Step title="Basic App Settings">
+    Configure app identity, versioning, and basic display properties
+  </Step>
+  <Step title="Platform-Specific Settings">
+    iOS and Android specific configurations including permissions and capabilities
+  </Step>
+  <Step title="Plugin Configuration">
+    Expo plugins for native functionality and third-party integrations
+  </Step>
+  <Step title="Build Optimization">
+    Performance and bundle size optimizations for production builds
+  </Step>
+</Steps>
+
+<CodeGroup>
+```json Complete app.json Configuration
+{
+  "expo": {
+    "name": "Shelther",
+    "slug": "shelther-safety",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF5A5A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shelther.app",
+      "buildNumber": "1.0.0",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Shelther needs location access to provide safety monitoring and emergency alerts.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Shelther uses background location to track your safety during activities.",
+        "NSLocationAlwaysUsageDescription": "Shelther uses background location to track your safety during activities.",
+        "NSCameraUsageDescription": "Shelther may use camera for profile photos and emergency documentation.",
+        "NSMicrophoneUsageDescription": "Shelther may record audio during emergency situations for your safety.",
+        "NSFaceIDUsageDescription": "Use Face ID to securely access your safety features.",
+        "NSContactsUsageDescription": "Access contacts to set up your emergency contact list.",
+        "NSPhotoLibraryUsageDescription": "Access photo library to save emergency documentation.",
+        "NSBluetoothPeripheralUsageDescription": "Connect to safety devices and wearables.",
+        "NSBluetoothAlwaysUsageDescription": "Connect to safety devices and wearables.",
+        "NSHealthShareUsageDescription": "Monitor health data for safety insights.",
+        "NSHealthUpdateUsageDescription": "Update health data during emergencies.",
+        "UIBackgroundModes": [
+          "background-fetch",
+          "background-processing",
+          "location"
+        ],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.shelther.app.safety-check",
+          "com.shelther.app.location-update"
+        ]
+      },
+      "associatedDomains": [
+        "applinks:app.shelther.com",
+        "applinks:*.shelther.com"
+      ],
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.security.application-groups": [
+          "group.com.shelther.app.shared"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF5A5A"
+      },
+      "package": "com.shelther.app",
+      "versionCode": 1,
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "minSdkVersion": 21,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "READ_CONTACTS",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.shelther.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Shelther uses location to provide safety monitoring and emergency alerts.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF5A5A",
+          "defaultChannel": "emergency-alerts",
+          "sounds": [
+            "./assets/sounds/emergency-alert.wav",
+            "./assets/sounds/check-in-reminder.wav"
+          ]
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Use Face ID to securely access your safety features."
+        }
+      ],
+      "expo-task-manager",
+      "expo-background-fetch",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.0",
+            "newArchEnabled": true,
+            "flipper": false
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 21,
+            "newArchEnabled": true,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Shelther to access your photos for profile images and emergency documentation.",
+          "cameraPermission": "Allow Shelther to access camera for emergency documentation."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Shelther to access your contacts to set up emergency contacts."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Shelther to access camera for emergency documentation."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Shelther to record audio during emergency situations."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "shelther",
+    "privacy": "public"
+  }
+}
+```
+
+```json EAS Build Configuration (eas.json)
+{
+  "cli": {
+    "version": ">= 5.4.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_APP_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_APP_ENV": "staging"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "aab"
+      },
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
+    },
+    "production-ios": {
+      "extends": "production",
+      "platform": "ios"
+    },
+    "production-android": {
+      "extends": "production",
+      "platform": "android"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-asc-app-id",
+        "appleTeamId": "your-team-id"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production"
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Advanced Plugin Configuration
+
+### Location Services Configuration
 
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Safety-Critical Location:** Location services are fundamental to safety applications. Proper configuration ensures reliable location tracking while preserving battery life.
+</Note>
+
+<Accordion title="Location Services Setup">
+**Enhanced Location Configuration:**
+```typescript
+// src/services/location/locationConfig.ts
+import * as Location from 'expo-location';
+
+export const locationConfig = {
+  // High accuracy for emergency situations
+  emergency: {
+    accuracy: Location.Accuracy.BestForNavigation,
+    distanceInterval: 1, // meters
+    timeInterval: 1000, // ms
+  },
+  // Balanced for regular monitoring
+  monitoring: {
+    accuracy: Location.Accuracy.Balanced,
+    distanceInterval: 10, // meters
+    timeInterval: 10000, // ms
+  },
+  // Power-efficient for background
+  background: {
+    accuracy: Location.Accuracy.Low,
+    distanceInterval: 50, // meters
+    timeInterval: 30000, // ms
+  },
+  // Geofencing configuration
+  geofencing: {
+    radius: 100, // meters
+    notifyOnEnter: true,
+    notifyOnExit: true,
+  },
+};
+
+// Background location task configuration
+export const BACKGROUND_LOCATION_TASK = 'background-location-task';
+
+// Task definition
+import * as TaskManager from 'expo-task-manager';
+
+TaskManager.defineTask(BACKGROUND_LOCATION_TASK, ({ data, error }) => {
+  if (error) {
+    console.error('Background location task error:', error);
+    return;
+  }
+  
+  if (data) {
+    const { locations } = data as { locations: Location.LocationObject[] };
+    console.log('Received new locations', locations);
+    
+    // Process location updates
+    processBackgroundLocationUpdate(locations);
+  }
+});
+
+async function processBackgroundLocationUpdate(locations: Location.LocationObject[]) {
+  // Store location locally
+  await storeLocationLocally(locations);
+  
+  // Check for safety concerns
+  await checkSafetyConcerns(locations);
+  
+  // Sync with server when possible
+  await syncLocationWithServer(locations);
+}
+```
+
+**Geofencing Implementation:**
+```typescript
+// src/services/location/geofencing.ts
+import * as Location from 'expo-location';
+
+interface SafeZone {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  isActive: boolean;
+}
+
+export class GeofencingService {
+  private activeRegions: Map<string, Location.LocationRegion> = new Map();
+  
+  async setupSafeZones(safeZones: SafeZone[]): Promise<void> {
+    for (const zone of safeZones) {
+      if (zone.isActive) {
+        await this.addSafeZone(zone);
+      }
+    }
+  }
+  
+  async addSafeZone(zone: SafeZone): Promise<void> {
+    const region: Location.LocationRegion = {
+      identifier: zone.id,
+      latitude: zone.latitude,
+      longitude: zone.longitude,
+      radius: zone.radius,
+      notifyOnEnter: true,
+      notifyOnExit: true,
+    };
+    
+    await Location.startGeofencingAsync(GEOFENCING_TASK_NAME, [region]);
+    this.activeRegions.set(zone.id, region);
+  }
+  
+  async removeSafeZone(zoneId: string): Promise<void> {
+    if (this.activeRegions.has(zoneId)) {
+      await Location.stopGeofencingAsync(GEOFENCING_TASK_NAME);
+      this.activeRegions.delete(zoneId);
+      
+      // Restart with remaining regions
+      const remainingRegions = Array.from(this.activeRegions.values());
+      if (remainingRegions.length > 0) {
+        await Location.startGeofencingAsync(GEOFENCING_TASK_NAME, remainingRegions);
+      }
+    }
+  }
+}
+
+// Geofencing task
+const GEOFENCING_TASK_NAME = 'geofencing-task';
+
+TaskManager.defineTask(GEOFENCING_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    console.error('Geofencing task error:', error);
+    return;
+  }
+  
+  if (data) {
+    const { eventType, region } = data as {
+      eventType: Location.GeofencingEventType;
+      region: Location.LocationRegion;
+    };
+    
+    handleGeofencingEvent(eventType, region);
+  }
+});
+
+async function handleGeofencingEvent(
+  eventType: Location.GeofencingEventType,
+  region: Location.LocationRegion
+) {
+  const isEntering = eventType === Location.GeofencingEventType.Enter;
+  const isExiting = eventType === Location.GeofencingEventType.Exit;
+  
+  if (isEntering) {
+    await handleSafeZoneEntry(region);
+  } else if (isExiting) {
+    await handleSafeZoneExit(region);
+  }
+}
+```
+</Accordion>
+
+### Notification Configuration
+
+<Warning>
+**Critical Notifications:** Emergency notifications must be configured to bypass user settings and system limitations to ensure delivery during safety-critical situations.
+</Warning>
+
+<CodeGroup>
+```typescript Advanced Notification Setup
+// src/services/notifications/notificationConfig.ts
+import * as Notifications from 'expo-notifications';
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    const data = notification.request.content.data;
+    
+    // Emergency notifications always show
+    if (data?.type === 'emergency') {
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      };
+    }
+    
+    // Regular notifications respect user settings
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: true,
+      priority: Notifications.AndroidNotificationPriority.DEFAULT,
+    };
+  },
+});
+
+// Notification categories for iOS
+export const notificationCategories = [
+  {
+    identifier: 'EMERGENCY_RESPONSE',
+    actions: [
+      {
+        identifier: 'RESPOND_SAFE',
+        title: "I'm Safe",
+        options: {
+          opensAppToForeground: false,
+        },
+      },
+      {
+        identifier: 'RESPOND_HELP',
+        title: 'Need Help',
+        options: {
+          opensAppToForeground: true,
+          destructive: true,
+        },
+      },
+      {
+        identifier: 'CALL_USER',
+        title: 'Call',
+        options: {
+          opensAppToForeground: true,
+        },
+      },
+    ],
+    options: {
+      categorySummaryFormat: '%u emergency alerts',
+      customDismissAction: true,
+      allowInCarPlay: false,
+    },
+  },
+  {
+    identifier: 'CHECK_IN_REMINDER',
+    actions: [
+      {
+        identifier: 'QUICK_CHECKIN',
+        title: 'Check In',
+        options: {
+          opensAppToForeground: false,
+        },
+      },
+      {
+        identifier: 'SNOOZE_REMINDER',
+        title: 'Remind Later',
+        options: {
+          opensAppToForeground: false,
+        },
+      },
+    ],
+  },
+];
+
+// Android notification channels
+export const notificationChannels = [
+  {
+    name: 'Emergency Alerts',
+    id: 'emergency-alerts',
+    description: 'Critical emergency notifications',
+    importance: Notifications.AndroidImportance.MAX,
+    sound: 'emergency_alert.wav',
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF0000',
+    bypassDnd: true,
+    showBadge: true,
+  },
+  {
+    name: 'Safety Reminders',
+    id: 'safety-reminders',
+    description: 'Check-in reminders and safety notifications',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'check_in_reminder.wav',
+    vibrationPattern: [0, 500, 500],
+    lightColor: '#FF5A5A',
+  },
+  {
+    name: 'General',
+    id: 'general',
+    description: 'General app notifications',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  },
+];
+
+// Initialize notification system
+export async function initializeNotifications(): Promise<void> {
+  // Set notification categories (iOS)
+  await Notifications.setNotificationCategoryAsync(
+    notificationCategories[0].identifier,
+    notificationCategories[0].actions,
+    notificationCategories[0].options
+  );
+  
+  // Create notification channels (Android)
+  for (const channel of notificationChannels) {
+    await Notifications.setNotificationChannelAsync(channel.id, channel);
+  }
+  
+  // Request permissions
+  const { status } = await Notifications.requestPermissionsAsync({
+    ios: {
+      allowAlert: true,
+      allowBadge: true,
+      allowSound: true,
+      allowCriticalAlerts: true,
+    },
+    android: {
+      allowAlert: true,
+      allowBadge: true,
+      allowSound: true,
+    },
+  });
+  
+  if (status !== 'granted') {
+    console.warn('Notification permissions not granted');
+  }
+}
+```
+
+```typescript Background Task Configuration
+// src/services/background/backgroundTasks.ts
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
+
+// Task names
+export const SAFETY_CHECK_TASK = 'safety-check-task';
+export const LOCATION_UPDATE_TASK = 'location-update-task';
+export const EMERGENCY_SYNC_TASK = 'emergency-sync-task';
+
+// Safety check task
+TaskManager.defineTask(SAFETY_CHECK_TASK, async () => {
+  console.log('Running safety check task');
+  
+  try {
+    // Check for missed check-ins
+    await checkMissedCheckIns();
+    
+    // Verify emergency contacts are reachable
+    await verifyEmergencyContacts();
+    
+    // Update safety status
+    await updateSafetyStatus();
+    
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  } catch (error) {
+    console.error('Safety check task failed:', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Location update task
+TaskManager.defineTask(LOCATION_UPDATE_TASK, async () => {
+  console.log('Running location update task');
+  
+  try {
+    // Get current location
+    const location = await getCurrentLocation();
+    
+    // Check if location sharing is active
+    const sharingStatus = await getLocationSharingStatus();
+    
+    if (sharingStatus.isActive) {
+      // Update shared location
+      await updateSharedLocation(location);
+    }
+    
+    // Store location locally
+    await storeLocationLocally(location);
+    
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  } catch (error) {
+    console.error('Location update task failed:', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Emergency sync task
+TaskManager.defineTask(EMERGENCY_SYNC_TASK, async () => {
+  console.log('Running emergency sync task');
+  
+  try {
+    // Sync pending emergency data
+    await syncPendingEmergencyData();
+    
+    // Update emergency contact status
+    await updateEmergencyContactStatus();
+    
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  } catch (error) {
+    console.error('Emergency sync task failed:', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Register background tasks
+export async function registerBackgroundTasks(): Promise<void> {
+  try {
+    // Register safety check task
+    await BackgroundFetch.registerTaskAsync(SAFETY_CHECK_TASK, {
+      minimumInterval: 15 * 60, // 15 minutes
+      stopOnTerminate: false,
+      startOnBoot: true,
+    });
+    
+    // Register location update task
+    await BackgroundFetch.registerTaskAsync(LOCATION_UPDATE_TASK, {
+      minimumInterval: 5 * 60, // 5 minutes
+      stopOnTerminate: false,
+      startOnBoot: true,
+    });
+    
+    // Register emergency sync task
+    await BackgroundFetch.registerTaskAsync(EMERGENCY_SYNC_TASK, {
+      minimumInterval: 30 * 60, // 30 minutes
+      stopOnTerminate: false,
+      startOnBoot: true,
+    });
+    
+    console.log('Background tasks registered successfully');
+  } catch (error) {
+    console.error('Failed to register background tasks:', error);
+  }
+}
+```
+</CodeGroup>
+
+## New Architecture Configuration
+
+### React Native New Architecture
+
+<Note>
+**Performance Benefits:** The New Architecture provides significant performance improvements through Fabric renderer and TurboModules, crucial for safety-critical applications.
+</Note>
+
+<Steps>
+  <Step title="Enable New Architecture">
+    Configure build properties to enable Fabric renderer and TurboModules
+  </Step>
+  <Step title="Update Dependencies">
+    Ensure all dependencies are compatible with the New Architecture
+  </Step>
+  <Step title="Test Thoroughly">
+    Comprehensive testing to ensure stability with New Architecture enabled
+  </Step>
+  <Step title="Performance Monitoring">
+    Monitor performance improvements and identify any regressions
+  </Step>
+</Steps>
+
+<Accordion title="New Architecture Implementation">
+**Build Configuration:**
+```json
+// In app.json plugins section
+[
+  "expo-build-properties",
+  {
+    "ios": {
+      "deploymentTarget": "13.0",
+      "newArchEnabled": true,
+      "flipper": false
+    },
+    "android": {
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "minSdkVersion": 21,
+      "newArchEnabled": true,
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResourcesInReleaseBuilds": true
+    }
+  }
+]
+```
+
+**Metro Configuration for New Architecture:**
+```javascript
+// metro.config.js
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+// Enable New Architecture optimizations
+config.transformer.unstable_allowRequireContext = true;
+config.transformer.enableBabelRCLookup = false;
+
+// Optimize for production
+if (process.env.NODE_ENV === 'production') {
+  config.transformer.minifierConfig = {
+    mangle: {
+      keep_fnames: true,
+    },
+    output: {
+      ascii_only: true,
+      quote_keys: true,
+      wrap_iife: true,
+    },
+    sourceMap: false,
+    toplevel: false,
+    warnings: false,
+  };
+}
+
+// Add resolver aliases for better module resolution
+config.resolver.alias = {
+  '@': './src',
+  '@components': './src/components',
+  '@screens': './src/screens',
+  '@services': './src/services',
+  '@utils': './src/utils',
+  '@types': './src/types',
+};
+
+module.exports = config;
+```
+
+**TurboModule Integration Example:**
+```typescript
+// src/modules/SafetyTurboModule.ts
+import { TurboModule, TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  // Emergency functions
+  triggerEmergencyAlert(alertData: Object): Promise<string>;
+  cancelEmergencyAlert(alertId: string): Promise<boolean>;
+  
+  // Location functions
+  getCurrentLocationSync(): Object;
+  startLocationMonitoring(config: Object): Promise<boolean>;
+  
+  // Security functions
+  encryptSensitiveData(data: string): Promise<string>;
+  decryptSensitiveData(encryptedData: string): Promise<string>;
+}
+
+export default TurboModuleRegistry.get<Spec>('SafetyTurboModule');
+
+// Usage in components
+import SafetyTurboModule from '@/modules/SafetyTurboModule';
+
+export const useEmergencyTurboModule = () => {
+  const triggerEmergency = async (alertData: EmergencyAlertData) => {
+    try {
+      const alertId = await SafetyTurboModule?.triggerEmergencyAlert(alertData);
+      return alertId;
+    } catch (error) {
+      console.error('TurboModule emergency trigger failed:', error);
+      // Fallback to JavaScript implementation
+      return await fallbackTriggerEmergency(alertData);
+    }
+  };
+  
+  return { triggerEmergency };
+};
+```
+</Accordion>
+
+## Security Configuration
+
+### App Attestation and Security
+
+<Warning>
+**Production Security:** Security configuration is crucial for safety applications handling sensitive user data and emergency communications.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="App Attestation" icon="shield-check">
+    Verify app integrity and prevent tampering in production builds
+  </Card>
+  <Card title="Certificate Pinning" icon="lock">
+    Pin SSL certificates to prevent man-in-the-middle attacks
+  </Card>
+  <Card title="Code Obfuscation" icon="eye-slash">
+    Protect sensitive business logic from reverse engineering
+  </Card>
+  <Card title="Root Detection" icon="alert-triangle">
+    Detect compromised devices and adjust security accordingly
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Security Service Implementation
+// src/services/security/securityService.ts
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
+import * as Application from 'expo-application';
+
+interface SecurityConfig {
+  enableRootDetection: boolean;
+  enableCertificatePinning: boolean;
+  enableCodeObfuscation: boolean;
+  enableAppAttestation: boolean;
+}
+
+export class SecurityService {
+  private config: SecurityConfig;
+  
+  constructor(config: SecurityConfig) {
+    this.config = config;
+  }
+  
+  async initializeSecurity(): Promise<void> {
+    // Check device security
+    await this.checkDeviceSecurity();
+    
+    // Initialize secure storage
+    await this.initializeSecureStorage();
+    
+    // Set up certificate pinning
+    if (this.config.enableCertificatePinning) {
+      await this.setupCertificatePinning();
+    }
+    
+    // Verify app integrity
+    if (this.config.enableAppAttestation) {
+      await this.verifyAppIntegrity();
+    }
+  }
+  
+  async checkDeviceSecurity(): Promise<SecurityStatus> {
+    const status: SecurityStatus = {
+      isDeviceSecure: true,
+      isRooted: false,
+      isDebuggingEnabled: false,
+      warnings: [],
+    };
+    
+    // Check if device is rooted/jailbroken
+    if (this.config.enableRootDetection) {
+      status.isRooted = await this.detectRootedDevice();
+      if (status.isRooted) {
+        status.isDeviceSecure = false;
+        status.warnings.push('Device appears to be rooted or jailbroken');
+      }
+    }
+    
+    // Check if debugging is enabled
+    status.isDebuggingEnabled = __DEV__ || await this.isDebuggingEnabled();
+    if (status.isDebuggingEnabled && !__DEV__) {
+      status.warnings.push('Debugging appears to be enabled on production build');
+    }
+    
+    return status;
+  }
+  
+  async encryptSensitiveData(data: string, keyAlias: string): Promise<string> {
+    try {
+      // Generate or retrieve encryption key
+      const key = await this.getOrCreateEncryptionKey(keyAlias);
+      
+      // Encrypt data
+      const encryptedData = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        data + key
+      );
+      
+      // Store encrypted data securely
+      await SecureStore.setItemAsync(keyAlias, encryptedData);
+      
+      return encryptedData;
+    } catch (error) {
+      console.error('Failed to encrypt sensitive data:', error);
+      throw new Error('Encryption failed');
+    }
+  }
+  
+  async decryptSensitiveData(keyAlias: string): Promise<string | null> {
+    try {
+      const encryptedData = await SecureStore.getItemAsync(keyAlias);
+      if (!encryptedData) {
+        return null;
+      }
+      
+      // In a real implementation, you'd use proper symmetric encryption
+      // This is a simplified example
+      return encryptedData;
+    } catch (error) {
+      console.error('Failed to decrypt sensitive data:', error);
+      return null;
+    }
+  }
+  
+  private async detectRootedDevice(): Promise<boolean> {
+    try {
+      // Check for common root indicators
+      const rootIndicators = [
+        '/system/app/Superuser.apk',
+        '/sbin/su',
+        '/system/bin/su',
+        '/system/xbin/su',
+        '/data/local/xbin/su',
+        '/data/local/bin/su',
+        '/system/sd/xbin/su',
+        '/system/bin/failsafe/su',
+        '/data/local/su',
+      ];
+      
+      // This would require native implementation for actual file checking
+      // For now, return false in development
+      return false;
+    } catch (error) {
+      console.error('Root detection failed:', error);
+      return false;
+    }
+  }
+  
+  private async setupCertificatePinning(): Promise<void> {
+    // Certificate pinning configuration
+    const pinnedCertificates = {
+      'api.shelther.com': [
+        'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=', // Replace with actual certificate hash
+      ],
+      'supabase.co': [
+        'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=', // Replace with actual certificate hash
+      ],
+    };
+    
+    // This would require native implementation for actual certificate pinning
+    console.log('Certificate pinning configured for:', Object.keys(pinnedCertificates));
+  }
+  
+  private async verifyAppIntegrity(): Promise<boolean> {
+    try {
+      const appInfo = {
+        bundleId: Application.applicationId,
+        version: Application.nativeApplicationVersion,
+        buildNumber: Application.nativeBuildVersion,
+      };
+      
+      // Verify app signature and integrity
+      // This would require native implementation for actual verification
+      console.log('App integrity verification for:', appInfo);
+      
+      return true;
+    } catch (error) {
+      console.error('App integrity verification failed:', error);
+      return false;
+    }
+  }
+  
+  private async getOrCreateEncryptionKey(keyAlias: string): Promise<string> {
+    let key = await SecureStore.getItemAsync(`${keyAlias}_key`);
+    
+    if (!key) {
+      // Generate new encryption key
+      key = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        `${keyAlias}_${Date.now()}_${Math.random()}`
+      );
+      
+      await SecureStore.setItemAsync(`${keyAlias}_key`, key);
+    }
+    
+    return key;
+  }
+  
+  private async isDebuggingEnabled(): Promise<boolean> {
+    // Check for debugging indicators
+    return __DEV__;
+  }
+}
+
+interface SecurityStatus {
+  isDeviceSecure: boolean;
+  isRooted: boolean;
+  isDebuggingEnabled: boolean;
+  warnings: string[];
+}
+
+// Initialize security service
+export const securityService = new SecurityService({
+  enableRootDetection: true,
+  enableCertificatePinning: true,
+  enableCodeObfuscation: true,
+  enableAppAttestation: true,
+});
+```
+
+```typescript Secure Storage Implementation
+// src/services/storage/secureStorage.ts
+import * as SecureStore from 'expo-secure-store';
+
+interface SecureStorageOptions {
+  requireAuthentication?: boolean;
+  accessGroup?: string;
+  keychainService?: string;
+}
+
+export class SecureStorageService {
+  private defaultOptions: SecureStorageOptions = {
+    requireAuthentication: true,
+    keychainService: 'com.shelther.app.keychain',
+  };
+  
+  async setItem(
+    key: string,
+    value: string,
+    options: SecureStorageOptions = {}
+  ): Promise<void> {
+    const finalOptions = { ...this.defaultOptions, ...options };
+    
+    try {
+      await SecureStore.setItemAsync(key, value, {
+        requireAuthentication: finalOptions.requireAuthentication,
+        keychainService: finalOptions.keychainService,
+        accessGroup: finalOptions.accessGroup,
+      });
+    } catch (error) {
+      console.error(`Failed to store item ${key}:`, error);
+      throw new Error('Secure storage failed');
+    }
+  }
+  
+  async getItem(
+    key: string,
+    options: SecureStorageOptions = {}
+  ): Promise<string | null> {
+    const finalOptions = { ...this.defaultOptions, ...options };
+    
+    try {
+      return await SecureStore.getItemAsync(key, {
+        requireAuthentication: finalOptions.requireAuthentication,
+        keychainService: finalOptions.keychainService,
+        accessGroup: finalOptions.accessGroup,
+      });
+    } catch (error) {
+      console.error(`Failed to retrieve item ${key}:`, error);
+      return null;
+    }
+  }
+  
+  async removeItem(key: string): Promise<void> {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      console.error(`Failed to remove item ${key}:`, error);
+    }
+  }
+  
+  async clear(): Promise<void> {
+    // Note: There's no direct way to clear all items in SecureStore
+    // You'd need to keep track of keys or implement your own key management
+    console.warn('SecureStore clear() not implemented - consider key management strategy');
+  }
+  
+  // Emergency credentials management
+  async storeEmergencyCredentials(credentials: EmergencyCredentials): Promise<void> {
+    await this.setItem('emergency_credentials', JSON.stringify(credentials), {
+      requireAuthentication: false, // Emergency access shouldn't require auth
+    });
+  }
+  
+  async getEmergencyCredentials(): Promise<EmergencyCredentials | null> {
+    const data = await this.getItem('emergency_credentials', {
+      requireAuthentication: false,
+    });
+    
+    return data ? JSON.parse(data) : null;
+  }
+}
+
+interface EmergencyCredentials {
+  emergencyContactId: string;
+  emergencyPhoneNumber: string;
+  encryptedApiKey?: string;
+}
+
+export const secureStorage = new SecureStorageService();
+```
+</CodeGroup>
+
+## Performance Optimization
+
+### Build Optimization
+
+<Note>
+**Production Performance:** Proper build optimization ensures fast app startup and smooth performance critical for emergency response scenarios.
+</Note>
+
+<Accordion title="Build Performance Configuration">
+**Production Build Optimization:**
+```javascript
+// metro.config.js - Production optimizations
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+if (process.env.NODE_ENV === 'production') {
+  // Enable advanced minification
+  config.transformer.minifierConfig = {
+    mangle: {
+      keep_fnames: true,
+    },
+    output: {
+      ascii_only: true,
+      quote_keys: true,
+      wrap_iife: true,
+    },
+    sourceMap: false,
+    toplevel: false,
+    warnings: false,
+    compress: {
+      drop_console: true, // Remove console.log in production
+      drop_debugger: true,
+      pure_funcs: ['console.log', 'console.info', 'console.debug'],
+    },
+  };
+  
+  // Enable tree shaking
+  config.transformer.unstable_allowRequireContext = true;
+  
+  // Optimize bundle splitting
+  config.serializer.createModuleIdFactory = () => {
+    return (path) => {
+      // Create smaller, more predictable module IDs
+      return path.replace(process.cwd(), '').replace(/\//g, '-');
+    };
+  };
+}
+
+// Asset optimization
+config.transformer.assetRegistryPath = ['react-native/Libraries/Image/AssetRegistry'];
+
+// Enable caching for faster rebuilds
+config.transformer.cacheFile = '.metro-cache';
+
+module.exports = config;
+```
+
+**EAS Build Optimization:**
+```json
+// eas.json - Optimized build configuration
+{
+  "build": {
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "cache": {
+        "disabled": false,
+        "cacheDefaultPaths": true,
+        "customPaths": [
+          "node_modules",
+          ".expo",
+          "ios/Pods"
+        ]
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "scheme": "shelther",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "aab",
+        "gradleCommand": ":app:bundleRelease",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_OPTIMIZE": "true"
+      }
+    }
+  }
+}
+```
+
+**ProGuard Configuration (Android):**
+```proguard
+# android/app/proguard-rules.pro
+# Keep safety-critical classes
+-keep class com.shelther.app.emergency.** { *; }
+-keep class com.shelther.app.location.** { *; }
+-keep class com.shelther.app.security.** { *; }
+
+# Keep React Native classes
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
+
+# Keep Expo classes
+-keep class expo.modules.** { *; }
+
+# Keep Supabase classes
+-keep class io.supabase.** { *; }
+
+# Optimize but keep essential debugging info
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
+
+# Keep line numbers for crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+```
+</Accordion>
+
+## Development vs Production Configuration
+
+### Environment-Specific Settings
+
+<Steps>
+  <Step title="Development Configuration">
+    Optimized for debugging, fast refresh, and development tools
+  </Step>
+  <Step title="Staging Configuration">
+    Production-like environment for testing and validation
+  </Step>
+  <Step title="Production Configuration">
+    Optimized for performance, security, and reliability
+  </Step>
+  <Step title="Configuration Management">
+    Automated configuration switching based on build environment
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Environment Configuration Manager
+// src/config/environmentConfig.ts
+interface EnvironmentConfig {
+  apiUrl: string;
+  debugMode: boolean;
+  mockServices: boolean;
+  analyticsEnabled: boolean;
+  crashReportingEnabled: boolean;
+  logLevel: 'debug' | 'info' | 'warn' | 'error';
+  performanceMonitoring: boolean;
+  securityLevel: 'development' | 'staging' | 'production';
+}
+
+const configurations: Record<string, EnvironmentConfig> = {
+  development: {
+    apiUrl: 'http://localhost:54321',
+    debugMode: true,
+    mockServices: false,
+    analyticsEnabled: false,
+    crashReportingEnabled: false,
+    logLevel: 'debug',
+    performanceMonitoring: false,
+    securityLevel: 'development',
+  },
+  staging: {
+    apiUrl: 'https://staging-api.shelther.com',
+    debugMode: false,
+    mockServices: false,
+    analyticsEnabled: true,
+    crashReportingEnabled: true,
+    logLevel: 'info',
+    performanceMonitoring: true,
+    securityLevel: 'staging',
+  },
+  production: {
+    apiUrl: 'https://api.shelther.com',
+    debugMode: false,
+    mockServices: false,
+    analyticsEnabled: true,
+    crashReportingEnabled: true,
+    logLevel: 'error',
+    performanceMonitoring: true,
+    securityLevel: 'production',
+  },
+};
+
+function getEnvironment(): string {
+  return process.env.EXPO_PUBLIC_APP_ENV || 'development';
+}
+
+export function getConfig(): EnvironmentConfig {
+  const environment = getEnvironment();
+  const config = configurations[environment];
+  
+  if (!config) {
+    console.warn(`Unknown environment: ${environment}, falling back to development`);
+    return configurations.development;
+  }
+  
+  return config;
+}
+
+// Configuration validation
+export function validateConfig(): void {
+  const config = getConfig();
+  const environment = getEnvironment();
+  
+  if (environment === 'production') {
+    if (config.debugMode) {
+      throw new Error('Debug mode should be disabled in production');
+    }
+    
+    if (config.mockServices) {
+      throw new Error('Mock services should be disabled in production');
+    }
+    
+    if (!config.crashReportingEnabled) {
+      console.warn('Crash reporting should be enabled in production');
+    }
+  }
+  
+  console.log(`Configuration loaded for environment: ${environment}`);
+}
+```
+
+```typescript Runtime Configuration Service
+// src/services/config/configService.ts
+import { getConfig } from '@/config/environmentConfig';
+
+export class ConfigService {
+  private config = getConfig();
+  private remoteConfig: Record<string, any> = {};
+  
+  async initialize(): Promise<void> {
+    // Load remote configuration
+    await this.loadRemoteConfig();
+    
+    // Apply environment-specific settings
+    this.applyEnvironmentSettings();
+    
+    // Validate configuration
+    this.validateConfiguration();
+  }
+  
+  private async loadRemoteConfig(): Promise<void> {
+    try {
+      // In a real app, this would fetch from a remote config service
+      this.remoteConfig = {
+        emergencyTimeoutSeconds: 10,
+        maxEmergencyContacts: 5,
+        locationAccuracyMeters: 10,
+        enableExperimentalFeatures: this.config.securityLevel !== 'production',
+      };
+    } catch (error) {
+      console.error('Failed to load remote config:', error);
+      // Use default values if remote config fails
+    }
+  }
+  
+  private applyEnvironmentSettings(): void {
+    if (this.config.securityLevel === 'production') {
+      // Production-specific settings
+      this.remoteConfig.enableExperimentalFeatures = false;
+      this.remoteConfig.debugLogging = false;
+    } else if (this.config.securityLevel === 'development') {
+      // Development-specific settings
+      this.remoteConfig.enableExperimentalFeatures = true;
+      this.remoteConfig.debugLogging = true;
+    }
+  }
+  
+  private validateConfiguration(): void {
+    const requiredSettings = [
+      'emergencyTimeoutSeconds',
+      'maxEmergencyContacts',
+      'locationAccuracyMeters',
+    ];
+    
+    for (const setting of requiredSettings) {
+      if (!(setting in this.remoteConfig)) {
+        throw new Error(`Required configuration missing: ${setting}`);
+      }
+    }
+  }
+  
+  get<T>(key: string, defaultValue?: T): T {
+    return this.remoteConfig[key] ?? defaultValue;
+  }
+  
+  set(key: string, value: any): void {
+    this.remoteConfig[key] = value;
+  }
+  
+  getEnvironmentConfig() {
+    return this.config;
+  }
+  
+  isProduction(): boolean {
+    return this.config.securityLevel === 'production';
+  }
+  
+  isDevelopment(): boolean {
+    return this.config.securityLevel === 'development';
+  }
+}
+
+export const configService = new ConfigService();
+```
+</CodeGroup>
+
+## Best Practices
+
+### Configuration Management
+
+<Warning>
+**Security Considerations:** Never store sensitive configuration in code or version control. Use environment variables and secure configuration management for production.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Environment Separation" icon="layers">
+    Clear separation between development, staging, and production configurations
+  </Card>
+  <Card title="Secret Management" icon="key">
+    Secure handling of API keys, certificates, and sensitive configuration data
+  </Card>
+  <Card title="Feature Flags" icon="flag">
+    Runtime feature toggles for gradual rollouts and A/B testing
+  </Card>
+  <Card title="Performance Monitoring" icon="activity">
+    Comprehensive monitoring and analytics configuration for production apps
+  </Card>
+</CardGroup>
+
+### Production Checklist
+
+<Steps>
+  <Step title="Security Verification">
+    Verify all security features are enabled and properly configured
+  </Step>
+  <Step title="Performance Testing">
+    Test app performance under various conditions and device specifications
+  </Step>
+  <Step title="Configuration Validation">
+    Ensure all production configurations are correct and complete
+  </Step>
+  <Step title="Compliance Check">
+    Verify app store compliance and platform-specific requirements
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Supabase Setup" icon="database" href="/development/supabase-setup">
+    Configure Supabase backend for safety applications
+  </Card>
+  <Card title="Local Development" icon="code" href="/development/local-development">
+    Set up local development workflow and testing environment
+  </Card>
+  <Card title="Component Development" icon="components" href="/development/component-development">
+    Build reusable, accessible components for safety applications
+  </Card>
+</CardGroup>
+
+<Note>
+**Configuration Evolution:** Expo configuration evolves with each SDK release. Regularly review and update your configuration to take advantage of new features and security improvements.
 </Note>

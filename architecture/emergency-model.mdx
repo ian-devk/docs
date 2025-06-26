@@ -1,59 +1,1143 @@
 ---
 title: "Emergency Model"
-description: "Emergency Model documentation for Data Models. Learn about implementation, configuration, and best practices."
+description: "Comprehensive emergency response system for Shelther. Learn about alert processing, escalation protocols, evidence collection, and multi-channel emergency communication systems."
 ---
 
 # Emergency Model
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Life-Critical System Design:** The emergency model is Shelther's most critical component, designed with multiple redundancies, fail-safe mechanisms, and sub-second response times to ensure help reaches users when they need it most.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+Shelther's emergency model orchestrates the complete emergency response workflow from initial alert detection through resolution. Every component prioritizes reliability, speed, and redundancy to ensure no emergency goes unnoticed or unresponded.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Instant Alert Processing" icon="zap">
+    Sub-second emergency detection with parallel processing across multiple channels
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Smart Escalation" icon="trending-up">
+    Intelligent escalation protocols that adapt based on response patterns and severity
+  </Card>
+  <Card title="Evidence Collection" icon="camera">
+    Automated audio, photo, and video evidence gathering during emergency situations
+  </Card>
+  <Card title="Multi-Channel Response" icon="broadcast-tower">
+    Redundant notification systems ensuring emergency alerts reach contacts reliably
   </Card>
 </CardGroup>
 
----
+## Core Emergency Entities
+
+### Emergency Alert Processing
+
+<CodeGroup>
+```sql Emergency Processing Pipeline
+-- Core emergency alerts with comprehensive tracking
+CREATE TABLE emergency_alerts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Alert classification and severity
+  alert_type emergency_alert_type NOT NULL,
+  severity_level INTEGER NOT NULL CHECK (severity_level BETWEEN 1 AND 5),
+  confidence_score DECIMAL(3,2) DEFAULT 1.0, -- AI confidence for auto-detected alerts
+  
+  -- Trigger context
+  trigger_method emergency_trigger_method NOT NULL,
+  trigger_data JSONB DEFAULT '{}'::jsonb, -- Device sensors, voice commands, etc.
+  trigger_location GEOGRAPHY(POINT, 4326),
+  trigger_accuracy REAL,
+  
+  -- Alert status and lifecycle
+  status emergency_status DEFAULT 'active',
+  substatus VARCHAR(50), -- processing, contacts_notified, escalating, resolved
+  
+  -- Evidence collection
+  evidence_collected JSONB DEFAULT '{
+    "audio": [],
+    "photos": [],
+    "videos": [],
+    "sensor_data": {},
+    "device_state": {}
+  }'::jsonb,
+  
+  -- Response tracking
+  notification_log JSONB DEFAULT '[]'::jsonb,
+  contact_responses JSONB DEFAULT '[]'::jsonb,
+  escalation_history JSONB DEFAULT '[]'::jsonb,
+  
+  -- Resolution
+  resolved_by emergency_resolver,
+  resolution_type emergency_resolution_type,
+  resolution_notes TEXT,
+  false_alarm_reason VARCHAR(100),
+  
+  -- Critical timestamps (all indexed)
+  triggered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  first_notification_sent_at TIMESTAMP WITH TIME ZONE,
+  first_response_received_at TIMESTAMP WITH TIME ZONE,
+  escalated_at TIMESTAMP WITH TIME ZONE,
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Audit and analytics
+  processing_time_ms INTEGER, -- Time from trigger to first notification
+  total_response_time_ms INTEGER, -- Time from trigger to resolution
+  contacts_notified_count INTEGER DEFAULT 0,
+  successful_notifications INTEGER DEFAULT 0,
+  
+  CONSTRAINT valid_severity CHECK (
+    (alert_type = 'test' AND severity_level = 1) OR
+    (alert_type != 'test' AND severity_level > 1)
+  )
+);
+
+-- Emergency alert types
+CREATE TYPE emergency_alert_type AS ENUM (
+  'manual_trigger',      -- User manually triggered emergency
+  'panic_button',        -- Physical panic button pressed
+  'voice_activation',    -- Voice command detected
+  'shake_pattern',       -- Shake gesture recognized
+  'duress_code',         -- Duress password used
+  'auto_detected',       -- AI detected emergency from behavior
+  'fall_detection',      -- Fall detected by sensors
+  'no_movement',         -- Extended period without movement
+  'geofence_violation',  -- Left safe area unexpectedly
+  'missed_checkin',      -- Failed to check in as scheduled
+  'heart_rate_anomaly',  -- Wearable detected health emergency
+  'sound_analysis',      -- AI detected distress from audio
+  'contact_triggered',   -- Emergency contact initiated alert
+  'test'                 -- Test alert for system verification
+);
+
+-- Trigger methods
+CREATE TYPE emergency_trigger_method AS ENUM (
+  'manual_button',       -- In-app emergency button
+  'widget_press',        -- Home screen widget
+  'volume_buttons',      -- Physical button combination
+  'voice_command',       -- Voice activation
+  'shake_gesture',       -- Shake pattern
+  'ai_detection',        -- Automated AI detection
+  'wearable_trigger',    -- Smart watch or fitness tracker
+  'external_api',        -- Third-party integration
+  'contact_report',      -- Contact reported emergency
+  'scheduled_test'       -- Automated system test
+);
+
+-- Critical indexes for emergency response
+CREATE INDEX idx_emergency_alerts_active ON emergency_alerts(user_id, triggered_at DESC) 
+  WHERE status IN ('active', 'escalating');
+CREATE INDEX idx_emergency_alerts_triggered_at ON emergency_alerts(triggered_at DESC);
+CREATE INDEX idx_emergency_alerts_geography ON emergency_alerts USING GIST(trigger_location)
+  WHERE status = 'active';
+CREATE INDEX idx_emergency_alerts_severity ON emergency_alerts(severity_level DESC, triggered_at DESC);
+CREATE INDEX idx_emergency_alerts_processing_time ON emergency_alerts(processing_time_ms);
+```
+
+```typescript Emergency Alert Interface
+interface EmergencyAlert {
+  id: string;
+  userId: string;
+  
+  // Classification
+  alertType: EmergencyAlertType;
+  severityLevel: 1 | 2 | 3 | 4 | 5; // 5 = life-threatening
+  confidenceScore: number; // 0.0 to 1.0 for AI-detected alerts
+  
+  // Trigger context
+  triggerMethod: EmergencyTriggerMethod;
+  triggerData: TriggerData;
+  triggerLocation?: GeoLocation;
+  triggerAccuracy?: number;
+  
+  // Status tracking
+  status: EmergencyStatus;
+  substatus?: string;
+  
+  // Evidence
+  evidenceCollected: EmergencyEvidence;
+  
+  // Response tracking
+  notificationLog: NotificationRecord[];
+  contactResponses: ContactResponse[];
+  escalationHistory: EscalationRecord[];
+  
+  // Resolution
+  resolvedBy?: EmergencyResolver;
+  resolutionType?: EmergencyResolutionType;
+  resolutionNotes?: string;
+  falseAlarmReason?: string;
+  
+  // Critical timestamps
+  triggeredAt: string;
+  firstNotificationSentAt?: string;
+  firstResponseReceivedAt?: string;
+  escalatedAt?: string;
+  resolvedAt?: string;
+  
+  // Performance metrics
+  processingTimeMs?: number;
+  totalResponseTimeMs?: number;
+  contactsNotifiedCount: number;
+  successfulNotifications: number;
+}
+
+type EmergencyStatus = 'active' | 'escalating' | 'resolved' | 'cancelled' | 'test_completed';
+type EmergencyResolver = 'user' | 'contact' | 'emergency_services' | 'auto_timeout' | 'system_admin';
+type EmergencyResolutionType = 'safe_resolution' | 'help_provided' | 'false_alarm' | 'no_response' | 'escalated_to_authorities';
+
+interface EmergencyEvidence {
+  audio: AudioEvidence[];
+  photos: PhotoEvidence[];
+  videos: VideoEvidence[];
+  sensorData: SensorData;
+  deviceState: DeviceState;
+}
+
+interface TriggerData {
+  deviceInfo: DeviceInfo;
+  sensorReadings: SensorReading[];
+  networkStatus: NetworkStatus;
+  batteryLevel: number;
+  userContext: UserContext;
+}
+```
+</CodeGroup>
+
+### Escalation Protocol Engine
+
+<CodeGroup>
+```sql Escalation Management
+CREATE TABLE escalation_protocols (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Protocol configuration
+  protocol_name VARCHAR(100) NOT NULL,
+  is_default BOOLEAN DEFAULT false,
+  priority_order INTEGER DEFAULT 0,
+  
+  -- Escalation levels
+  escalation_levels JSONB NOT NULL DEFAULT '[
+    {
+      "level": 1,
+      "delay_minutes": 0,
+      "contact_tiers": ["primary"],
+      "notification_methods": ["push", "sms"],
+      "require_acknowledgment": true,
+      "timeout_minutes": 5
+    },
+    {
+      "level": 2,
+      "delay_minutes": 5,
+      "contact_tiers": ["primary", "secondary"],
+      "notification_methods": ["push", "sms", "call"],
+      "require_acknowledgment": true,
+      "timeout_minutes": 10
+    },
+    {
+      "level": 3,
+      "delay_minutes": 15,
+      "contact_tiers": ["all"],
+      "notification_methods": ["push", "sms", "call", "email"],
+      "auto_call_emergency_services": true,
+      "require_acknowledgment": false,
+      "timeout_minutes": 30
+    }
+  ]'::jsonb,
+  
+  -- Conditions and triggers
+  severity_thresholds JSONB DEFAULT '{
+    "level_1": [1, 2],
+    "level_2": [3, 4],
+    "level_3": [5]
+  }'::jsonb,
+  
+  alert_type_overrides JSONB DEFAULT '{}'::jsonb,
+  time_based_modifications JSONB DEFAULT '{}'::jsonb,
+  location_based_modifications JSONB DEFAULT '{}'::jsonb,
+  
+  -- Emergency service integration
+  emergency_services_config JSONB DEFAULT '{
+    "enabled": false,
+    "service_type": "local_emergency",
+    "include_medical_info": true,
+    "include_location": true,
+    "include_contact_info": true
+  }'::jsonb,
+  
+  -- Status and metadata
+  is_active BOOLEAN DEFAULT true,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  success_rate DECIMAL(3,2) DEFAULT 0.0,
+  average_response_time_minutes INTEGER,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Escalation execution tracking
+CREATE TABLE escalation_executions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  emergency_alert_id UUID REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  escalation_protocol_id UUID REFERENCES escalation_protocols(id),
+  
+  -- Execution details
+  current_level INTEGER NOT NULL,
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  level_completed_at TIMESTAMP WITH TIME ZONE,
+  next_level_scheduled_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Level-specific tracking
+  notifications_sent JSONB DEFAULT '[]'::jsonb,
+  responses_received JSONB DEFAULT '[]'::jsonb,
+  acknowledgments_required INTEGER DEFAULT 0,
+  acknowledgments_received INTEGER DEFAULT 0,
+  
+  -- Override and control
+  manual_override BOOLEAN DEFAULT false,
+  override_reason VARCHAR(200),
+  stopped_by emergency_resolver,
+  stopped_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Performance metrics
+  level_response_time_ms INTEGER,
+  notification_success_rate DECIMAL(3,2),
+  
+  status VARCHAR(20) DEFAULT 'executing' -- executing, completed, stopped, failed
+);
+
+CREATE INDEX idx_escalation_executions_alert ON escalation_executions(emergency_alert_id);
+CREATE INDEX idx_escalation_executions_active ON escalation_executions(status, next_level_scheduled_at)
+  WHERE status = 'executing';
+```
+
+```typescript Escalation Protocol Interface
+interface EscalationProtocol {
+  id: string;
+  userId: string;
+  
+  // Configuration
+  protocolName: string;
+  isDefault: boolean;
+  priorityOrder: number;
+  
+  // Level definitions
+  escalationLevels: EscalationLevel[];
+  
+  // Trigger conditions
+  severityThresholds: SeverityThresholds;
+  alertTypeOverrides: AlertTypeOverrides;
+  timeBasedModifications: TimeBasedModifications;
+  locationBasedModifications: LocationBasedModifications;
+  
+  // Emergency services
+  emergencyServicesConfig: EmergencyServicesConfig;
+  
+  // Performance tracking
+  isActive: boolean;
+  lastUsedAt?: string;
+  successRate: number;
+  averageResponseTimeMinutes?: number;
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EscalationLevel {
+  level: number;
+  delayMinutes: number;
+  contactTiers: ContactTier[];
+  notificationMethods: NotificationMethod[];
+  requireAcknowledgment: boolean;
+  timeoutMinutes: number;
+  autoCallEmergencyServices?: boolean;
+  customMessage?: string;
+  evidenceIncluded?: EvidenceType[];
+}
+
+interface EscalationExecution {
+  id: string;
+  emergencyAlertId: string;
+  escalationProtocolId: string;
+  
+  // Current state
+  currentLevel: number;
+  startedAt: string;
+  levelCompletedAt?: string;
+  nextLevelScheduledAt?: string;
+  
+  // Tracking
+  notificationsSent: NotificationRecord[];
+  responsesReceived: ResponseRecord[];
+  acknowledgmentsRequired: number;
+  acknowledgmentsReceived: number;
+  
+  // Control
+  manualOverride: boolean;
+  overrideReason?: string;
+  stoppedBy?: EmergencyResolver;
+  stoppedAt?: string;
+  
+  // Metrics
+  levelResponseTimeMs?: number;
+  notificationSuccessRate?: number;
+  status: ExecutionStatus;
+}
+
+type ContactTier = 'primary' | 'secondary' | 'emergency' | 'all';
+type NotificationMethod = 'push' | 'sms' | 'call' | 'email' | 'emergency_service';
+type ExecutionStatus = 'executing' | 'completed' | 'stopped' | 'failed';
+type EvidenceType = 'location' | 'audio' | 'photo' | 'medical_info' | 'device_state';
+```
+</CodeGroup>
+
+## Evidence Collection System
+
+### Automated Evidence Gathering
+
+<Steps>
+  <Step title="Immediate Capture">
+    Instant activation of device sensors and media collection upon emergency trigger
+  </Step>
+  <Step title="Context-Aware Recording">
+    Intelligent evidence collection based on emergency type and user preferences
+  </Step>
+  <Step title="Secure Storage">
+    Encrypted evidence storage with tamper-proof timestamps and metadata
+  </Step>
+  <Step title="Selective Sharing">
+    Granular control over which evidence is shared with which contacts
+  </Step>
+</Steps>
+
+<Accordion title="Evidence Collection Configuration">
+**Audio Recording:**
+- Configurable pre-trigger recording buffer (30 seconds to 5 minutes)
+- Noise reduction and voice enhancement for emergency communications
+- Automatic transcription with keyword detection
+- Privacy controls for audio sharing with different contact types
+
+**Visual Evidence:**
+- Automatic photo capture at trigger + periodic intervals
+- Front/rear camera selection based on emergency type
+- Video recording with configurable duration and quality
+- Automatic upload with compression optimization
+
+**Sensor Data:**
+- Accelerometer data for movement/impact analysis
+- GPS trajectory with high-accuracy positioning
+- Heart rate and health data from connected wearables
+- Environmental sensors (light, noise, temperature)
+
+**Device State:**
+- Battery level and charging status
+- Network connectivity and signal strength
+- Running applications and recent activity
+- Device orientation and lock status
+</Accordion>
+
+<CodeGroup>
+```sql Evidence Management
+CREATE TABLE emergency_evidence (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  emergency_alert_id UUID REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  
+  -- Evidence classification
+  evidence_type evidence_type_enum NOT NULL,
+  evidence_subtype VARCHAR(50), -- voice_call, impact_sound, etc.
+  collection_method VARCHAR(30), -- automatic, manual, triggered
+  
+  -- File information
+  file_url TEXT,
+  file_size_bytes BIGINT,
+  file_format VARCHAR(20),
+  file_hash VARCHAR(64), -- SHA-256 for integrity verification
+  
+  -- Content metadata
+  duration_seconds REAL, -- For audio/video
+  resolution VARCHAR(20), -- For photos/video
+  quality_score DECIMAL(3,2), -- AI-assessed quality
+  
+  -- Capture context
+  captured_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  device_location GEOGRAPHY(POINT, 4326),
+  device_orientation VARCHAR(20),
+  ambient_conditions JSONB DEFAULT '{}'::jsonb,
+  
+  -- Processing and analysis
+  ai_analysis_results JSONB DEFAULT '{}'::jsonb,
+  transcription TEXT, -- For audio evidence
+  detected_keywords TEXT[],
+  threat_indicators JSONB DEFAULT '{}'::jsonb,
+  
+  -- Privacy and sharing
+  sharing_permissions JSONB DEFAULT '{
+    "emergency_contacts": true,
+    "emergency_services": false,
+    "law_enforcement": false,
+    "healthcare_providers": false
+  }'::jsonb,
+  
+  retention_period_days INTEGER DEFAULT 30,
+  auto_delete_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Security
+  encryption_key_id UUID,
+  access_log JSONB DEFAULT '[]'::jsonb,
+  
+  -- Status
+  processing_status VARCHAR(20) DEFAULT 'processing', -- processing, ready, failed
+  is_deleted BOOLEAN DEFAULT false,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  deletion_reason VARCHAR(100)
+);
+
+CREATE TYPE evidence_type_enum AS ENUM (
+  'audio_recording',
+  'photo_evidence',
+  'video_recording',
+  'sensor_data',
+  'device_state',
+  'location_trace',
+  'health_data',
+  'communication_log',
+  'environmental_data'
+);
+
+-- Evidence processing queue
+CREATE TABLE evidence_processing_queue (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  evidence_id UUID REFERENCES emergency_evidence(id) ON DELETE CASCADE,
+  
+  processing_type VARCHAR(30) NOT NULL, -- transcription, analysis, compression
+  priority INTEGER DEFAULT 0, -- Higher numbers = higher priority
+  
+  queued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  started_at TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  
+  processor_id VARCHAR(50), -- Which service/worker is processing
+  processing_config JSONB DEFAULT '{}'::jsonb,
+  
+  status VARCHAR(20) DEFAULT 'queued', -- queued, processing, completed, failed
+  error_message TEXT,
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3
+);
+
+CREATE INDEX idx_evidence_alert ON emergency_evidence(emergency_alert_id);
+CREATE INDEX idx_evidence_type ON emergency_evidence(evidence_type, captured_at DESC);
+CREATE INDEX idx_evidence_processing_queue ON evidence_processing_queue(priority DESC, queued_at)
+  WHERE status = 'queued';
+```
+
+```typescript Evidence Collection Interface
+interface EmergencyEvidence {
+  id: string;
+  emergencyAlertId: string;
+  
+  // Classification
+  evidenceType: EvidenceType;
+  evidenceSubtype?: string;
+  collectionMethod: CollectionMethod;
+  
+  // File details
+  fileUrl?: string;
+  fileSizeBytes?: number;
+  fileFormat?: string;
+  fileHash?: string; // For integrity verification
+  
+  // Content metadata
+  durationSeconds?: number;
+  resolution?: string;
+  qualityScore?: number;
+  
+  // Capture context
+  capturedAt: string;
+  deviceLocation?: GeoLocation;
+  deviceOrientation?: string;
+  ambientConditions: AmbientConditions;
+  
+  // AI processing
+  aiAnalysisResults: AIAnalysisResults;
+  transcription?: string;
+  detectedKeywords: string[];
+  threatIndicators: ThreatIndicator[];
+  
+  // Privacy controls
+  sharingPermissions: EvidenceSharingPermissions;
+  retentionPeriodDays: number;
+  autoDeleteAt?: string;
+  
+  // Security
+  encryptionKeyId?: string;
+  accessLog: AccessRecord[];
+  
+  // Status
+  processingStatus: ProcessingStatus;
+  isDeleted: boolean;
+  deletedAt?: string;
+  deletionReason?: string;
+}
+
+interface EvidenceSharingPermissions {
+  emergencyContacts: boolean;
+  emergencyServices: boolean;
+  lawEnforcement: boolean;
+  healthcareProviders: boolean;
+  customContactGroups?: ContactGroupPermission[];
+}
+
+interface AIAnalysisResults {
+  confidenceScore: number;
+  detectedEmotions?: EmotionAnalysis[];
+  voiceStressLevel?: number;
+  backgroundNoiseAnalysis?: NoiseAnalysis;
+  visualThreatDetection?: VisualThreat[];
+  movementPatternAnalysis?: MovementPattern;
+}
+
+type EvidenceType = 'audio_recording' | 'photo_evidence' | 'video_recording' 
+  | 'sensor_data' | 'device_state' | 'location_trace' | 'health_data' 
+  | 'communication_log' | 'environmental_data';
+
+type CollectionMethod = 'automatic' | 'manual' | 'triggered' | 'scheduled';
+type ProcessingStatus = 'processing' | 'ready' | 'failed' | 'queued';
+```
+</CodeGroup>
+
+## Multi-Channel Communication System
+
+### Redundant Notification Delivery
+
+<CardGroup cols={2}>
+  <Card title="Primary Channels" icon="smartphone">
+    Push notifications with real-time delivery confirmation and read receipts
+  </Card>
+  <Card title="Fallback Channels" icon="phone">
+    SMS, voice calls, and email with automatic failover for unreachable contacts
+  </Card>
+  <Card title="Emergency Overrides" icon="alert-triangle">
+    System-level notification overrides that bypass Do Not Disturb and volume settings
+  </Card>
+  <Card title="Delivery Confirmation" icon="check-circle">
+    Real-time tracking of message delivery, read status, and contact response
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```sql Communication Tracking
+CREATE TABLE emergency_notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  emergency_alert_id UUID REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  escalation_execution_id UUID REFERENCES escalation_executions(id),
+  
+  -- Recipient information
+  recipient_user_id UUID REFERENCES users(id),
+  recipient_phone VARCHAR(20),
+  recipient_email VARCHAR(100),
+  contact_relationship VARCHAR(30),
+  
+  -- Notification details
+  notification_method notification_method_enum NOT NULL,
+  message_template_id UUID,
+  message_content TEXT NOT NULL,
+  message_priority INTEGER DEFAULT 0, -- 0 = normal, 1 = high, 2 = critical
+  
+  -- Delivery tracking
+  sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  delivered_at TIMESTAMP WITH TIME ZONE,
+  read_at TIMESTAMP WITH TIME ZONE,
+  responded_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Status and confirmation
+  delivery_status notification_status DEFAULT 'sending',
+  delivery_attempts INTEGER DEFAULT 0,
+  max_delivery_attempts INTEGER DEFAULT 3,
+  
+  -- Provider tracking
+  provider_service VARCHAR(50), -- expo, twilio, sendgrid, etc.
+  provider_message_id VARCHAR(100),
+  provider_status VARCHAR(50),
+  provider_error_code VARCHAR(20),
+  provider_error_message TEXT,
+  
+  -- Response tracking
+  response_method VARCHAR(20), -- app, sms, call, email
+  response_content TEXT,
+  acknowledgment_required BOOLEAN DEFAULT false,
+  acknowledged BOOLEAN DEFAULT false,
+  acknowledgment_method VARCHAR(20),
+  
+  -- Analytics
+  notification_effectiveness_score DECIMAL(3,2),
+  response_time_seconds INTEGER,
+  
+  -- Retry and fallback
+  is_retry BOOLEAN DEFAULT false,
+  original_notification_id UUID REFERENCES emergency_notifications(id),
+  fallback_to_method notification_method_enum,
+  fallback_scheduled_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TYPE notification_method_enum AS ENUM (
+  'push_notification',
+  'sms_message',
+  'voice_call',
+  'email',
+  'in_app_alert',
+  'emergency_service_api',
+  'webhook',
+  'system_alert'
+);
+
+CREATE TYPE notification_status AS ENUM (
+  'queued',
+  'sending',
+  'sent',
+  'delivered',
+  'read',
+  'failed',
+  'cancelled',
+  'expired'
+);
+
+-- Real-time delivery monitoring
+CREATE TABLE notification_delivery_log (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  notification_id UUID REFERENCES emergency_notifications(id) ON DELETE CASCADE,
+  
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  event_type VARCHAR(30) NOT NULL, -- queued, sent, delivered, failed, etc.
+  event_details JSONB DEFAULT '{}'::jsonb,
+  
+  -- Provider response
+  provider_response JSONB,
+  network_conditions JSONB,
+  device_status JSONB,
+  
+  -- Error tracking
+  error_category VARCHAR(50),
+  error_severity VARCHAR(20),
+  retry_recommended BOOLEAN DEFAULT false
+);
+
+CREATE INDEX idx_emergency_notifications_alert ON emergency_notifications(emergency_alert_id, sent_at);
+CREATE INDEX idx_emergency_notifications_recipient ON emergency_notifications(recipient_user_id, sent_at DESC);
+CREATE INDEX idx_emergency_notifications_status ON emergency_notifications(delivery_status, sent_at)
+  WHERE delivery_status IN ('queued', 'sending', 'failed');
+CREATE INDEX idx_notification_delivery_log_notification ON notification_delivery_log(notification_id, timestamp DESC);
+```
+
+```typescript Emergency Communication Interface
+interface EmergencyNotification {
+  id: string;
+  emergencyAlertId: string;
+  escalationExecutionId?: string;
+  
+  // Recipient
+  recipientUserId?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  contactRelationship?: string;
+  
+  // Message details
+  notificationMethod: NotificationMethod;
+  messageTemplateId?: string;
+  messageContent: string;
+  messagePriority: 0 | 1 | 2; // normal, high, critical
+  
+  // Delivery tracking
+  sentAt: string;
+  deliveredAt?: string;
+  readAt?: string;
+  respondedAt?: string;
+  
+  // Status
+  deliveryStatus: NotificationStatus;
+  deliveryAttempts: number;
+  maxDeliveryAttempts: number;
+  
+  // Provider details
+  providerService: string;
+  providerMessageId?: string;
+  providerStatus?: string;
+  providerErrorCode?: string;
+  providerErrorMessage?: string;
+  
+  // Response tracking
+  responseMethod?: ResponseMethod;
+  responseContent?: string;
+  acknowledgmentRequired: boolean;
+  acknowledged: boolean;
+  acknowledgmentMethod?: string;
+  
+  // Analytics
+  notificationEffectivenessScore?: number;
+  responseTimeSeconds?: number;
+  
+  // Retry and fallback
+  isRetry: boolean;
+  originalNotificationId?: string;
+  fallbackToMethod?: NotificationMethod;
+  fallbackScheduledAt?: string;
+}
+
+interface NotificationDeliveryLog {
+  id: string;
+  notificationId: string;
+  timestamp: string;
+  eventType: DeliveryEventType;
+  eventDetails: DeliveryEventDetails;
+  providerResponse?: ProviderResponse;
+  networkConditions?: NetworkConditions;
+  deviceStatus?: DeviceStatus;
+  errorCategory?: string;
+  errorSeverity?: ErrorSeverity;
+  retryRecommended: boolean;
+}
+
+type NotificationMethod = 'push_notification' | 'sms_message' | 'voice_call' 
+  | 'email' | 'in_app_alert' | 'emergency_service_api' | 'webhook' | 'system_alert';
+
+type NotificationStatus = 'queued' | 'sending' | 'sent' | 'delivered' 
+  | 'read' | 'failed' | 'cancelled' | 'expired';
+
+type ResponseMethod = 'app' | 'sms' | 'call' | 'email' | 'webhook';
+type DeliveryEventType = 'queued' | 'sent' | 'delivered' | 'failed' | 'read' | 'responded';
+type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+```
+</CodeGroup>
+
+## Emergency Service Integration
+
+### Professional Emergency Response
 
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Emergency Service Protocols:** Integration with professional emergency services follows strict protocols with location accuracy verification, callback number provision, and incident classification.
 </Note>
+
+<Steps>
+  <Step title="Service Discovery">
+    Automatic detection of local emergency services based on user location
+  </Step>
+  <Step title="Protocol Compliance">
+    Adherence to local emergency service communication standards and requirements
+  </Step>
+  <Step title="Information Package">
+    Comprehensive emergency information package with location, medical data, and contact details
+  </Step>
+  <Step title="Follow-up Coordination">
+    Continued communication with emergency services throughout incident resolution
+  </Step>
+</Steps>
+
+<Accordion title="Emergency Service Integration Types">
+**Direct API Integration:**
+- Integration with emergency service APIs where available
+- Real-time incident reporting with structured data
+- Automatic location and medical information sharing
+- Two-way communication for incident updates
+
+**SMS/Voice Fallback:**
+- Automated SMS to emergency service text lines
+- Voice call placement with pre-recorded emergency information
+- Manual operator connection for complex situations
+- Backup communication when API services are unavailable
+
+**Third-Party Emergency Services:**
+- Integration with private emergency response companies
+- Specialized medical emergency services
+- Security service dispatching
+- Professional monitoring service coordination
+
+**Implementation:**
+```typescript
+interface EmergencyServiceIntegration {
+  serviceType: EmergencyServiceType;
+  serviceProvider: string;
+  jurisdiction: string;
+  contactMethods: ContactMethod[];
+  
+  // Integration capabilities
+  apiIntegration: boolean;
+  realtimeUpdates: boolean;
+  locationAccuracy: number; // meters required
+  responseTimeGuarantee?: number; // minutes
+  
+  // Data sharing permissions
+  shareLocation: boolean;
+  shareMedicalInfo: boolean;
+  shareContactInfo: boolean;
+  shareEvidence: boolean;
+  
+  // Communication protocols
+  incidentReportingProtocol: ReportingProtocol;
+  escalationProcedure: EscalationProcedure;
+  followUpRequirements: FollowUpRequirement[];
+}
+
+type EmergencyServiceType = 'police' | 'fire' | 'medical' | 'rescue' 
+  | 'private_security' | 'mental_health' | 'crisis_intervention';
+
+interface ContactMethod {
+  method: 'api' | 'sms' | 'voice' | 'email';
+  endpoint: string;
+  priority: number;
+  availabilityHours: string;
+  responseTimeMinutes: number;
+}
+```
+</Accordion>
+
+## False Alarm Prevention
+
+### Intelligent Alert Validation
+
+<CardGroup cols={3}>
+  <Card title="Multi-Factor Validation" icon="shield-check">
+    Multiple trigger confirmation to reduce false positive emergency alerts
+  </Card>
+  <Card title="Grace Period Controls" icon="clock">
+    Configurable cancellation windows for accidental emergency triggers
+  </Card>
+  <Card title="Pattern Recognition" icon="brain">
+    AI learning from user behavior to distinguish real emergencies from false alarms
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```sql False Alarm Management
+CREATE TABLE false_alarm_prevention (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Prevention configuration
+  grace_period_seconds INTEGER DEFAULT 10, -- Time to cancel accidental triggers
+  confirmation_required BOOLEAN DEFAULT true, -- Require confirmation for auto-detected alerts
+  double_trigger_required BOOLEAN DEFAULT false, -- Require two triggers within timeframe
+  
+  -- Pattern learning
+  user_behavior_profile JSONB DEFAULT '{
+    "typical_movement_patterns": {},
+    "common_locations": [],
+    "daily_routines": {},
+    "trigger_sensitivity_adjustments": {}
+  }'::jsonb,
+  
+  -- Validation thresholds
+  ai_confidence_threshold DECIMAL(3,2) DEFAULT 0.8, -- Minimum confidence for auto-triggers
+  sensor_correlation_required BOOLEAN DEFAULT true, -- Multiple sensors must agree
+  location_validation_enabled BOOLEAN DEFAULT true, -- Validate emergency location makes sense
+  
+  -- False alarm tracking
+  total_triggers INTEGER DEFAULT 0,
+  false_alarms INTEGER DEFAULT 0,
+  false_alarm_rate DECIMAL(3,2) DEFAULT 0.0,
+  last_false_alarm_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Learning and adaptation
+  learning_enabled BOOLEAN DEFAULT true,
+  manual_adjustments JSONB DEFAULT '{}'::jsonb,
+  automatic_sensitivity_adjustment BOOLEAN DEFAULT true,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- False alarm analytics
+CREATE TABLE false_alarm_incidents (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  emergency_alert_id UUID REFERENCES emergency_alerts(id),
+  
+  -- Incident details
+  trigger_type emergency_trigger_method,
+  trigger_confidence DECIMAL(3,2),
+  detection_context JSONB,
+  
+  -- User response
+  cancelled_within_grace_period BOOLEAN DEFAULT false,
+  cancellation_time_seconds INTEGER,
+  user_feedback VARCHAR(200),
+  reported_cause VARCHAR(100),
+  
+  -- System analysis
+  system_analysis JSONB DEFAULT '{
+    "sensor_data_quality": {},
+    "location_plausibility": {},
+    "behavior_pattern_match": {},
+    "environmental_factors": {}
+  }'::jsonb,
+  
+  prevention_adjustments JSONB DEFAULT '{}'::jsonb,
+  
+  occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_false_alarm_prevention_user ON false_alarm_prevention(user_id);
+CREATE INDEX idx_false_alarm_incidents_user ON false_alarm_incidents(user_id, occurred_at DESC);
+```
+
+```typescript False Alarm Prevention Interface
+interface FalseAlarmPrevention {
+  id: string;
+  userId: string;
+  
+  // Configuration
+  gracePeriodSeconds: number;
+  confirmationRequired: boolean;
+  doubleTriggerRequired: boolean;
+  
+  // Learning profile
+  userBehaviorProfile: UserBehaviorProfile;
+  
+  // Validation settings
+  aiConfidenceThreshold: number;
+  sensorCorrelationRequired: boolean;
+  locationValidationEnabled: boolean;
+  
+  // Analytics
+  totalTriggers: number;
+  falseAlarms: number;
+  falseAlarmRate: number;
+  lastFalseAlarmAt?: string;
+  
+  // Adaptation
+  learningEnabled: boolean;
+  manualAdjustments: ManualAdjustments;
+  automaticSensitivityAdjustment: boolean;
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UserBehaviorProfile {
+  typicalMovementPatterns: MovementPattern[];
+  commonLocations: LocationPattern[];
+  dailyRoutines: RoutinePattern[];
+  triggerSensitivityAdjustments: SensitivityAdjustment[];
+}
+
+interface FalseAlarmIncident {
+  id: string;
+  userId: string;
+  emergencyAlertId?: string;
+  
+  // Incident context
+  triggerType: EmergencyTriggerMethod;
+  triggerConfidence: number;
+  detectionContext: DetectionContext;
+  
+  // User response
+  cancelledWithinGracePeriod: boolean;
+  cancellationTimeSeconds?: number;
+  userFeedback?: string;
+  reportedCause?: string;
+  
+  // Analysis
+  systemAnalysis: SystemAnalysis;
+  preventionAdjustments: PreventionAdjustment[];
+  
+  occurredAt: string;
+}
+
+interface SystemAnalysis {
+  sensorDataQuality: QualityMetrics;
+  locationPlausibility: PlausibilityScore;
+  behaviorPatternMatch: PatternMatchScore;
+  environmentalFactors: EnvironmentalAnalysis;
+}
+
+// Grace period management
+class GracePeriodManager {
+  static async startGracePeriod(alertId: string, durationSeconds: number): Promise<void> {
+    const cancelToken = await this.createCancelToken(alertId);
+    
+    // Set up cancellation window
+    setTimeout(async () => {
+      const alert = await this.getAlert(alertId);
+      if (alert.status === 'grace_period') {
+        // Grace period expired, proceed with alert
+        await this.proceedWithEmergency(alertId);
+      }
+    }, durationSeconds * 1000);
+  }
+  
+  static async cancelDuringGracePeriod(alertId: string, reason: string): Promise<boolean> {
+    const alert = await this.getAlert(alertId);
+    
+    if (alert.status === 'grace_period') {
+      await this.recordFalseAlarm(alertId, reason);
+      await this.updateAlert(alertId, { status: 'cancelled', resolutionType: 'false_alarm' });
+      return true;
+    }
+    
+    return false;
+  }
+}
+```
+</CodeGroup>
+
+## Emergency Analytics and Learning
+
+### Performance Monitoring
+
+<CardGroup cols={2}>
+  <Card title="Response Time Analysis" icon="clock">
+    Comprehensive tracking of emergency response performance across all system components
+  </Card>
+  <Card title="Contact Effectiveness" icon="users">
+    Analysis of contact response patterns to optimize notification strategies
+  </Card>
+  <Card title="System Reliability" icon="shield">
+    Monitoring of system uptime, notification delivery success, and failure patterns
+  </Card>
+  <Card title="Predictive Improvements" icon="trending-up">
+    Machine learning insights for proactive system optimization and risk prevention
+  </Card>
+</CardGroup>
+
+<Note>
+**Performance Targets for Emergency System:**
+- Alert processing: &lt;1 second from trigger to database
+- First notification delivery: &lt;3 seconds total
+- Contact response time: &lt;2 minutes average
+- System availability: &gt;99.95% uptime
+- Notification delivery rate: &gt;99.5% success
+</Note>
+
+---
+
+## Implementation Best Practices
+
+<Warning>
+**Emergency System Critical Requirements:**
+- All emergency features must work offline with sync when connectivity returns
+- Multiple redundant notification pathways required for reliability
+- Evidence collection must respect privacy while ensuring safety utility
+- False alarm prevention cannot compromise legitimate emergency response
+- Performance monitoring must identify and resolve issues proactively
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Data Flow Architecture" icon="workflow" href="/architecture/data-flow">
+    Understanding how emergency data flows through the entire system
+  </Card>
+  <Card title="Security Design" icon="lock" href="/architecture/security-design">
+    Security measures protecting emergency data and system integrity
+  </Card>
+  <Card title="Emergency Features" icon="bell" href="/features/emergency-alerts">
+    User-facing emergency features and implementation guides
+  </Card>
+</CardGroup>
+
+## Next Steps in Architecture
+
+<Info>
+**Architecture Foundation Complete:** With the user, safety, location, and emergency models documented, you now have the complete data architecture foundation for Shelther. The next phase focuses on feature implementation and user experience documentation.
+</Info>
+
+Continue with Phase 3 feature documentation or move to Phase 4 developer experience based on your implementation priorities.

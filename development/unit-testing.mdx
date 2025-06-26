@@ -1,59 +1,1234 @@
 ---
 title: "Unit Testing"
-description: "Unit Testing documentation for Testing. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to unit testing in Shelther safety applications. Learn testing patterns for emergency features, location services, real-time subscriptions, and safety-critical components with Jest and React Native Testing Library."
 ---
 
 # Unit Testing
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-First Unit Testing:** Unit tests form the foundation of our testing pyramid, providing fast feedback and high confidence in safety-critical components. Every emergency feature must have comprehensive unit test coverage.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+Unit testing in safety applications focuses on testing individual components, functions, and services in isolation. Our approach emphasizes emergency scenario coverage, edge case handling, and performance validation.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Safety-Critical Coverage" icon="shield-check">
+    95%+ test coverage for emergency features with comprehensive edge case testing
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Fast Feedback Loop" icon="zap">
+    Tests run in &lt;30 seconds providing immediate feedback during development
+  </Card>
+  <Card title="Isolated Testing" icon="box">
+    Each component tested independently with mocked dependencies and controlled inputs
+  </Card>
+  <Card title="Performance Validation" icon="clock">
+    Critical functions validated for speed requirements and resource usage
   </Card>
 </CardGroup>
 
----
+## Testing Setup
+
+### Jest Configuration for Safety Apps
+
+<CodeGroup>
+```javascript jest.config.js
+module.exports = {
+  preset: 'react-native',
+  setupFilesAfterEnv: [
+    '@testing-library/jest-native/extend-expect',
+    '<rootDir>/src/test/setup.ts'
+  ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(react-native|@react-native|expo|@expo|@unimodules|unimodules|sentry-expo|native-base|react-navigation))'
+  ],
+  testMatch: [
+    '**/__tests__/**/*.(ts|tsx|js)',
+    '**/*.test.(ts|tsx|js)'
+  ],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/test/**/*',
+    '!src/**/*.stories.{ts,tsx}'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    },
+    // Safety-critical modules require higher coverage
+    'src/services/emergency/': {
+      branches: 95,
+      functions: 95,
+      lines: 95,
+      statements: 95
+    },
+    'src/services/location/': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    'src/hooks/safety/': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    }
+  },
+  testTimeout: 10000,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true
+};
+```
+
+```typescript src/test/setup.ts
+// Global test setup for safety features
+import 'react-native-gesture-handler/jestSetup';
+import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import { jest } from '@jest/globals';
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
+
+// Mock Expo modules critical for safety features
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: jest.fn(() => 
+    Promise.resolve({ status: 'granted' })
+  ),
+  requestBackgroundPermissionsAsync: jest.fn(() => 
+    Promise.resolve({ status: 'granted' })
+  ),
+  getCurrentPositionAsync: jest.fn(() => 
+    Promise.resolve({
+      coords: {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null
+      },
+      timestamp: Date.now()
+    })
+  ),
+  watchPositionAsync: jest.fn()
+}));
+
+jest.mock('expo-notifications', () => ({
+  requestPermissionsAsync: jest.fn(() => 
+    Promise.resolve({ status: 'granted' })
+  ),
+  scheduleNotificationAsync: jest.fn(() => 
+    Promise.resolve('notification-id')
+  ),
+  dismissAllNotificationsAsync: jest.fn(() => Promise.resolve()),
+  setNotificationHandler: jest.fn()
+}));
+
+// Mock Supabase client
+jest.mock('../services/supabase', () => ({
+  supabase: {
+    auth: {
+      getUser: jest.fn(() => 
+        Promise.resolve({ 
+          data: { user: { id: 'test-user-id' } },
+          error: null 
+        })
+      ),
+      signInWithPassword: jest.fn(),
+      signOut: jest.fn()
+    },
+    from: jest.fn(() => ({
+      insert: jest.fn(() => ({ data: null, error: null })),
+      select: jest.fn(() => ({ data: [], error: null })),
+      update: jest.fn(() => ({ data: null, error: null })),
+      delete: jest.fn(() => ({ data: null, error: null }))
+    })),
+    channel: jest.fn(() => ({
+      on: jest.fn(() => ({ subscribe: jest.fn() })),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn()
+    }))
+  }
+}));
+
+// Safety-specific test utilities
+global.createEmergencyTestContext = () => ({
+  user: {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    emergency_contacts: [
+      {
+        id: 'contact-1',
+        name: 'Emergency Contact 1',
+        phone: '+1234567890',
+        priority: 1
+      }
+    ]
+  },
+  location: {
+    latitude: 40.7128,
+    longitude: -74.0060,
+    accuracy: 10
+  }
+});
+
+// Performance testing utilities
+global.measureExecutionTime = async (fn: () => Promise<any>) => {
+  const start = performance.now();
+  await fn();
+  return performance.now() - start;
+};
+
+// Mock timer for testing delayed actions
+global.advanceTimersByTime = (ms: number) => {
+  jest.advanceTimersByTime(ms);
+};
+```
+</CodeGroup>
+
+## Testing Emergency Services
+
+### Emergency Alert Service Testing
+
+<Accordion title="Core Emergency Alert Functions">
+The emergency alert service is the most critical component requiring comprehensive testing of all trigger mechanisms, error handling, and performance requirements.
+
+```typescript
+// src/services/emergency/__tests__/EmergencyAlertService.test.ts
+import { EmergencyAlertService } from '../EmergencyAlertService';
+import { LocationService } from '../../location/LocationService';
+import { NotificationService } from '../../notification/NotificationService';
+import { supabase } from '../../supabase';
+
+// Mock dependencies
+jest.mock('../../location/LocationService');
+jest.mock('../../notification/NotificationService');
+jest.mock('../../supabase');
+
+describe('EmergencyAlertService', () => {
+  let emergencyService: EmergencyAlertService;
+  let mockLocationService: jest.Mocked<typeof LocationService>;
+  let mockNotificationService: jest.Mocked<typeof NotificationService>;
+
+  beforeEach(() => {
+    emergencyService = new EmergencyAlertService();
+    mockLocationService = LocationService as jest.Mocked<typeof LocationService>;
+    mockNotificationService = NotificationService as jest.Mocked<typeof NotificationService>;
+    
+    // Reset all mocks
+    jest.clearAllMocks();
+    
+    // Setup default mock responses
+    mockLocationService.getCurrentPosition.mockResolvedValue({
+      latitude: 40.7128,
+      longitude: -74.0060,
+      accuracy: 10
+    });
+  });
+
+  describe('triggerAlert', () => {
+    it('should complete alert within 3 second requirement', async () => {
+      const startTime = performance.now();
+      
+      await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+      
+      const duration = performance.now() - startTime;
+      expect(duration).toBeLessThan(3000);
+    });
+
+    it('should capture accurate location', async () => {
+      const alert = await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+
+      expect(mockLocationService.getCurrentPosition).toHaveBeenCalledWith({
+        accuracy: 'high',
+        timeout: 10000,
+        maximumAge: 0
+      });
+      expect(alert.location).toEqual({
+        latitude: 40.7128,
+        longitude: -74.0060,
+        accuracy: 10
+      });
+    });
+
+    it('should handle location service failure gracefully', async () => {
+      mockLocationService.getCurrentPosition.mockRejectedValue(
+        new Error('Location unavailable')
+      );
+
+      const alert = await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+
+      // Should use last known location or approximate location
+      expect(alert.location).toBeDefined();
+      expect(alert.location_source).toBe('fallback');
+      expect(alert.status).toBe('active'); // Should still create alert
+    });
+
+    it('should work in offline mode', async () => {
+      // Mock offline condition
+      jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
+      
+      const alert = await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+
+      expect(alert.status).toBe('pending_sync');
+      expect(localStorage.getItem).toHaveBeenCalledWith('pending_alerts');
+    });
+
+    it('should handle different trigger types', async () => {
+      const triggerTypes = ['manual', 'voice', 'shake', 'auto_detection'];
+      
+      for (const type of triggerTypes) {
+        const alert = await emergencyService.triggerAlert({
+          type: type as any,
+          userId: 'test-user-id'
+        });
+        
+        expect(alert.trigger_type).toBe(type);
+        expect(alert.id).toBeDefined();
+      }
+    });
+
+    it('should validate user permissions', async () => {
+      await expect(
+        emergencyService.triggerAlert({
+          type: 'manual',
+          userId: 'unauthorized-user'
+        })
+      ).rejects.toThrow('Unauthorized');
+    });
+  });
+
+  describe('cancelAlert', () => {
+    it('should cancel active alert within 1 second', async () => {
+      const alert = await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+
+      const startTime = performance.now();
+      await emergencyService.cancelAlert(alert.id, 'test-user-id');
+      const duration = performance.now() - startTime;
+
+      expect(duration).toBeLessThan(1000);
+    });
+
+    it('should notify contacts of cancellation', async () => {
+      const alert = await emergencyService.triggerAlert({
+        type: 'manual',
+        userId: 'test-user-id'
+      });
+
+      await emergencyService.cancelAlert(alert.id, 'test-user-id');
+
+      expect(mockNotificationService.sendCancellationNotification).toHaveBeenCalledWith({
+        alertId: alert.id,
+        userId: 'test-user-id',
+        message: 'Emergency alert has been cancelled - user is safe'
+      });
+    });
+  });
+});
+```
+</Accordion>
+
+### Location Service Testing
+
+<CodeGroup>
+```typescript Location Service Unit Tests
+// src/services/location/__tests__/LocationService.test.ts
+import { LocationService } from '../LocationService';
+import * as Location from 'expo-location';
+
+jest.mock('expo-location');
+
+describe('LocationService', () => {
+  let locationService: LocationService;
+  const mockLocation = Location as jest.Mocked<typeof Location>;
+
+  beforeEach(() => {
+    locationService = new LocationService();
+    jest.clearAllMocks();
+  });
+
+  describe('getCurrentPosition', () => {
+    it('should return accurate position within timeout', async () => {
+      mockLocation.getCurrentPositionAsync.mockResolvedValue({
+        coords: {
+          latitude: 40.7128,
+          longitude: -74.0060,
+          accuracy: 5,
+          altitude: 10,
+          altitudeAccuracy: 5,
+          heading: 0,
+          speed: 0
+        },
+        timestamp: Date.now()
+      });
+
+      const position = await locationService.getCurrentPosition({
+        accuracy: 'high',
+        timeout: 10000
+      });
+
+      expect(position.accuracy).toBeLessThanOrEqual(10);
+      expect(position.latitude).toBeCloseTo(40.7128, 4);
+      expect(position.longitude).toBeCloseTo(-74.0060, 4);
+    });
+
+    it('should handle permission denied', async () => {
+      mockLocation.requestForegroundPermissionsAsync.mockResolvedValue({
+        status: 'denied'
+      });
+
+      await expect(
+        locationService.getCurrentPosition()
+      ).rejects.toThrow('Location permission denied');
+    });
+
+    it('should timeout appropriately', async () => {
+      mockLocation.getCurrentPositionAsync.mockImplementation(
+        () => new Promise(resolve => setTimeout(resolve, 15000))
+      );
+
+      const startTime = Date.now();
+      
+      await expect(
+        locationService.getCurrentPosition({ timeout: 5000 })
+      ).rejects.toThrow('Location timeout');
+      
+      const duration = Date.now() - startTime;
+      expect(duration).toBeLessThan(6000); // Should timeout at ~5 seconds
+    });
+
+    it('should use cached location when appropriate', async () => {
+      const cachedPosition = {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        accuracy: 15,
+        timestamp: Date.now() - 30000 // 30 seconds old
+      };
+
+      locationService.setLastKnownPosition(cachedPosition);
+
+      const position = await locationService.getCurrentPosition({
+        maximumAge: 60000 // Accept positions up to 1 minute old
+      });
+
+      expect(position).toEqual(cachedPosition);
+      expect(mockLocation.getCurrentPositionAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('startTracking', () => {
+    it('should start location tracking with correct options', async () => {
+      const callback = jest.fn();
+      
+      await locationService.startTracking(callback, {
+        accuracy: 'high',
+        distanceInterval: 10
+      });
+
+      expect(mockLocation.watchPositionAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 10
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it('should optimize tracking for battery life', async () => {
+      const callback = jest.fn();
+      
+      await locationService.startTracking(callback, {
+        batteryOptimized: true
+      });
+
+      expect(mockLocation.watchPositionAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 30000, // 30 seconds for battery optimization
+          distanceInterval: 50 // Larger distance interval
+        }),
+        expect.any(Function)
+      );
+    });
+  });
+
+  describe('calculateDistance', () => {
+    it('should calculate accurate distances', () => {
+      const point1 = { latitude: 40.7128, longitude: -74.0060 }; // NYC
+      const point2 = { latitude: 34.0522, longitude: -118.2437 }; // LA
+      
+      const distance = locationService.calculateDistance(point1, point2);
+      
+      // Distance between NYC and LA is approximately 3944 km
+      expect(distance).toBeCloseTo(3944, -2); // Within 100km accuracy
+    });
+
+    it('should handle same location', () => {
+      const point = { latitude: 40.7128, longitude: -74.0060 };
+      
+      const distance = locationService.calculateDistance(point, point);
+      
+      expect(distance).toBe(0);
+    });
+  });
+});
+```
+</CodeGroup>
+
+## Testing React Components
+
+### Emergency Component Testing
+
+<Accordion title="Emergency Button Component">
+The emergency button is the primary trigger for safety alerts and requires comprehensive testing of all interaction patterns, accessibility features, and visual feedback.
+
+```typescript
+// src/components/emergency/__tests__/EmergencyButton.test.tsx
+import React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { EmergencyButton } from '../EmergencyButton';
+import { EmergencyAlertService } from '../../../services/emergency/EmergencyAlertService';
+
+// Mock the emergency service
+jest.mock('../../../services/emergency/EmergencyAlertService');
+
+describe('EmergencyButton', () => {
+  const mockEmergencyService = EmergencyAlertService as jest.Mocked<typeof EmergencyAlertService>;
+  const mockOnAlert = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should render with proper accessibility labels', () => {
+    const { getByTestId, getByLabelText } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    expect(getByTestId('emergency-button')).toBeTruthy();
+    expect(getByLabelText('Emergency SOS Button')).toBeTruthy();
+  });
+
+  it('should trigger emergency alert on press', async () => {
+    mockEmergencyService.prototype.triggerAlert.mockResolvedValue({
+      id: 'alert-123',
+      status: 'active',
+      location: { latitude: 40.7128, longitude: -74.0060 }
+    });
+
+    const { getByTestId } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    fireEvent.press(getByTestId('emergency-button'));
+
+    await waitFor(() => {
+      expect(mockEmergencyService.prototype.triggerAlert).toHaveBeenCalled();
+      expect(mockOnAlert).toHaveBeenCalledWith({
+        id: 'alert-123',
+        status: 'active'
+      });
+    });
+  });
+
+  it('should show loading state during alert creation', async () => {
+    // Simulate slow alert creation
+    mockEmergencyService.prototype.triggerAlert.mockImplementation(
+      () => new Promise(resolve => setTimeout(resolve, 2000))
+    );
+
+    const { getByTestId } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    fireEvent.press(getByTestId('emergency-button'));
+
+    // Should show loading immediately
+    expect(getByTestId('emergency-button-loading')).toBeTruthy();
+    
+    // Button should be disabled during loading
+    expect(getByTestId('emergency-button')).toHaveProp('disabled', true);
+  });
+
+  it('should handle long press for confirmation', async () => {
+    const { getByTestId } = render(
+      <EmergencyButton 
+        onAlert={mockOnAlert}
+        requireLongPress={true}
+        longPressDuration={2000}
+      />
+    );
+
+    // Short press should not trigger
+    fireEvent.press(getByTestId('emergency-button'));
+    expect(mockEmergencyService.prototype.triggerAlert).not.toHaveBeenCalled();
+
+    // Long press should trigger
+    fireEvent(getByTestId('emergency-button'), 'pressIn');
+    
+    // Advance timers to simulate long press
+    jest.advanceTimersByTime(2000);
+    
+    fireEvent(getByTestId('emergency-button'), 'pressOut');
+
+    await waitFor(() => {
+      expect(mockEmergencyService.prototype.triggerAlert).toHaveBeenCalled();
+    });
+  });
+
+  it('should provide haptic feedback', async () => {
+    const mockHapticFeedback = jest.fn();
+    jest.mock('expo-haptics', () => ({
+      impactAsync: mockHapticFeedback
+    }));
+
+    const { getByTestId } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    fireEvent.press(getByTestId('emergency-button'));
+
+    expect(mockHapticFeedback).toHaveBeenCalledWith(
+      expect.anything() // HapticsImpactType
+    );
+  });
+
+  it('should display error states appropriately', async () => {
+    mockEmergencyService.prototype.triggerAlert.mockRejectedValue(
+      new Error('Network error')
+    );
+
+    const { getByTestId } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    fireEvent.press(getByTestId('emergency-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('emergency-button-error')).toBeTruthy();
+    });
+  });
+
+  it('should work with screen readers', () => {
+    const { getByTestId } = render(
+      <EmergencyButton onAlert={mockOnAlert} />
+    );
+
+    const button = getByTestId('emergency-button');
+    
+    expect(button).toHaveProp('accessible', true);
+    expect(button).toHaveProp('accessibilityRole', 'button');
+    expect(button).toHaveProp('accessibilityLabel', 'Emergency SOS Button');
+    expect(button).toHaveProp('accessibilityHint', 'Tap to send emergency alert to your contacts');
+  });
+});
+```
+</Accordion>
+
+### Location Sharing Component Testing
+
+<CodeGroup>
+```typescript Location Sharing Tests
+// src/components/location/__tests__/LocationShareToggle.test.tsx
+import React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { LocationShareToggle } from '../LocationShareToggle';
+import { useLocationSharing } from '../../../hooks/useLocationSharing';
+
+// Mock the location sharing hook
+jest.mock('../../../hooks/useLocationSharing');
+
+describe('LocationShareToggle', () => {
+  const mockUseLocationSharing = useLocationSharing as jest.MockedFunction<typeof useLocationSharing>;
+  const mockStartSharing = jest.fn();
+  const mockStopSharing = jest.fn();
+
+  beforeEach(() => {
+    mockUseLocationSharing.mockReturnValue({
+      isSharing: false,
+      sharedWith: [],
+      startSharing: mockStartSharing,
+      stopSharing: mockStopSharing,
+      isLoading: false,
+      error: null
+    });
+    jest.clearAllMocks();
+  });
+
+  it('should start location sharing when toggled on', async () => {
+    const { getByTestId } = render(
+      <LocationShareToggle contactId="contact-123" />
+    );
+
+    fireEvent.press(getByTestId('location-share-toggle'));
+
+    await waitFor(() => {
+      expect(mockStartSharing).toHaveBeenCalledWith({
+        contactId: 'contact-123',
+        duration: 24 * 60 * 60 * 1000, // 24 hours default
+        permissions: ['location']
+      });
+    });
+  });
+
+  it('should stop location sharing when toggled off', async () => {
+    mockUseLocationSharing.mockReturnValue({
+      isSharing: true,
+      sharedWith: ['contact-123'],
+      startSharing: mockStartSharing,
+      stopSharing: mockStopSharing,
+      isLoading: false,
+      error: null
+    });
+
+    const { getByTestId } = render(
+      <LocationShareToggle contactId="contact-123" />
+    );
+
+    fireEvent.press(getByTestId('location-share-toggle'));
+
+    await waitFor(() => {
+      expect(mockStopSharing).toHaveBeenCalledWith('contact-123');
+    });
+  });
+
+  it('should show loading state', () => {
+    mockUseLocationSharing.mockReturnValue({
+      isSharing: false,
+      sharedWith: [],
+      startSharing: mockStartSharing,
+      stopSharing: mockStopSharing,
+      isLoading: true,
+      error: null
+    });
+
+    const { getByTestId } = render(
+      <LocationShareToggle contactId="contact-123" />
+    );
+
+    expect(getByTestId('location-share-loading')).toBeTruthy();
+  });
+
+  it('should display error messages', () => {
+    mockUseLocationSharing.mockReturnValue({
+      isSharing: false,
+      sharedWith: [],
+      startSharing: mockStartSharing,
+      stopSharing: mockStopSharing,
+      isLoading: false,
+      error: 'Location permission denied'
+    });
+
+    const { getByText } = render(
+      <LocationShareToggle contactId="contact-123" />
+    );
+
+    expect(getByText('Location permission denied')).toBeTruthy();
+  });
+});
+```
+</CodeGroup>
+
+## Testing Custom Hooks
+
+### Safety Hook Testing
+
+<Accordion title="useEmergencyAlert Hook">
+Custom hooks for safety features require comprehensive testing of state management, side effects, and error handling.
+
+```typescript
+// src/hooks/__tests__/useEmergencyAlert.test.ts
+import { renderHook, act } from '@testing-library/react-hooks';
+import { useEmergencyAlert } from '../useEmergencyAlert';
+import { EmergencyAlertService } from '../../services/emergency/EmergencyAlertService';
+
+jest.mock('../../services/emergency/EmergencyAlertService');
+
+describe('useEmergencyAlert', () => {
+  const mockEmergencyService = EmergencyAlertService as jest.Mocked<typeof EmergencyAlertService>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should initialize with correct default state', () => {
+    const { result } = renderHook(() => useEmergencyAlert());
+
+    expect(result.current.alert).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isActive).toBe(false);
+  });
+
+  it('should trigger alert successfully', async () => {
+    const mockAlert = {
+      id: 'alert-123',
+      status: 'active',
+      location: { latitude: 40.7128, longitude: -74.0060 }
+    };
+
+    mockEmergencyService.prototype.triggerAlert.mockResolvedValue(mockAlert);
+
+    const { result } = renderHook(() => useEmergencyAlert());
+
+    await act(async () => {
+      await result.current.triggerAlert('manual');
+    });
+
+    expect(result.current.alert).toEqual(mockAlert);
+    expect(result.current.isActive).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('should handle alert failure gracefully', async () => {
+    const error = new Error('Network error');
+    mockEmergencyService.prototype.triggerAlert.mockRejectedValue(error);
+
+    const { result } = renderHook(() => useEmergencyAlert());
+
+    await act(async () => {
+      await result.current.triggerAlert('manual');
+    });
+
+    expect(result.current.alert).toBeNull();
+    expect(result.current.isActive).toBe(false);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBe('Network error');
+  });
+
+  it('should cancel alert successfully', async () => {
+    const mockAlert = {
+      id: 'alert-123',
+      status: 'active',
+      location: { latitude: 40.7128, longitude: -74.0060 }
+    };
+
+    mockEmergencyService.prototype.triggerAlert.mockResolvedValue(mockAlert);
+    mockEmergencyService.prototype.cancelAlert.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useEmergencyAlert());
+
+    // First trigger an alert
+    await act(async () => {
+      await result.current.triggerAlert('manual');
+    });
+
+    // Then cancel it
+    await act(async () => {
+      await result.current.cancelAlert();
+    });
+
+    expect(result.current.alert).toBeNull();
+    expect(result.current.isActive).toBe(false);
+    expect(mockEmergencyService.prototype.cancelAlert).toHaveBeenCalledWith('alert-123');
+  });
+
+  it('should auto-cancel after timeout', async () => {
+    jest.useFakeTimers();
+
+    const mockAlert = {
+      id: 'alert-123',
+      status: 'active',
+      location: { latitude: 40.7128, longitude: -74.0060 }
+    };
+
+    mockEmergencyService.prototype.triggerAlert.mockResolvedValue(mockAlert);
+    mockEmergencyService.prototype.cancelAlert.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => 
+      useEmergencyAlert({ autoCancel: 300000 }) // 5 minutes
+    );
+
+    await act(async () => {
+      await result.current.triggerAlert('manual');
+    });
+
+    expect(result.current.isActive).toBe(true);
+
+    // Fast-forward time
+    act(() => {
+      jest.advanceTimersByTime(300000);
+    });
+
+    expect(mockEmergencyService.prototype.cancelAlert).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+});
+```
+</Accordion>
+
+## Testing Utilities and Helpers
+
+### Mock Data Factories
+
+<CodeGroup>
+```typescript Test Data Factories
+// src/test/factories/index.ts
+import { faker } from '@faker-js/faker';
+
+export const createMockUser = (overrides = {}) => ({
+  id: faker.string.uuid(),
+  email: faker.internet.email(),
+  phone_number: faker.phone.number(),
+  full_name: faker.person.fullName(),
+  created_at: faker.date.past().toISOString(),
+  ...overrides
+});
+
+export const createMockEmergencyContact = (overrides = {}) => ({
+  id: faker.string.uuid(),
+  name: faker.person.fullName(),
+  phone: faker.phone.number(),
+  email: faker.internet.email(),
+  relationship: faker.helpers.arrayElement(['family', 'friend', 'partner', 'colleague']),
+  priority: faker.number.int({ min: 1, max: 3 }),
+  verified: true,
+  ...overrides
+});
+
+export const createMockLocation = (overrides = {}) => ({
+  latitude: faker.location.latitude(),
+  longitude: faker.location.longitude(),
+  accuracy: faker.number.float({ min: 1, max: 50 }),
+  altitude: faker.number.float({ min: 0, max: 1000 }),
+  timestamp: Date.now(),
+  ...overrides
+});
+
+export const createMockEmergencyAlert = (overrides = {}) => ({
+  id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  alert_type: faker.helpers.arrayElement(['manual', 'voice', 'shake', 'auto_detection']),
+  status: faker.helpers.arrayElement(['active', 'resolved', 'cancelled']),
+  location: createMockLocation(),
+  created_at: faker.date.recent().toISOString(),
+  contacts_notified: [createMockEmergencyContact()],
+  evidence: [],
+  ...overrides
+});
+
+export const createMockLocationShare = (overrides = {}) => ({
+  id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  shared_with_user_id: faker.string.uuid(),
+  permissions: ['location', 'emergency_alerts'],
+  expires_at: faker.date.future().toISOString(),
+  is_active: true,
+  created_at: faker.date.recent().toISOString(),
+  ...overrides
+});
+```
+
+```typescript Performance Testing Utilities
+// src/test/utils/performance.ts
+export const measureAsyncFunction = async <T>(
+  fn: () => Promise<T>,
+  maxDuration: number,
+  description: string
+): Promise<T> => {
+  const start = performance.now();
+  const result = await fn();
+  const duration = performance.now() - start;
+  
+  if (duration > maxDuration) {
+    throw new Error(
+      `${description} took ${duration}ms, expected < ${maxDuration}ms`
+    );
+  }
+  
+  return result;
+};
+
+export const measureMemoryUsage = async <T>(
+  fn: () => Promise<T>
+): Promise<{ result: T; memoryDelta: number }> => {
+  const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+  const result = await fn();
+  const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+  
+  return {
+    result,
+    memoryDelta: finalMemory - initialMemory
+  };
+};
+
+export const waitForCondition = async (
+  condition: () => boolean,
+  timeout: number = 5000,
+  interval: number = 100
+): Promise<void> => {
+  const start = Date.now();
+  
+  while (!condition() && Date.now() - start < timeout) {
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+  
+  if (!condition()) {
+    throw new Error(`Condition not met within ${timeout}ms`);
+  }
+};
+
+// Emergency-specific test utilities
+export const simulateEmergencyScenario = async (
+  scenario: 'low_battery' | 'poor_signal' | 'offline' | 'normal'
+) => {
+  switch (scenario) {
+    case 'low_battery':
+      Object.defineProperty(navigator, 'battery', {
+        value: { level: 0.05, charging: false }
+      });
+      break;
+    case 'poor_signal':
+      Object.defineProperty(navigator, 'connection', {
+        value: { effectiveType: '2g', downlink: 0.1 }
+      });
+      break;
+    case 'offline':
+      Object.defineProperty(navigator, 'onLine', { value: false });
+      break;
+  }
+};
+```
+</CodeGroup>
+
+## Test Coverage and Quality Metrics
+
+### Coverage Requirements
 
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Safety-Critical Coverage Standards:** Different components have different coverage requirements based on their safety criticality.
 </Note>
+
+| Component Type | Branch Coverage | Function Coverage | Line Coverage |
+|----------------|----------------|-------------------|---------------|
+| **Emergency Services** | &gt;95% | &gt;95% | &gt;95% |
+| **Location Services** | &gt;90% | &gt;90% | &gt;90% |
+| **Safety Hooks** | &gt;90% | &gt;90% | &gt;90% |
+| **UI Components** | &gt;85% | &gt;85% | &gt;85% |
+| **Utilities** | &gt;80% | &gt;80% | &gt;80% |
+
+### Quality Metrics
+
+<CardGroup cols={2}>
+  <Card title="Performance Benchmarks" icon="zap">
+    Emergency functions must complete within strict time limits to ensure user safety
+  </Card>
+  <Card title="Error Handling" icon="shield">
+    All edge cases and error conditions must be tested and handled gracefully
+  </Card>
+  <Card title="Accessibility" icon="universal-access">
+    Safety features must work with assistive technologies and accessibility tools
+  </Card>
+  <Card title="Memory Usage" icon="cpu">
+    Critical functions should not cause memory leaks or excessive resource usage
+  </Card>
+</CardGroup>
+
+## Advanced Testing Patterns
+
+### Snapshot Testing for Safety UI
+
+<Accordion title="Emergency UI Snapshot Testing">
+Snapshot testing ensures that critical UI components don't change unexpectedly, which could affect user safety during emergencies.
+
+```typescript
+// src/components/emergency/__tests__/EmergencyButton.snapshot.test.tsx
+import React from 'react';
+import renderer from 'react-test-renderer';
+import { EmergencyButton } from '../EmergencyButton';
+
+describe('EmergencyButton Snapshots', () => {
+  it('should match snapshot in default state', () => {
+    const tree = renderer
+      .create(<EmergencyButton onAlert={jest.fn()} />)
+      .toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+
+  it('should match snapshot in loading state', () => {
+    const tree = renderer
+      .create(<EmergencyButton onAlert={jest.fn()} isLoading={true} />)
+      .toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+
+  it('should match snapshot in error state', () => {
+    const tree = renderer
+      .create(
+        <EmergencyButton 
+          onAlert={jest.fn()} 
+          error="Network error" 
+        />
+      )
+      .toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+
+  it('should match snapshot with accessibility enabled', () => {
+    const tree = renderer
+      .create(
+        <EmergencyButton 
+          onAlert={jest.fn()} 
+          accessibilityEnabled={true}
+        />
+      )
+      .toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+});
+```
+</Accordion>
+
+### Property-Based Testing
+
+<CodeGroup>
+```typescript Property-Based Testing
+// src/services/location/__tests__/LocationService.property.test.ts
+import { fc } from 'fast-check';
+import { LocationService } from '../LocationService';
+
+describe('LocationService Property-Based Tests', () => {
+  const locationService = new LocationService();
+
+  it('should always return valid coordinates', () => {
+    fc.assert(fc.property(
+      fc.float({ min: -90, max: 90 }),     // latitude
+      fc.float({ min: -180, max: 180 }),   // longitude
+      fc.float({ min: 1, max: 50 }),       // accuracy
+      (lat, lng, accuracy) => {
+        const result = locationService.validateCoordinates({
+          latitude: lat,
+          longitude: lng,
+          accuracy: accuracy
+        });
+        
+        expect(result.isValid).toBe(true);
+        expect(result.coordinates.latitude).toBeGreaterThanOrEqual(-90);
+        expect(result.coordinates.latitude).toBeLessThanOrEqual(90);
+        expect(result.coordinates.longitude).toBeGreaterThanOrEqual(-180);
+        expect(result.coordinates.longitude).toBeLessThanOrEqual(180);
+      }
+    ));
+  });
+
+  it('should calculate distance consistently', () => {
+    fc.assert(fc.property(
+      fc.float({ min: -90, max: 90 }),
+      fc.float({ min: -180, max: 180 }),
+      fc.float({ min: -90, max: 90 }),
+      fc.float({ min: -180, max: 180 }),
+      (lat1, lng1, lat2, lng2) => {
+        const point1 = { latitude: lat1, longitude: lng1 };
+        const point2 = { latitude: lat2, longitude: lng2 };
+        
+        const distance1 = locationService.calculateDistance(point1, point2);
+        const distance2 = locationService.calculateDistance(point2, point1);
+        
+        // Distance should be symmetric
+        expect(Math.abs(distance1 - distance2)).toBeLessThan(0.01);
+        
+        // Distance should be non-negative
+        expect(distance1).toBeGreaterThanOrEqual(0);
+      }
+    ));
+  });
+});
+```
+</CodeGroup>
+
+## Continuous Testing Workflow
+
+### Pre-Commit Testing
+
+<Steps>
+  <Step title="Lint and Format">
+    ESLint and Prettier run automatically to ensure code quality and consistency
+  </Step>
+  <Step title="Type Checking">
+    TypeScript compilation validates type safety across all safety-critical components
+  </Step>
+  <Step title="Unit Tests">
+    Fast unit tests run to provide immediate feedback on core functionality
+  </Step>
+  <Step title="Safety Validation">
+    Special safety-critical tests run to ensure emergency features are functional
+  </Step>
+</Steps>
+
+### Test Automation Scripts
+
+<CodeGroup>
+```json package.json Scripts
+{
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=test",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:safety": "jest --testPathPattern=emergency|location|safety",
+    "test:performance": "jest --testPathPattern=performance",
+    "test:accessibility": "jest --testPathPattern=accessibility",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:debug": "jest --detectOpenHandles --forceExit",
+    "lint": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "pre-commit": "npm run lint && npm run type-check && npm run test:safety"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Best Practices Summary
+
+<Warning>
+**Critical Testing Guidelines:**
+- Always test emergency scenarios first and most thoroughly
+- Use real-world data and conditions in your tests
+- Mock external dependencies but test integration points
+- Validate performance requirements for safety-critical functions
+- Include accessibility testing for all emergency features
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Integration Testing" icon="link" href="/development/integration-testing">
+    Learn how to test complete workflows and feature interactions
+  </Card>
+  <Card title="E2E Testing" icon="monitor" href="/development/e2e-testing">
+    Implement end-to-end testing for complete emergency scenarios
+  </Card>
+  <Card title="Performance Testing" icon="zap" href="/development/performance-testing">
+    Validate performance requirements under stress conditions
+  </Card>
+</CardGroup>
+
+<Info>
+**Testing Philosophy:** Remember that in safety applications, comprehensive testing isn't just about code quality—it's about ensuring that the app works reliably when someone's safety depends on it. Test with that responsibility in mind.
+</Info>

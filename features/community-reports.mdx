@@ -1,59 +1,1457 @@
 ---
 title: "Community Reports"
-description: "Community Reports documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Anonymous safety reporting and community-driven safety intelligence for Shelther. Learn about incident reporting, safety data contribution, and building a safer community together."
 ---
 
 # Community Reports
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Collective Safety Intelligence:** Community Reports empowers users to share safety information anonymously, creating a crowd-sourced safety network that benefits everyone. Your reports help build a safer world for all users.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's Community Reports feature creates a collaborative safety ecosystem where users can anonymously report incidents, share safety information, and contribute to community safety knowledge. Every report helps build a more comprehensive picture of safety across locations and situations.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Anonymous Reporting" icon="eye-off">
+    Share safety concerns and incidents while protecting your identity and privacy
+  </Card>
+  <Card title="Real-Time Intelligence" icon="activity">
+    Immediate safety alerts and updates based on community-reported information
+  </Card>
+  <Card title="Verified Contributions" icon="check-circle">
+    Location-verified reports that build credible community safety intelligence
+  </Card>
+  <Card title="Impact Tracking" icon="trending-up">
+    See how your contributions help improve safety for the entire community
+  </Card>
+</CardGroup>
+
+## Types of Community Reports
+
+### Safety Incident Reports
+
+<Steps>
+  <Step title="Personal Safety Incidents">
+    Reports of harassment, theft, assault, or other safety concerns affecting individuals
+  </Step>
+  <Step title="Venue Safety Issues">
+    Problems with security, staff behavior, facility conditions, or safety protocols
+  </Step>
+  <Step title="Environmental Hazards">
+    Lighting issues, unsafe areas, construction hazards, or environmental concerns
+  </Step>
+  <Step title="Positive Safety Features">
+    Recognition of good safety practices, helpful staff, or effective security measures
+  </Step>
+</Steps>
 
 <CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+```typescript Community Report Types
+interface CommunityReport {
+  reportId: string;
+  reportType: ReportType;
+  category: ReportCategory;
+  severity: SeverityLevel;
+  
+  // Content
+  title: string;
+  description: string;
+  tags: string[];
+  
+  // Location context
+  location: GeoLocation;
+  locationVerified: boolean;
+  venueId?: string;
+  locationDescription: string;
+  
+  // Timing
+  incidentTime: string;
+  reportedAt: string;
+  
+  // Evidence
+  evidence: ReportEvidence;
+  hasWitnesses: boolean;
+  witnessCount?: number;
+  
+  // Reporter information (anonymous)
+  reporterHash: string; // Anonymized identifier
+  reporterCredibility: number;
+  
+  // Processing status
+  status: ReportStatus;
+  verified: boolean;
+  verificationMethod?: VerificationMethod;
+  
+  // Community interaction
+  confirmations: number;
+  supportingReports: string[];
+  helpfulVotes: number;
+  flaggedAsInaccurate: number;
+  
+  // Impact tracking
+  viewCount: number;
+  actionsTaken: CommunityAction[];
+  officialResponse?: OfficialResponse;
 }
-```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+type ReportType = 
+  | 'safety_incident'
+  | 'venue_issue'
+  | 'environmental_hazard'
+  | 'positive_safety'
+  | 'emergency_response'
+  | 'transportation_safety'
+  | 'community_concern'
+  | 'safety_tip';
+
+type ReportCategory = 
+  | 'harassment'
+  | 'theft'
+  | 'assault'
+  | 'stalking'
+  | 'discrimination'
+  | 'unsafe_conditions'
+  | 'poor_lighting'
+  | 'security_issues'
+  | 'staff_behavior'
+  | 'crowd_management'
+  | 'accessibility'
+  | 'emergency_preparedness'
+  | 'positive_experience'
+  | 'helpful_staff'
+  | 'good_security'
+  | 'other';
+
+type SeverityLevel = 1 | 2 | 3 | 4 | 5; // 5 = most severe
+
+interface ReportEvidence {
+  photos: EvidencePhoto[];
+  audio?: EvidenceAudio;
+  additionalDetails: string;
+  contextualInfo: ContextualInfo;
+}
+
+interface ContextualInfo {
+  timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' | 'late_night';
+  crowdLevel: 'empty' | 'few_people' | 'moderate' | 'crowded' | 'very_crowded';
+  weatherConditions: string;
+  lighting: 'excellent' | 'good' | 'poor' | 'very_poor';
+  noiseLevel: 'quiet' | 'moderate' | 'loud' | 'very_loud';
+  securityPresence: 'none' | 'minimal' | 'adequate' | 'strong';
+}
+
+export const ReportSubmissionForm = () => {
+  const [reportData, setReportData] = useState<Partial<CommunityReport>>({
+    reportType: 'safety_incident',
+    severity: 3,
+    hasWitnesses: false,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<GeoLocation | null>(null);
+
+  useEffect(() => {
+    // Get current location for report
+    getCurrentLocation().then(setCurrentLocation);
+  }, []);
+
+  const handleSubmitReport = async () => {
+    if (!validateReportData(reportData)) {
+      Alert.alert('Missing Information', 'Please fill in all required fields.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const submissionData = {
+        ...reportData,
+        location: currentLocation,
+        reportedAt: new Date().toISOString(),
+        reporterHash: await generateAnonymousReporterHash(),
+      };
+
+      const result = await CommunityReportService.submitReport(submissionData);
+      
+      navigation.goBack();
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Report Submitted',
+        text2: 'Thank you for contributing to community safety',
+        visibilityTime: 4000,
+      });
+
+      // Show impact message after delay
+      setTimeout(() => {
+        showImpactNotification(result.reportId);
+      }, 2000);
+
+    } catch (error) {
+      Alert.alert('Submission Failed', 'Please try again or contact support.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Report Safety Information</Text>
+        <Text style={styles.subtitle}>
+          Your anonymous report helps keep the community safe
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>What happened?</Text>
+        <ReportTypeSelector
+          value={reportData.reportType}
+          onChange={(type) => setReportData(prev => ({ ...prev, reportType: type }))}
+        />
+        
+        <ReportCategorySelector
+          reportType={reportData.reportType}
+          value={reportData.category}
+          onChange={(category) => setReportData(prev => ({ ...prev, category }))}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Details</Text>
+        <TextInput
+          style={styles.titleInput}
+          placeholder="Brief title (e.g., 'Poor lighting in parking area')"
+          value={reportData.title}
+          onChangeText={(title) => setReportData(prev => ({ ...prev, title }))}
+          maxLength={100}
+        />
+        
+        <TextInput
+          style={styles.descriptionInput}
+          placeholder="Describe what happened, when, and any other relevant details..."
+          value={reportData.description}
+          onChangeText={(description) => setReportData(prev => ({ ...prev, description }))}
+          multiline
+          maxLength={1000}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Severity</Text>
+        <SeveritySelector
+          value={reportData.severity}
+          onChange={(severity) => setReportData(prev => ({ ...prev, severity }))}
+          reportType={reportData.reportType}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Context & Evidence</Text>
+        <ContextualInfoForm
+          value={reportData.contextualInfo}
+          onChange={(contextualInfo) => setReportData(prev => ({ ...prev, contextualInfo }))}
+        />
+        
+        <EvidenceUpload
+          value={reportData.evidence}
+          onChange={(evidence) => setReportData(prev => ({ ...prev, evidence }))}
+          reportType={reportData.reportType}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Location</Text>
+        <LocationVerification
+          currentLocation={currentLocation}
+          onLocationConfirmed={(location) => setReportData(prev => ({ ...prev, location }))}
+        />
+      </View>
+
+      <View style={styles.privacyNotice}>
+        <Icon name="shield" size={20} color="#4CAF50" />
+        <Text style={styles.privacyText}>
+          Your report is completely anonymous. No personal information is stored or shared.
+        </Text>
+      </View>
+
+      <TouchableOpacity 
+        style={styles.submitButton}
+        onPress={handleSubmitReport}
+        disabled={isSubmitting || !reportData.title || !reportData.description}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit Anonymous Report</Text>
+        )}
+      </TouchableOpacity>
+    </ScrollView>
+  );
+};
+
+const SeveritySelector = ({ value, onChange, reportType }) => {
+  const getSeverityConfig = (level: SeverityLevel) => {
+    const configs = {
+      1: { label: 'Minor', color: '#4CAF50', description: 'Low impact, advisory' },
+      2: { label: 'Moderate', color: '#FF9800', description: 'Noticeable concern' },
+      3: { label: 'Significant', color: '#FF5722', description: 'Important safety issue' },
+      4: { label: 'Serious', color: '#F44336', description: 'Urgent attention needed' },
+      5: { label: 'Critical', color: '#9C27B0', description: 'Immediate danger' },
+    };
+    return configs[level];
+  };
+
+  return (
+    <View style={styles.severitySelector}>
+      {[1, 2, 3, 4, 5].map(level => {
+        const config = getSeverityConfig(level);
+        const isSelected = value === level;
+        
+        return (
+          <TouchableOpacity
+            key={level}
+            style={[
+              styles.severityOption,
+              { borderColor: config.color },
+              isSelected && { backgroundColor: config.color }
+            ]}
+            onPress={() => onChange(level)}
+          >
+            <Text style={[
+              styles.severityLabel,
+              isSelected && styles.severityLabelSelected
+            ]}>
+              {config.label}
+            </Text>
+            <Text style={[
+              styles.severityDescription,
+              isSelected && styles.severityDescriptionSelected
+            ]}>
+              {config.description}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 };
 ```
 
+```typescript Report Processing Service
+export class CommunityReportService {
+  static async submitReport(reportData: CommunityReportSubmission): Promise<SubmissionResult> {
+    try {
+      // Validate submission
+      const validation = await this.validateSubmission(reportData);
+      if (!validation.isValid) {
+        throw new Error(validation.reason);
+      }
+
+      // Verify location
+      const locationVerification = await this.verifyLocation(reportData.location);
+      
+      // Process evidence
+      const processedEvidence = await this.processEvidence(reportData.evidence);
+      
+      // Create anonymous reporter identifier
+      const reporterHash = await this.generateReporterHash(reportData);
+      
+      // Create report record
+      const report = await this.createReport({
+        ...reportData,
+        reporterHash,
+        locationVerified: locationVerification.verified,
+        evidence: processedEvidence,
+        status: 'pending_review',
+        verified: false,
+      });
+
+      // Start automated verification process
+      await this.startVerificationProcess(report.reportId);
+      
+      // Check for similar reports
+      const similarReports = await this.findSimilarReports(report);
+      if (similarReports.length > 0) {
+        await this.linkSimilarReports(report.reportId, similarReports);
+      }
+      
+      // Generate community alerts if needed
+      if (report.severity >= 4) {
+        await this.generateCommunityAlert(report);
+      }
+      
+      // Update venue safety data
+      if (report.venueId) {
+        await this.updateVenueSafetyData(report.venueId, report);
+      }
+      
+      // Track contribution for impact metrics
+      await this.trackContribution(reporterHash, report);
+      
+      return {
+        success: true,
+        reportId: report.reportId,
+        estimatedReach: await this.calculateReportReach(report),
+        impactScore: await this.calculateImpactScore(report),
+      };
+      
+    } catch (error) {
+      console.error('Report submission failed:', error);
+      throw error;
+    }
+  }
+
+  private static async validateSubmission(
+    reportData: CommunityReportSubmission
+  ): Promise<ValidationResult> {
+    
+    // Content validation
+    if (!reportData.title || reportData.title.length < 10) {
+      return { isValid: false, reason: 'Title too short' };
+    }
+    
+    if (!reportData.description || reportData.description.length < 20) {
+      return { isValid: false, reason: 'Description too short' };
+    }
+    
+    // Location validation
+    if (!reportData.location) {
+      return { isValid: false, reason: 'Location required' };
+    }
+    
+    // Rate limiting
+    const reporterHash = await this.generateReporterHash(reportData);
+    const recentReports = await this.getRecentReports(reporterHash, 24); // 24 hours
+    
+    if (recentReports.length >= 5) {
+      return { isValid: false, reason: 'Too many reports in 24 hours' };
+    }
+    
+    // Content moderation
+    const moderationResult = await this.moderateContent(reportData);
+    if (!moderationResult.approved) {
+      return { isValid: false, reason: moderationResult.reason };
+    }
+    
+    return { isValid: true };
+  }
+
+  private static async verifyLocation(location: GeoLocation): Promise<LocationVerification> {
+    try {
+      // Verify location is reasonable (not in ocean, etc.)
+      const geocodingResult = await GeocodingService.reverseGeocode(location);
+      
+      if (!geocodingResult.isValid) {
+        return { verified: false, reason: 'Invalid location' };
+      }
+      
+      // Check if location matches a known venue
+      const nearbyVenues = await VenueService.getVenuesInRadius(location, 100);
+      const matchedVenue = nearbyVenues.length > 0 ? nearbyVenues[0] : null;
+      
+      return {
+        verified: true,
+        accuracy: geocodingResult.accuracy,
+        address: geocodingResult.formattedAddress,
+        matchedVenue: matchedVenue?.venueId,
+      };
+      
+    } catch (error) {
+      return { verified: false, reason: 'Location verification failed' };
+    }
+  }
+
+  static async getReportsForArea(
+    location: GeoLocation,
+    radius: number = 1000,
+    filters: ReportFilters = {}
+  ): Promise<CommunityReport[]> {
+    
+    const query = {
+      location,
+      radius,
+      reportTypes: filters.reportTypes || [],
+      severityMin: filters.severityMin || 1,
+      timeRange: filters.timeRange || '30d',
+      includePositive: filters.includePositive ?? true,
+      verified: filters.verifiedOnly ?? false,
+    };
+
+    const reports = await this.queryReports(query);
+    
+    // Apply additional filtering
+    const filteredReports = this.applyFilters(reports, filters);
+    
+    // Sort by relevance
+    const sortedReports = this.sortReportsByRelevance(filteredReports, location);
+    
+    return sortedReports;
+  }
+
+  static async findSimilarReports(report: CommunityReport): Promise<CommunityReport[]> {
+    const searchRadius = 200; // 200 meters
+    const timeWindow = 48; // 48 hours
+    
+    const nearbyReports = await this.getReportsForArea(
+      report.location,
+      searchRadius,
+      {
+        timeRange: `${timeWindow}h`,
+        reportTypes: [report.reportType],
+        severityMin: Math.max(1, report.severity - 1),
+      }
+    );
+    
+    // Filter for similar content using text similarity
+    const similarReports = await this.filterBySimilarity(report, nearbyReports);
+    
+    return similarReports;
+  }
+
+  private static async filterBySimilarity(
+    targetReport: CommunityReport,
+    candidateReports: CommunityReport[]
+  ): Promise<CommunityReport[]> {
+    
+    const similarReports = [];
+    
+    for (const candidate of candidateReports) {
+      if (candidate.reportId === targetReport.reportId) continue;
+      
+      // Calculate similarity score
+      const titleSimilarity = this.calculateTextSimilarity(
+        targetReport.title,
+        candidate.title
+      );
+      
+      const descriptionSimilarity = this.calculateTextSimilarity(
+        targetReport.description,
+        candidate.description
+      );
+      
+      const overallSimilarity = (titleSimilarity * 0.4) + (descriptionSimilarity * 0.6);
+      
+      // Consider similar if >70% match
+      if (overallSimilarity > 0.7) {
+        similarReports.push({
+          ...candidate,
+          similarityScore: overallSimilarity,
+        });
+      }
+    }
+    
+    return similarReports.sort((a, b) => b.similarityScore - a.similarityScore);
+  }
+
+  static async confirmReport(
+    reportId: string,
+    confirmingUserHash: string
+  ): Promise<ConfirmationResult> {
+    
+    try {
+      // Prevent self-confirmation
+      const report = await this.getReport(reportId);
+      if (report.reporterHash === confirmingUserHash) {
+        throw new Error('Cannot confirm own report');
+      }
+      
+      // Check if user already confirmed
+      const existingConfirmation = await this.getExistingConfirmation(reportId, confirmingUserHash);
+      if (existingConfirmation) {
+        throw new Error('Already confirmed this report');
+      }
+      
+      // Add confirmation
+      await this.addConfirmation(reportId, confirmingUserHash);
+      
+      // Update report confidence
+      await this.updateReportConfidence(reportId);
+      
+      // Check if report should be verified
+      const updatedReport = await this.getReport(reportId);
+      if (updatedReport.confirmations >= 3 && !updatedReport.verified) {
+        await this.verifyReport(reportId);
+      }
+      
+      return {
+        success: true,
+        newConfirmationCount: updatedReport.confirmations + 1,
+        reportVerified: updatedReport.confirmations >= 2,
+      };
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+interface ReportFilters {
+  reportTypes?: ReportType[];
+  severityMin?: SeverityLevel;
+  severityMax?: SeverityLevel;
+  timeRange?: string; // e.g., '7d', '30d', '1y'
+  includePositive?: boolean;
+  verifiedOnly?: boolean;
+  venueId?: string;
+}
+
+interface SubmissionResult {
+  success: boolean;
+  reportId: string;
+  estimatedReach: number;
+  impactScore: number;
+  error?: string;
+}
+```
 </CodeGroup>
 
-## Next Steps
+## Anonymous Reporting System
+
+### Privacy-Preserving Architecture
+
+<Note>
+**Complete Anonymity:** Reports are completely anonymous with no way to trace back to individual users, while still preventing abuse through cryptographic techniques.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Anonymous Identifiers" icon="hash">
+    Cryptographically generated anonymous identifiers that prevent tracking while enabling spam prevention
+  </Card>
+  <Card title="Location Verification" icon="map-pin">
+    GPS verification that you were actually at the reported location without storing personal location history
+  </Card>
+  <Card title="Content Moderation" icon="shield">
+    Automated content filtering and human review to prevent abuse while protecting reporter identity
+  </Card>
+</CardGroup>
+
+<Accordion title="Anonymity Implementation">
+**Anonymous Identifier Generation:**
+```typescript
+class AnonymousReportingSystem {
+  static async generateReporterHash(
+    reportData: CommunityReportSubmission
+  ): Promise<string> {
+    // Create a hash that's unique per user but not traceable
+    const deviceId = await this.getDeviceIdentifier();
+    const salt = await this.getOrCreateSalt();
+    const timestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24)); // Daily rotation
+    
+    const hashInput = `${deviceId}:${salt}:${timestamp}`;
+    const hash = await this.createHash(hashInput);
+    
+    // Truncate to prevent rainbow table attacks
+    return hash.substring(0, 16);
+  }
+
+  private static async getDeviceIdentifier(): Promise<string> {
+    // Use multiple device characteristics to create unique but non-personal ID
+    const characteristics = [
+      await DeviceInfo.getUniqueId(),
+      await DeviceInfo.getBrand(),
+      await DeviceInfo.getModel(),
+      await DeviceInfo.getSystemVersion(),
+    ];
+    
+    return this.createHash(characteristics.join(':'));
+  }
+
+  static async verifyLocationWithoutStoring(
+    reportLocation: GeoLocation,
+    userLocation: GeoLocation
+  ): Promise<LocationVerificationResult> {
+    
+    const distance = calculateDistance(reportLocation, userLocation);
+    const accuracy = Math.min(reportLocation.accuracy || 100, userLocation.accuracy || 100);
+    
+    // Verify user is within reasonable distance of report location
+    const isValid = distance <= Math.max(accuracy * 2, 100); // At least 100m tolerance
+    
+    // Don't store the actual locations, just return verification status
+    return {
+      verified: isValid,
+      confidence: this.calculateLocationConfidence(distance, accuracy),
+      // No actual coordinates stored
+    };
+  }
+}
+```
+
+**Privacy-Preserving Features:**
+- Reports cannot be traced back to specific users
+- Location verification without storing user location data
+- Evidence photos stripped of metadata and personal identifiers
+- Time-based anonymous identifiers that rotate regularly
+- No IP address or device fingerprinting storage
+
+**Abuse Prevention:**
+- Rate limiting based on anonymous identifiers
+- Content moderation using AI and human review
+- Community verification and flagging systems
+- Credibility scoring based on report accuracy over time
+- Duplicate report detection without compromising anonymity
+</Accordion>
+
+## Community Verification System
+
+### Crowd-Sourced Validation
+
+<Steps>
+  <Step title="Peer Review">
+    Community members can confirm or dispute reports based on their own knowledge
+  </Step>
+  <Step title="Location Verification">
+    Multiple users verify reports by confirming conditions at the same location
+  </Step>
+  <Step title="Expert Validation">
+    Qualified community members provide expert verification for complex reports
+  </Step>
+  <Step title="Official Response">
+    Venues and authorities can provide official responses to community reports
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Community Verification System
+interface CommunityVerification {
+  verificationId: string;
+  reportId: string;
+  verifierHash: string;
+  verificationType: VerificationType;
+  
+  verificationData: {
+    canConfirm: boolean;
+    hasFirstHandKnowledge: boolean;
+    additionalInfo?: string;
+    contradictingInfo?: string;
+    supportingEvidence?: VerificationEvidence;
+  };
+  
+  credibilityWeight: number;
+  submittedAt: string;
+  
+  // Verification status
+  reviewed: boolean;
+  helpful: boolean;
+  flaggedAsAbuse: boolean;
+}
+
+type VerificationType = 
+  | 'location_confirmation'
+  | 'incident_witness'
+  | 'venue_employee'
+  | 'expert_opinion'
+  | 'official_response'
+  | 'general_confirmation'
+  | 'contradiction';
+
+export const ReportVerificationInterface = ({ report }) => {
+  const [verification, setVerification] = useState<Partial<CommunityVerification>>({
+    verificationType: 'general_confirmation',
+    verificationData: { canConfirm: false, hasFirstHandKnowledge: false },
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitVerification = async () => {
+    if (!validation.isValid(verification)) {
+      Alert.alert('Missing Information', 'Please provide all required verification details.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await CommunityVerificationService.submitVerification(report.reportId, verification);
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Verification Submitted',
+        text2: 'Thank you for helping verify community reports',
+      });
+
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Submission Failed', 'Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.reportSummary}>
+        <Text style={styles.reportTitle}>{report.title}</Text>
+        <Text style={styles.reportLocation}>{report.locationDescription}</Text>
+        <Text style={styles.reportTime}>{formatTimeAgo(report.incidentTime)}</Text>
+      </View>
+
+      <View style={styles.verificationSection}>
+        <Text style={styles.sectionTitle}>How can you help verify this report?</Text>
+        
+        <VerificationTypeSelector
+          value={verification.verificationType}
+          onChange={(type) => setVerification(prev => ({ ...prev, verificationType: type }))}
+          options={[
+            {
+              value: 'location_confirmation',
+              label: 'I know this location',
+              description: 'I can confirm details about this location'
+            },
+            {
+              value: 'incident_witness',
+              label: 'I witnessed this incident',
+              description: 'I was present when this happened'
+            },
+            {
+              value: 'venue_employee',
+              label: 'I work at this venue',
+              description: 'I have inside knowledge of venue conditions'
+            },
+            {
+              value: 'expert_opinion',
+              label: 'I have relevant expertise',
+              description: 'Professional knowledge relevant to this report'
+            },
+            {
+              value: 'contradiction',
+              label: 'I disagree with this report',
+              description: 'I have information that contradicts this report'
+            }
+          ]}
+        />
+      </View>
+
+      <View style={styles.verificationDetails}>
+        <Text style={styles.sectionTitle}>Verification Details</Text>
+        
+        <View style={styles.checkboxGroup}>
+          <CheckboxItem
+            label="I can confirm the main details of this report"
+            value={verification.verificationData.canConfirm}
+            onChange={(canConfirm) => 
+              setVerification(prev => ({
+                ...prev,
+                verificationData: { ...prev.verificationData, canConfirm }
+              }))
+            }
+          />
+          
+          <CheckboxItem
+            label="I have first-hand knowledge of this situation"
+            value={verification.verificationData.hasFirstHandKnowledge}
+            onChange={(hasFirstHandKnowledge) => 
+              setVerification(prev => ({
+                ...prev,
+                verificationData: { ...prev.verificationData, hasFirstHandKnowledge }
+              }))
+            }
+          />
+        </View>
+
+        <TextInput
+          style={styles.additionalInfoInput}
+          placeholder="Additional information or context you can provide..."
+          value={verification.verificationData.additionalInfo}
+          onChangeText={(additionalInfo) =>
+            setVerification(prev => ({
+              ...prev,
+              verificationData: { ...prev.verificationData, additionalInfo }
+            }))
+          }
+          multiline
+          maxLength={500}
+        />
+
+        {verification.verificationType === 'contradiction' && (
+          <TextInput
+            style={styles.contradictionInput}
+            placeholder="Please explain what information contradicts this report..."
+            value={verification.verificationData.contradictingInfo}
+            onChangeText={(contradictingInfo) =>
+              setVerification(prev => ({
+                ...prev,
+                verificationData: { ...prev.verificationData, contradictingInfo }
+              }))
+            }
+            multiline
+            maxLength={500}
+          />
+        )}
+      </View>
+
+      <View style={styles.privacyNotice}>
+        <Icon name="shield" size={16} color="#4CAF50" />
+        <Text style={styles.privacyText}>
+          Your verification is anonymous and helps the community assess report accuracy.
+        </Text>
+      </View>
+
+      <TouchableOpacity 
+        style={styles.submitButton}
+        onPress={handleSubmitVerification}
+        disabled={isSubmitting || !verification.verificationData.canConfirm}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit Verification</Text>
+        )}
+      </TouchableOpacity>
+    </ScrollView>
+  );
+};
+
+export class CommunityVerificationService {
+  static async submitVerification(
+    reportId: string,
+    verificationData: CommunityVerification
+  ): Promise<VerificationResult> {
+    
+    try {
+      // Generate anonymous verifier hash
+      const verifierHash = await this.generateVerifierHash();
+      
+      // Check for duplicate verifications
+      const existingVerification = await this.checkExistingVerification(reportId, verifierHash);
+      if (existingVerification) {
+        throw new Error('You have already verified this report');
+      }
+      
+      // Calculate credibility weight
+      const credibilityWeight = await this.calculateVerifierCredibility(verifierHash);
+      
+      // Create verification record
+      const verification = await this.createVerification({
+        ...verificationData,
+        reportId,
+        verifierHash,
+        credibilityWeight,
+        submittedAt: new Date().toISOString(),
+      });
+      
+      // Update report verification status
+      await this.updateReportVerificationStatus(reportId);
+      
+      // Award points for community contribution
+      await this.awardVerificationPoints(verifierHash);
+      
+      return {
+        success: true,
+        verificationId: verification.verificationId,
+        reportVerificationUpdated: true,
+      };
+      
+    } catch (error) {
+      console.error('Verification submission failed:', error);
+      throw error;
+    }
+  }
+
+  static async calculateReportCredibility(reportId: string): Promise<CredibilityScore> {
+    const verifications = await this.getReportVerifications(reportId);
+    const report = await CommunityReportService.getReport(reportId);
+    
+    let credibilityScore = 0.5; // Start with neutral credibility
+    let confidence = 0.1; // Low confidence with no verifications
+    
+    if (verifications.length === 0) {
+      return { score: credibilityScore, confidence, verificationCount: 0 };
+    }
+    
+    // Weight verifications by verifier credibility
+    const weightedVerifications = verifications.map(v => ({
+      ...v,
+      weight: v.credibilityWeight,
+    }));
+    
+    // Calculate positive vs negative verifications
+    const positiveWeight = weightedVerifications
+      .filter(v => v.verificationData.canConfirm)
+      .reduce((sum, v) => sum + v.weight, 0);
+      
+    const negativeWeight = weightedVerifications
+      .filter(v => v.verificationType === 'contradiction')
+      .reduce((sum, v) => sum + v.weight, 0);
+    
+    const totalWeight = positiveWeight + negativeWeight;
+    
+    if (totalWeight > 0) {
+      credibilityScore = positiveWeight / totalWeight;
+      confidence = Math.min(0.9, totalWeight / 5); // Higher confidence with more verifications
+    }
+    
+    // Adjust for report age (older reports with verifications are more credible)
+    const reportAge = Date.now() - new Date(report.reportedAt).getTime();
+    const ageBonus = Math.min(0.1, reportAge / (1000 * 60 * 60 * 24 * 7)); // Up to 0.1 bonus after a week
+    
+    return {
+      score: Math.min(1.0, credibilityScore + ageBonus),
+      confidence,
+      verificationCount: verifications.length,
+      positiveVerifications: weightedVerifications.filter(v => v.verificationData.canConfirm).length,
+      negativeVerifications: weightedVerifications.filter(v => v.verificationType === 'contradiction').length,
+    };
+  }
+}
+
+interface CredibilityScore {
+  score: number; // 0.0 to 1.0
+  confidence: number; // 0.0 to 1.0
+  verificationCount: number;
+  positiveVerifications: number;
+  negativeVerifications: number;
+}
+```
+</CodeGroup>
+
+## Real-Time Community Alerts
+
+### Intelligent Alert Distribution
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Location-Based Alerts" icon="map-pin">
+    Automatic notifications for users near reported incidents or safety concerns
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Interest-Based Alerts" icon="bell">
+    Customizable alerts based on user preferences and safety interests
+  </Card>
+  <Card title="Severity-Based Routing" icon="alert-triangle">
+    Critical safety reports get immediate wide distribution while minor issues are targeted
+  </Card>
+  <Card title="Community Amplification" icon="trending-up">
+    Popular and verified reports reach broader audiences through community engagement
+  </Card>
+</CardGroup>
+
+<Accordion title="Alert Distribution System">
+**Alert Targeting Logic:**
+```typescript
+interface AlertDistributionConfig {
+  geographicRadius: number; // meters
+  severityThreshold: SeverityLevel;
+  userPreferences: AlertPreferences;
+  timeRestrictions: TimeRestriction[];
+  frequencyLimits: FrequencyLimit[];
+}
+
+interface AlertPreferences {
+  enabledReportTypes: ReportType[];
+  minimumSeverity: SeverityLevel;
+  geographicRadius: number;
+  quietHours: TimeRange;
+  maxAlertsPerDay: number;
+  requireVerification: boolean;
+  venueTypes: VenueCategory[];
+}
+
+export class CommunityAlertService {
+  static async distributeReportAlert(report: CommunityReport): Promise<AlertDistribution> {
+    // Determine alert urgency
+    const urgency = this.calculateAlertUrgency(report);
+    
+    // Find target users
+    const targetUsers = await this.findTargetUsers(report, urgency);
+    
+    // Filter by user preferences
+    const eligibleUsers = await this.filterByPreferences(targetUsers, report);
+    
+    // Respect frequency limits
+    const finalUsers = await this.applyFrequencyLimits(eligibleUsers);
+    
+    // Send alerts
+    const results = await this.sendAlerts(finalUsers, report, urgency);
+    
+    return {
+      reportId: report.reportId,
+      targetUserCount: targetUsers.length,
+      eligibleUserCount: eligibleUsers.length,
+      actuallyNotifiedCount: finalUsers.length,
+      deliveryResults: results,
+    };
+  }
+
+  private static async findTargetUsers(
+    report: CommunityReport,
+    urgency: AlertUrgency
+  ): Promise<string[]> {
+    
+    const baseRadius = this.getBaseRadius(urgency);
+    const expandedRadius = this.getExpandedRadius(urgency, report.severity);
+    
+    // Get users in immediate area
+    const nearbyUsers = await this.getUsersInRadius(report.location, baseRadius);
+    
+    // Get users who frequent this area
+    const frequentUsers = await this.getFrequentUsers(report.location, expandedRadius);
+    
+    // Get users with specific interest in this location/venue
+    const interestedUsers = report.venueId ? 
+      await this.getVenueFollowers(report.venueId) : [];
+    
+    // Combine and deduplicate
+    const allUsers = [...new Set([...nearbyUsers, ...frequentUsers, ...interestedUsers])];
+    
+    return allUsers;
+  }
+
+  private static calculateAlertUrgency(report: CommunityReport): AlertUrgency {
+    let urgencyScore = 0;
+    
+    // Base urgency from severity
+    urgencyScore += report.severity * 0.2;
+    
+    // Recent incident factor
+    const timeAgo = Date.now() - new Date(report.incidentTime).getTime();
+    const hoursAgo = timeAgo / (1000 * 60 * 60);
+    if (hoursAgo < 1) urgencyScore += 0.3;
+    else if (hoursAgo < 6) urgencyScore += 0.2;
+    else if (hoursAgo < 24) urgencyScore += 0.1;
+    
+    // Verification factor
+    if (report.verified) urgencyScore += 0.2;
+    if (report.confirmations >= 3) urgencyScore += 0.1;
+    
+    // Public safety factor
+    const publicSafetyTypes = ['assault', 'harassment', 'unsafe_conditions'];
+    if (publicSafetyTypes.includes(report.category)) urgencyScore += 0.2;
+    
+    if (urgencyScore >= 0.8) return 'critical';
+    if (urgencyScore >= 0.6) return 'high';
+    if (urgencyScore >= 0.4) return 'medium';
+    return 'low';
+  }
+}
+
+type AlertUrgency = 'low' | 'medium' | 'high' | 'critical';
+```
+
+**Alert Types and Formats:**
+- **Immediate Alerts:** Push notifications for critical safety issues
+- **Daily Digests:** Summary of safety reports in user's area
+- **Weekly Summaries:** Trends and patterns in community safety
+- **Custom Notifications:** User-defined alert criteria and frequency
+- **Venue-Specific Alerts:** Updates about favorited or frequently visited venues
+</Accordion>
+
+## Impact Tracking and Analytics
+
+### Community Contribution Metrics
+
+<Note>
+**Measuring Impact:** Track how your reports contribute to community safety and see the collective impact of community-driven safety intelligence.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Report Reach" icon="users">
+    See how many community members were helped by your safety reports
+  </Card>
+  <Card title="Verification Score" icon="check-circle">
+    Track the accuracy and credibility of your contributed reports over time
+  </Card>
+  <Card title="Community Impact" icon="trending-up">
+    Understand how collective reporting improves safety in your area
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Impact Tracking System
+interface CommunityImpactMetrics {
+  userId: string; // Anonymous hash
+  reportingPeriod: DateRange;
+  
+  // Contribution metrics
+  totalReports: number;
+  verifiedReports: number;
+  helpfulVerifications: number;
+  averageReportCredibility: number;
+  
+  // Reach and influence
+  totalReportViews: number;
+  totalUniqueViewers: number;
+  averageReportReach: number;
+  reportsLeadingToAction: number;
+  
+  // Quality indicators
+  falseReportRate: number;
+  reportAccuracyScore: number;
+  communityTrustScore: number;
+  
+  // Recognition
+  contributorLevel: ContributorLevel;
+  badges: ContributorBadge[];
+  pointsEarned: number;
+  
+  // Community impact
+  areasSafetyImproved: number;
+  venuesSafetyImproved: number;
+  estimatedPeopleHelped: number;
+}
+
+type ContributorLevel = 
+  | 'new_contributor'
+  | 'community_member'
+  | 'trusted_reporter'
+  | 'safety_advocate'
+  | 'community_leader';
+
+interface ContributorBadge {
+  badgeId: string;
+  badgeType: BadgeType;
+  earnedAt: string;
+  description: string;
+  criteria: string;
+}
+
+type BadgeType = 
+  | 'first_report'
+  | 'verified_reporter'
+  | 'location_expert'
+  | 'venue_specialist'
+  | 'helpful_verifier'
+  | 'safety_champion'
+  | 'community_protector';
+
+export const CommunityImpactDashboard = () => {
+  const [impactMetrics, setImpactMetrics] = useState<CommunityImpactMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadImpactMetrics();
+  }, []);
+
+  const loadImpactMetrics = async () => {
+    try {
+      const metrics = await CommunityImpactService.getUserImpactMetrics();
+      setImpactMetrics(metrics);
+    } catch (error) {
+      console.error('Failed to load impact metrics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!impactMetrics) {
+    return <EmptyState message="No contribution data available" />;
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Your Community Impact</Text>
+        <Text style={styles.subtitle}>
+          How your safety contributions help the community
+        </Text>
+      </View>
+
+      <View style={styles.levelCard}>
+        <ContributorLevelDisplay level={impactMetrics.contributorLevel} />
+        <Text style={styles.pointsText}>
+          {impactMetrics.pointsEarned} Safety Points Earned
+        </Text>
+      </View>
+
+      <View style={styles.metricsGrid}>
+        <MetricCard
+          title="Reports Submitted"
+          value={impactMetrics.totalReports}
+          subtitle={`${impactMetrics.verifiedReports} verified`}
+          icon="file-text"
+          color="#4CAF50"
+        />
+        
+        <MetricCard
+          title="People Helped"
+          value={impactMetrics.estimatedPeopleHelped}
+          subtitle="Estimated reach"
+          icon="users"
+          color="#2196F3"
+        />
+        
+        <MetricCard
+          title="Report Views"
+          value={impactMetrics.totalReportViews}
+          subtitle={`${impactMetrics.totalUniqueViewers} unique viewers`}
+          icon="eye"
+          color="#FF9800"
+        />
+        
+        <MetricCard
+          title="Accuracy Score"
+          value={`${Math.round(impactMetrics.reportAccuracyScore * 100)}%`}
+          subtitle="Report accuracy"
+          icon="target"
+          color="#9C27B0"
+        />
+      </View>
+
+      <View style={styles.badgesSection}>
+        <Text style={styles.sectionTitle}>Your Badges</Text>
+        <View style={styles.badgesGrid}>
+          {impactMetrics.badges.map(badge => (
+            <BadgeCard key={badge.badgeId} badge={badge} />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.impactStories}>
+        <Text style={styles.sectionTitle}>Your Impact Stories</Text>
+        <ImpactStoriesList userId={impactMetrics.userId} />
+      </View>
+
+      <View style={styles.callToAction}>
+        <Text style={styles.ctaTitle}>Keep Making a Difference</Text>
+        <Text style={styles.ctaSubtitle}>
+          Your reports help create safer communities for everyone
+        </Text>
+        <TouchableOpacity 
+          style={styles.ctaButton}
+          onPress={() => navigation.navigate('SubmitReport')}
+        >
+          <Text style={styles.ctaButtonText}>Submit Another Report</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
+export class CommunityImpactService {
+  static async calculateReportImpact(reportId: string): Promise<ReportImpact> {
+    const report = await CommunityReportService.getReport(reportId);
+    const metrics = await this.getReportMetrics(reportId);
+    
+    // Calculate direct impact
+    const directViews = metrics.viewCount;
+    const directActions = metrics.actionsTaken.length;
+    
+    // Calculate indirect impact through alerts
+    const alertRecipients = await this.getAlertRecipients(reportId);
+    const estimatedIndirectReach = alertRecipients.length * 0.7; // 70% engagement estimate
+    
+    // Calculate safety improvement
+    const safetyImprovement = await this.calculateSafetyImprovement(report);
+    
+    return {
+      reportId,
+      directViews,
+      directActions,
+      alertRecipients: alertRecipients.length,
+      estimatedTotalReach: directViews + estimatedIndirectReach,
+      safetyImprovementScore: safetyImprovement.score,
+      impactCategory: this.categorizeImpact(directViews + estimatedIndirectReach),
+    };
+  }
+
+  static async getUserImpactMetrics(userHash: string): Promise<CommunityImpactMetrics> {
+    const reports = await this.getUserReports(userHash);
+    const verifications = await this.getUserVerifications(userHash);
+    
+    // Calculate metrics
+    const totalReports = reports.length;
+    const verifiedReports = reports.filter(r => r.verified).length;
+    const helpfulVerifications = verifications.filter(v => v.helpful).length;
+    
+    // Calculate reach
+    const totalViews = reports.reduce((sum, r) => sum + (r.viewCount || 0), 0);
+    const uniqueViewers = await this.calculateUniqueViewers(reports);
+    
+    // Calculate quality scores
+    const accuracyScore = await this.calculateAccuracyScore(reports);
+    const trustScore = await this.calculateTrustScore(userHash);
+    
+    // Determine contributor level and badges
+    const level = await this.calculateContributorLevel(userHash);
+    const badges = await this.getUserBadges(userHash);
+    
+    return {
+      userId: userHash,
+      reportingPeriod: { start: reports[0]?.reportedAt, end: new Date().toISOString() },
+      totalReports,
+      verifiedReports,
+      helpfulVerifications,
+      averageReportCredibility: reports.reduce((sum, r) => sum + (r.credibilityScore || 0.5), 0) / totalReports,
+      totalReportViews: totalViews,
+      totalUniqueViewers: uniqueViewers,
+      averageReportReach: totalViews / totalReports,
+      reportsLeadingToAction: reports.filter(r => r.actionsTaken?.length > 0).length,
+      falseReportRate: await this.calculateFalseReportRate(reports),
+      reportAccuracyScore: accuracyScore,
+      communityTrustScore: trustScore,
+      contributorLevel: level,
+      badges,
+      pointsEarned: await this.calculateTotalPoints(userHash),
+      areasSafetyImproved: await this.calculateAreasSafetyImproved(reports),
+      venuesSafetyImproved: await this.calculateVenuesSafetyImproved(reports),
+      estimatedPeopleHelped: await this.calculatePeopleHelped(reports),
+    };
+  }
+}
+
+interface ReportImpact {
+  reportId: string;
+  directViews: number;
+  directActions: number;
+  alertRecipients: number;
+  estimatedTotalReach: number;
+  safetyImprovementScore: number;
+  impactCategory: 'low' | 'medium' | 'high' | 'exceptional';
+}
+```
+</CodeGroup>
+
+## Integration with Safety Features
+
+<CardGroup cols={4}>
+  <Card title="Venue Safety" icon="building" href="/features/venue-safety">
+    Community reports directly contribute to venue safety ratings and real-time status
+  </Card>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Critical community reports can trigger emergency alerts for nearby users
+  </Card>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Report locations integrated with smart geofencing and safety zone creation
+  </Card>
+  <Card title="AI Insights" icon="brain" href="/features/ai-insights">
+    Community data feeds AI models for improved safety predictions and recommendations
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+## Implementation Guidelines
+
+<Warning>
+**Critical Community Reporting Requirements:**
+- Complete anonymity must be maintained for all reporters while preventing abuse
+- Report verification systems must be robust against manipulation and false reports
+- Alert distribution must be intelligent to avoid notification fatigue
+- Content moderation must balance free expression with community safety
+- Impact tracking must motivate contributions without compromising privacy
+- Integration with other features must respect user privacy preferences
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Submit Your First Report" icon="edit" href="/quickstart/setup">
+    Learn how to safely and anonymously contribute to community safety
+  </Card>
+  <Card title="Verify Community Reports" icon="check-circle" href="/features/venue-safety">
+    Help validate community reports to improve safety data accuracy
+  </Card>
+  <Card title="Configure Alert Preferences" icon="bell" href="/features/emergency-alerts">
+    Set up community alert preferences to stay informed about safety in your area
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contribute to Safety" icon="heart" href="/quickstart/setup">
+    Start contributing to community safety with your first anonymous report
+  </Card>
+  <Card title="Track Your Impact" icon="trending-up" href="/features/venue-safety">
+    See how your contributions help make communities safer for everyone
+  </Card>
+</CardGroup>

@@ -1,59 +1,1858 @@
 ---
 title: "Component Development"
-description: "Component Development documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to building React Native components for Shelther safety applications. Includes design patterns, accessibility standards, performance optimization, and integration with Supabase real-time features."
 ---
 
 # Component Development
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-First Components:** React Native components designed for emergency scenarios with accessibility, performance, and reliability as core principles. Every component prioritizes quick access and clear communication during critical moments.
 </Info>
 
-## Key Points
+## Component Architecture Principles
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther components follow safety-focused design principles:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Accessibility First" icon="universal-access">
+    Components support screen readers, voice control, and emergency access patterns
+  </Card>
+  <Card title="Performance Optimized" icon="bolt">
+    Minimal re-renders and efficient memory usage for battery conservation
+  </Card>
+  <Card title="Offline Capable" icon="wifi-slash">
+    Components gracefully handle offline states and sync when connectivity returns
+  </Card>
+  <Card title="Real-time Ready" icon="broadcast-tower">
+    Built-in Supabase integration for emergency alerts and location sharing
+  </Card>
+</CardGroup>
+
+## Core Component Structure
+
+### Base Component Template
 
 <CodeGroup>
+```typescript Component Template
+// components/BaseComponent.tsx
+import React, { memo, forwardRef } from 'react';
+import { View, ViewStyle, AccessibilityProps } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { logger } from '../utils/logger';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+interface BaseComponentProps extends AccessibilityProps {
+  children?: React.ReactNode;
+  style?: ViewStyle;
+  testID?: string;
+  emergencyMode?: boolean;
+  onEmergencyAccess?: () => void;
 }
+
+export const BaseComponent = memo(forwardRef<View, BaseComponentProps>(({
+  children,
+  style,
+  testID,
+  emergencyMode = false,
+  onEmergencyAccess,
+  accessible = true,
+  accessibilityRole = 'button',
+  ...accessibilityProps
+}, ref) => {
+  const { theme, isHighContrast } = useTheme();
+  
+  const handlePress = React.useCallback(() => {
+    if (emergencyMode && onEmergencyAccess) {
+      logger.emergency('Emergency component accessed', { component: testID });
+      onEmergencyAccess();
+    }
+  }, [emergencyMode, onEmergencyAccess, testID]);
+
+  const componentStyle = React.useMemo(() => [
+    {
+      // Base styles
+      padding: theme.spacing.md,
+      backgroundColor: emergencyMode 
+        ? theme.colors.emergency 
+        : theme.colors.surface,
+      borderRadius: theme.borderRadius.md,
+      // High contrast mode support
+      ...(isHighContrast && {
+        borderWidth: 2,
+        borderColor: theme.colors.primary,
+      }),
+    },
+    style,
+  ], [theme, emergencyMode, isHighContrast, style]);
+
+  return (
+    <View
+      ref={ref}
+      style={componentStyle}
+      testID={testID}
+      accessible={accessible}
+      accessibilityRole={accessibilityRole}
+      onTouchEnd={emergencyMode ? handlePress : undefined}
+      {...accessibilityProps}
+    >
+      {children}
+    </View>
+  );
+}));
+
+BaseComponent.displayName = 'BaseComponent';
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript Theme Integration
+// contexts/ThemeContext.tsx
+import React, { createContext, useContext, useState } from 'react';
+import { useColorScheme, AccessibilityInfo } from 'react-native';
+
+interface Theme {
+  colors: {
+    primary: string;
+    secondary: string;
+    emergency: string;
+    warning: string;
+    success: string;
+    background: string;
+    surface: string;
+    text: {
+      primary: string;
+      secondary: string;
+      inverse: string;
+    };
+  };
+  spacing: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+  };
+  typography: {
+    h1: { fontSize: number; fontWeight: string };
+    h2: { fontSize: number; fontWeight: string };
+    body: { fontSize: number; fontWeight: string };
+    caption: { fontSize: number; fontWeight: string };
+    emergency: { fontSize: number; fontWeight: string };
+  };
+  borderRadius: {
+    sm: number;
+    md: number;
+    lg: number;
+  };
+  shadows: {
+    sm: object;
+    md: object;
+    lg: object;
+  };
+}
+
+const lightTheme: Theme = {
+  colors: {
+    primary: '#FF5A5A',
+    secondary: '#4CAF50',
+    emergency: '#FF1744',
+    warning: '#FF9800',
+    success: '#4CAF50',
+    background: '#FAFAFA',
+    surface: '#FFFFFF',
+    text: {
+      primary: '#212121',
+      secondary: '#757575',
+      inverse: '#FFFFFF',
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  typography: {
+    h1: { fontSize: 32, fontWeight: 'bold' },
+    h2: { fontSize: 24, fontWeight: 'bold' },
+    body: { fontSize: 16, fontWeight: 'normal' },
+    caption: { fontSize: 12, fontWeight: 'normal' },
+    emergency: { fontSize: 18, fontWeight: 'bold' },
+  },
+  borderRadius: {
+    sm: 4,
+    md: 8,
+    lg: 16,
+  },
+  shadows: {
+    sm: {
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.22,
+      shadowRadius: 2.22,
+      elevation: 3,
+    },
+    md: {
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    lg: {
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4.65,
+      elevation: 8,
+    },
+  },
+};
+
+interface ThemeContextType {
+  theme: Theme;
+  isDarkMode: boolean;
+  isHighContrast: boolean;
+  toggleDarkMode: () => void;
+  toggleHighContrast: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const systemColorScheme = useColorScheme();
+  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+  const [isHighContrast, setIsHighContrast] = useState(false);
+
+  React.useEffect(() => {
+    // Check for system-level high contrast setting
+    AccessibilityInfo.isHighTextContrastEnabled().then(setIsHighContrast);
+  }, []);
+
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+  const toggleHighContrast = () => setIsHighContrast(!isHighContrast);
+
+  const theme = React.useMemo(() => {
+    const baseTheme = isDarkMode ? darkTheme : lightTheme;
+    
+    if (isHighContrast) {
+      return {
+        ...baseTheme,
+        colors: {
+          ...baseTheme.colors,
+          primary: '#FF0000',
+          text: {
+            primary: isDarkMode ? '#FFFFFF' : '#000000',
+            secondary: isDarkMode ? '#CCCCCC' : '#333333',
+            inverse: isDarkMode ? '#000000' : '#FFFFFF',
+          },
+        },
+      };
+    }
+    
+    return baseTheme;
+  }, [isDarkMode, isHighContrast]);
+
+  return (
+    <ThemeContext.Provider value={{
+      theme,
+      isDarkMode,
+      isHighContrast,
+      toggleDarkMode,
+      toggleHighContrast,
+    }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+```
+</CodeGroup>
+
+## Emergency Components
+
+### Emergency Button Component
+
+<Steps>
+  <Step title="Core Emergency Button">
+    Primary emergency trigger with accessibility and visual feedback
+    
+    ```typescript
+    // components/EmergencyButton.tsx
+    import React, { useState, useRef } from 'react';
+    import { 
+      TouchableOpacity, 
+      Text, 
+      Animated, 
+      Vibration,
+      AccessibilityInfo 
+    } from 'react-native';
+    import { useTheme } from '../contexts/ThemeContext';
+    import { EmergencyService } from '../services/emergency';
+    import { logger } from '../utils/logger';
+
+    interface EmergencyButtonProps {
+      onPress?: () => void;
+      disabled?: boolean;
+      countdown?: boolean;
+      countdownDuration?: number;
+      testID?: string;
+    }
+
+    export const EmergencyButton: React.FC<EmergencyButtonProps> = ({
+      onPress,
+      disabled = false,
+      countdown = true,
+      countdownDuration = 5,
+      testID = 'emergency-button',
+    }) => {
+      const { theme } = useTheme();
+      const [isPressed, setIsPressed] = useState(false);
+      const [countdownActive, setCountdownActive] = useState(false);
+      const [timeLeft, setTimeLeft] = useState(countdownDuration);
+      
+      const scaleAnim = useRef(new Animated.Value(1)).current;
+      const pulseAnim = useRef(new Animated.Value(1)).current;
+      
+      const startCountdown = () => {
+        if (disabled) return;
+        
+        setCountdownActive(true);
+        setTimeLeft(countdownDuration);
+        
+        // Haptic feedback
+        Vibration.vibrate([100, 100, 100]);
+        
+        // Screen reader announcement
+        AccessibilityInfo.announceForAccessibility(
+          `Emergency alert starting in ${countdownDuration} seconds. Tap again to cancel.`
+        );
+        
+        logger.emergency('Emergency countdown started', { duration: countdownDuration });
+        
+        const timer = setInterval(() => {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              setCountdownActive(false);
+              triggerEmergency();
+              return 0;
+            }
+            
+            // Vibrate each second
+            Vibration.vibrate(200);
+            
+            // Screen reader countdown
+            AccessibilityInfo.announceForAccessibility(`${prev - 1} seconds`);
+            
+            return prev - 1;
+          });
+        }, 1000);
+        
+        // Store timer reference for cleanup
+        return timer;
+      };
+      
+      const cancelCountdown = () => {
+        setCountdownActive(false);
+        setTimeLeft(countdownDuration);
+        
+        AccessibilityInfo.announceForAccessibility('Emergency alert cancelled');
+        logger.info('Emergency countdown cancelled');
+      };
+      
+      const triggerEmergency = async () => {
+        try {
+          AccessibilityInfo.announceForAccessibility('Emergency alert activated');
+          logger.emergency('Emergency button triggered');
+          
+          await EmergencyService.triggerAlert({
+            type: 'manual',
+            source: 'emergency_button',
+          });
+          
+          if (onPress) {
+            onPress();
+          }
+        } catch (error) {
+          logger.emergency('Emergency button trigger failed', error);
+          AccessibilityInfo.announceForAccessibility('Emergency alert failed. Please try again.');
+        }
+      };
+      
+      const handlePress = () => {
+        if (countdownActive) {
+          cancelCountdown();
+          return;
+        }
+        
+        if (countdown) {
+          startCountdown();
+        } else {
+          triggerEmergency();
+        }
+      };
+      
+      // Button press animation
+      const handlePressIn = () => {
+        setIsPressed(true);
+        Animated.spring(scaleAnim, {
+          toValue: 0.95,
+          useNativeDriver: true,
+        }).start();
+      };
+      
+      const handlePressOut = () => {
+        setIsPressed(false);
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+        }).start();
+      };
+      
+      // Pulsing animation during countdown
+      React.useEffect(() => {
+        if (countdownActive) {
+          const pulse = Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseAnim, {
+                toValue: 1.1,
+                duration: 500,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: true,
+              }),
+            ])
+          );
+          pulse.start();
+          
+          return () => pulse.stop();
+        }
+      }, [countdownActive, pulseAnim]);
+      
+      const buttonStyle = [
+        {
+          width: 120,
+          height: 120,
+          borderRadius: 60,
+          backgroundColor: countdownActive ? theme.colors.warning : theme.colors.emergency,
+          justifyContent: 'center',
+          alignItems: 'center',
+          ...theme.shadows.lg,
+        },
+        disabled && {
+          backgroundColor: theme.colors.text.secondary,
+          opacity: 0.5,
+        },
+      ];
+      
+      return (
+        <Animated.View style={{ transform: [{ scale: scaleAnim }, { scale: pulseAnim }] }}>
+          <TouchableOpacity
+            style={buttonStyle}
+            onPress={handlePress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            disabled={disabled}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={countdownActive ? "Cancel emergency alert" : "Emergency SOS button"}
+            accessibilityHint={countdown ? "Tap to start emergency countdown, tap again to cancel" : "Tap to trigger immediate emergency alert"}
+            testID={testID}
+          >
+            <Text style={{
+              color: theme.colors.text.inverse,
+              fontSize: countdownActive ? 24 : 18,
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
+              {countdownActive ? timeLeft : 'SOS'}
+            </Text>
+            {!countdownActive && (
+              <Text style={{
+                color: theme.colors.text.inverse,
+                fontSize: 12,
+                marginTop: 4,
+              }}>
+                Emergency
+              </Text>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    };
+    ```
+  </Step>
+  <Step title="Emergency Alert Display">
+    Component for displaying active emergency alerts
+    
+    ```typescript
+    // components/EmergencyAlert.tsx
+    import React from 'react';
+    import { View, Text, TouchableOpacity } from 'react-native';
+    import { useTheme } from '../contexts/ThemeContext';
+    import { EmergencyAlert as EmergencyAlertType } from '../types/emergency';
+    import { formatDistanceToNow } from 'date-fns';
+
+    interface EmergencyAlertProps {
+      alert: EmergencyAlertType;
+      onResolve?: (alertId: string) => void;
+      onViewDetails?: (alertId: string) => void;
+      compact?: boolean;
+    }
+
+    export const EmergencyAlert: React.FC<EmergencyAlertProps> = ({
+      alert,
+      onResolve,
+      onViewDetails,
+      compact = false,
+    }) => {
+      const { theme } = useTheme();
+      
+      const getAlertTypeLabel = (type: string) => {
+        const labels = {
+          manual: 'Manual Emergency',
+          automated: 'Automatic Detection',
+          duress: 'Duress Signal',
+          check_in_missed: 'Missed Check-in',
+        };
+        return labels[type] || 'Emergency Alert';
+      };
+      
+      const getStatusColor = (status: string) => {
+        switch (status) {
+          case 'active': return theme.colors.emergency;
+          case 'acknowledged': return theme.colors.warning;
+          case 'resolved': return theme.colors.success;
+          default: return theme.colors.text.secondary;
+        }
+      };
+      
+      if (compact) {
+        return (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: theme.spacing.sm,
+            backgroundColor: theme.colors.surface,
+            borderLeftWidth: 4,
+            borderLeftColor: getStatusColor(alert.status),
+            marginVertical: theme.spacing.xs,
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: theme.typography.body.fontSize,
+                fontWeight: 'bold',
+                color: theme.colors.text.primary,
+              }}>
+                {getAlertTypeLabel(alert.alert_type)}
+              </Text>
+              <Text style={{
+                fontSize: theme.typography.caption.fontSize,
+                color: theme.colors.text.secondary,
+              }}>
+                {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+              </Text>
+            </View>
+            <View style={{
+              backgroundColor: getStatusColor(alert.status),
+              paddingHorizontal: theme.spacing.sm,
+              paddingVertical: theme.spacing.xs,
+              borderRadius: theme.borderRadius.sm,
+            }}>
+              <Text style={{
+                color: theme.colors.text.inverse,
+                fontSize: theme.typography.caption.fontSize,
+                fontWeight: 'bold',
+              }}>
+                {alert.status.toUpperCase()}
+              </Text>
+            </View>
+          </View>
+        );
+      }
+      
+      return (
+        <View style={{
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          marginVertical: theme.spacing.sm,
+          borderWidth: 2,
+          borderColor: getStatusColor(alert.status),
+          ...theme.shadows.md,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: theme.spacing.sm,
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: theme.typography.h2.fontSize,
+                fontWeight: theme.typography.h2.fontWeight,
+                color: theme.colors.text.primary,
+                marginBottom: theme.spacing.xs,
+              }}>
+                {getAlertTypeLabel(alert.alert_type)}
+              </Text>
+              <Text style={{
+                fontSize: theme.typography.caption.fontSize,
+                color: theme.colors.text.secondary,
+              }}>
+                Created {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+              </Text>
+            </View>
+            <View style={{
+              backgroundColor: getStatusColor(alert.status),
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.sm,
+              borderRadius: theme.borderRadius.md,
+            }}>
+              <Text style={{
+                color: theme.colors.text.inverse,
+                fontSize: theme.typography.body.fontSize,
+                fontWeight: 'bold',
+              }}>
+                {alert.status.toUpperCase()}
+              </Text>
+            </View>
+          </View>
+          
+          {alert.message && (
+            <Text style={{
+              fontSize: theme.typography.body.fontSize,
+              color: theme.colors.text.primary,
+              marginBottom: theme.spacing.md,
+            }}>
+              {alert.message}
+            </Text>
+          )}
+          
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            {onViewDetails && (
+              <TouchableOpacity
+                onPress={() => onViewDetails(alert.id)}
+                style={{
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.sm,
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                  borderRadius: theme.borderRadius.sm,
+                }}
+              >
+                <Text style={{
+                  color: theme.colors.primary,
+                  fontSize: theme.typography.body.fontSize,
+                  fontWeight: 'bold',
+                }}>
+                  View Details
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {alert.status === 'active' && onResolve && (
+              <TouchableOpacity
+                onPress={() => onResolve(alert.id)}
+                style={{
+                  backgroundColor: theme.colors.success,
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.sm,
+                }}
+              >
+                <Text style={{
+                  color: theme.colors.text.inverse,
+                  fontSize: theme.typography.body.fontSize,
+                  fontWeight: 'bold',
+                }}>
+                  Mark Safe
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      );
+    };
+    ```
+  </Step>
+</Steps>
+
+## Location Components
+
+### Location Sharing Card
+
+<CodeGroup>
+```typescript Location Sharing Component
+// components/LocationSharingCard.tsx
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Switch } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLocationSharing } from '../hooks/useLocationSharing';
+import { Contact } from '../types/contact';
+
+interface LocationSharingCardProps {
+  contact: Contact;
+  isSharing: boolean;
+  onToggleSharing: (contactId: string, enabled: boolean) => void;
+  onConfigurePermissions: (contactId: string) => void;
+}
+
+export const LocationSharingCard: React.FC<LocationSharingCardProps> = ({
+  contact,
+  isSharing,
+  onToggleSharing,
+  onConfigurePermissions,
+}) => {
+  const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleToggle = async (value: boolean) => {
+    setIsLoading(true);
+    try {
+      await onToggleSharing(contact.id, value);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <View style={{
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      marginVertical: theme.spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'center',
+      ...theme.shadows.sm,
+    }}>
+      <View style={{
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: theme.colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: theme.spacing.md,
+      }}>
+        <Text style={{
+          color: theme.colors.text.inverse,
+          fontSize: 18,
+          fontWeight: 'bold',
+        }}>
+          {contact.name.charAt(0).toUpperCase()}
+        </Text>
+      </View>
+      
+      <View style={{ flex: 1 }}>
+        <Text style={{
+          fontSize: theme.typography.body.fontSize,
+          fontWeight: 'bold',
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.xs,
+        }}>
+          {contact.name}
+        </Text>
+        <Text style={{
+          fontSize: theme.typography.caption.fontSize,
+          color: theme.colors.text.secondary,
+        }}>
+          {contact.relationship || 'Emergency Contact'}
+        </Text>
+        
+        {isSharing && (
+          <TouchableOpacity
+            onPress={() => onConfigurePermissions(contact.id)}
+            style={{ marginTop: theme.spacing.xs }}
+          >
+            <Text style={{
+              fontSize: theme.typography.caption.fontSize,
+              color: theme.colors.primary,
+              textDecorationLine: 'underline',
+            }}>
+              Configure permissions
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      <Switch
+        value={isSharing}
+        onValueChange={handleToggle}
+        disabled={isLoading}
+        trackColor={{ 
+          false: theme.colors.text.secondary, 
+          true: theme.colors.success 
+        }}
+        thumbColor={isSharing ? theme.colors.text.inverse : theme.colors.background}
+      />
+    </View>
+  );
 };
 ```
 
+```typescript Real-time Location Display
+// components/LocationDisplay.tsx
+import React, { useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { useRealTimeLocation } from '../hooks/useRealTimeLocation';
+import { formatDistanceToNow } from 'date-fns';
+
+interface LocationDisplayProps {
+  userId: string;
+  showAccuracy?: boolean;
+  showTimestamp?: boolean;
+  compact?: boolean;
+}
+
+export const LocationDisplay: React.FC<LocationDisplayProps> = ({
+  userId,
+  showAccuracy = true,
+  showTimestamp = true,
+  compact = false,
+}) => {
+  const { theme } = useTheme();
+  const { location, isLoading, error } = useRealTimeLocation(userId);
+  
+  if (isLoading) {
+    return (
+      <View style={{
+        padding: theme.spacing.md,
+        backgroundColor: theme.colors.surface,
+        borderRadius: theme.borderRadius.md,
+        alignItems: 'center',
+      }}>
+        <Text style={{
+          color: theme.colors.text.secondary,
+          fontSize: theme.typography.body.fontSize,
+        }}>
+          Loading location...
+        </Text>
+      </View>
+    );
+  }
+  
+  if (error || !location) {
+    return (
+      <View style={{
+        padding: theme.spacing.md,
+        backgroundColor: theme.colors.surface,
+        borderRadius: theme.borderRadius.md,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.colors.warning,
+      }}>
+        <Text style={{
+          color: theme.colors.warning,
+          fontSize: theme.typography.body.fontSize,
+          textAlign: 'center',
+        }}>
+          Location unavailable
+        </Text>
+      </View>
+    );
+  }
+  
+  const getAccuracyDescription = (accuracy: number) => {
+    if (accuracy <= 5) return 'Very precise';
+    if (accuracy <= 15) return 'Precise';
+    if (accuracy <= 50) return 'Good';
+    return 'Approximate';
+  };
+  
+  const getAccuracyColor = (accuracy: number) => {
+    if (accuracy <= 15) return theme.colors.success;
+    if (accuracy <= 50) return theme.colors.warning;
+    return theme.colors.error;
+  };
+  
+  if (compact) {
+    return (
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: theme.spacing.sm,
+        backgroundColor: theme.colors.surface,
+        borderRadius: theme.borderRadius.sm,
+      }}>
+        <View style={{
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: getAccuracyColor(location.accuracy || 999),
+          marginRight: theme.spacing.sm,
+        }} />
+        <Text style={{
+          fontSize: theme.typography.caption.fontSize,
+          color: theme.colors.text.primary,
+        }}>
+          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+        </Text>
+      </View>
+    );
+  }
+  
+  return (
+    <View style={{
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      ...theme.shadows.sm,
+    }}>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.sm,
+      }}>
+        <Text style={{
+          fontSize: theme.typography.h2.fontSize,
+          fontWeight: 'bold',
+          color: theme.colors.text.primary,
+        }}>
+          Current Location
+        </Text>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
+          <View style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: getAccuracyColor(location.accuracy || 999),
+            marginRight: theme.spacing.xs,
+          }} />
+          <Text style={{
+            fontSize: theme.typography.caption.fontSize,
+            color: theme.colors.text.secondary,
+          }}>
+            Live
+          </Text>
+        </View>
+      </View>
+      
+      <Text style={{
+        fontSize: theme.typography.body.fontSize,
+        color: theme.colors.text.primary,
+        fontFamily: 'monospace',
+        marginBottom: theme.spacing.sm,
+      }}>
+        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+      </Text>
+      
+      {showAccuracy && location.accuracy && (
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: theme.spacing.sm,
+        }}>
+          <Text style={{
+            fontSize: theme.typography.caption.fontSize,
+            color: theme.colors.text.secondary,
+            marginRight: theme.spacing.sm,
+          }}>
+            Accuracy:
+          </Text>
+          <Text style={{
+            fontSize: theme.typography.caption.fontSize,
+            color: getAccuracyColor(location.accuracy),
+            fontWeight: 'bold',
+          }}>
+            ±{location.accuracy.toFixed(0)}m ({getAccuracyDescription(location.accuracy)})
+          </Text>
+        </View>
+      )}
+      
+      {showTimestamp && location.timestamp && (
+        <Text style={{
+          fontSize: theme.typography.caption.fontSize,
+          color: theme.colors.text.secondary,
+        }}>
+          Updated {formatDistanceToNow(new Date(location.timestamp), { addSuffix: true })}
+        </Text>
+      )}
+    </View>
+  );
+};
+```
+</CodeGroup>
+
+## Contact Management Components
+
+### Emergency Contact Card
+
+<Accordion title="Emergency Contact Management">
+```typescript
+// components/EmergencyContactCard.tsx
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { EmergencyContact } from '../types/contact';
+
+interface EmergencyContactCardProps {
+  contact: EmergencyContact;
+  onEdit: (contact: EmergencyContact) => void;
+  onRemove: (contactId: string) => void;
+  onTest: (contactId: string) => void;
+  isPrimary?: boolean;
+}
+
+export const EmergencyContactCard: React.FC<EmergencyContactCardProps> = ({
+  contact,
+  onEdit,
+  onRemove,
+  onTest,
+  isPrimary = false,
+}) => {
+  const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleRemove = () => {
+    Alert.alert(
+      'Remove Emergency Contact',
+      `Are you sure you want to remove ${contact.name} from your emergency contacts?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Remove', 
+          style: 'destructive',
+          onPress: () => onRemove(contact.id),
+        },
+      ]
+    );
+  };
+  
+  const handleTest = async () => {
+    setIsLoading(true);
+    try {
+      await onTest(contact.id);
+      Alert.alert(
+        'Test Notification Sent',
+        `A test notification has been sent to ${contact.name}.`
+      );
+    } catch (error) {
+      Alert.alert(
+        'Test Failed',
+        'Failed to send test notification. Please check the contact information.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <View style={{
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      marginVertical: theme.spacing.sm,
+      borderWidth: isPrimary ? 2 : 1,
+      borderColor: isPrimary ? theme.colors.primary : theme.colors.text.secondary,
+      ...theme.shadows.sm,
+    }}>
+      {isPrimary && (
+        <View style={{
+          position: 'absolute',
+          top: -8,
+          left: theme.spacing.md,
+          backgroundColor: theme.colors.primary,
+          paddingHorizontal: theme.spacing.sm,
+          paddingVertical: theme.spacing.xs,
+          borderRadius: theme.borderRadius.sm,
+        }}>
+          <Text style={{
+            color: theme.colors.text.inverse,
+            fontSize: theme.typography.caption.fontSize,
+            fontWeight: 'bold',
+          }}>
+            PRIMARY
+          </Text>
+        </View>
+      )}
+      
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: theme.spacing.md,
+      }}>
+        <View style={{
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: isPrimary ? theme.colors.primary : theme.colors.secondary,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: theme.spacing.md,
+        }}>
+          <Text style={{
+            color: theme.colors.text.inverse,
+            fontSize: 18,
+            fontWeight: 'bold',
+          }}>
+            {contact.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: theme.typography.body.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.xs,
+          }}>
+            {contact.name}
+          </Text>
+          <Text style={{
+            fontSize: theme.typography.caption.fontSize,
+            color: theme.colors.text.secondary,
+            marginBottom: theme.spacing.xs,
+          }}>
+            {contact.relationship}
+          </Text>
+          <Text style={{
+            fontSize: theme.typography.caption.fontSize,
+            color: theme.colors.text.secondary,
+          }}>
+            {contact.phone}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      }}>
+        <TouchableOpacity
+          onPress={handleTest}
+          disabled={isLoading}
+          style={{
+            backgroundColor: theme.colors.secondary,
+            paddingHorizontal: theme.spacing.md,
+            paddingVertical: theme.spacing.sm,
+            borderRadius: theme.borderRadius.sm,
+            opacity: isLoading ? 0.6 : 1,
+          }}
+        >
+          <Text style={{
+            color: theme.colors.text.inverse,
+            fontSize: theme.typography.caption.fontSize,
+            fontWeight: 'bold',
+          }}>
+            {isLoading ? 'Testing...' : 'Test'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => onEdit(contact)}
+          style={{
+            borderWidth: 1,
+            borderColor: theme.colors.primary,
+            paddingHorizontal: theme.spacing.md,
+            paddingVertical: theme.spacing.sm,
+            borderRadius: theme.borderRadius.sm,
+          }}
+        >
+          <Text style={{
+            color: theme.colors.primary,
+            fontSize: theme.typography.caption.fontSize,
+            fontWeight: 'bold',
+          }}>
+            Edit
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={handleRemove}
+          style={{
+            borderWidth: 1,
+            borderColor: theme.colors.error,
+            paddingHorizontal: theme.spacing.md,
+            paddingVertical: theme.spacing.sm,
+            borderRadius: theme.borderRadius.sm,
+          }}
+        >
+          <Text style={{
+            color: theme.colors.error,
+            fontSize: theme.typography.caption.fontSize,
+            fontWeight: 'bold',
+          }}>
+            Remove
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+```
+</Accordion>
+
+## Check-in Components
+
+### Check-in Scheduler
+
+<Steps>
+  <Step title="Check-in Scheduler Component">
+    Smart scheduling for safety check-ins with intelligent suggestions
+    
+    ```typescript
+    // components/CheckInScheduler.tsx
+    import React, { useState } from 'react';
+    import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+    import { useTheme } from '../contexts/ThemeContext';
+    import { CheckInService } from '../services/checkin';
+    import { addMinutes, format } from 'date-fns';
+
+    interface CheckInSchedulerProps {
+      onSchedule: (checkIn: ScheduledCheckIn) => void;
+      activityType?: string;
+      suggestedDuration?: number;
+    }
+
+    interface ScheduledCheckIn {
+      scheduledTime: Date;
+      activityType: string;
+      location?: string;
+      notes?: string;
+    }
+
+    export const CheckInScheduler: React.FC<CheckInSchedulerProps> = ({
+      onSchedule,
+      activityType = 'general',
+      suggestedDuration = 60,
+    }) => {
+      const { theme } = useTheme();
+      const [selectedTime, setSelectedTime] = useState<Date>(
+        addMinutes(new Date(), suggestedDuration)
+      );
+      const [selectedActivity, setSelectedActivity] = useState(activityType);
+      
+      const quickTimeOptions = [
+        { label: '15 min', minutes: 15 },
+        { label: '30 min', minutes: 30 },
+        { label: '1 hour', minutes: 60 },
+        { label: '2 hours', minutes: 120 },
+        { label: '4 hours', minutes: 240 },
+      ];
+      
+      const activityTypes = [
+        { value: 'date', label: 'Date/Meeting', icon: '💕' },
+        { value: 'travel', label: 'Travel', icon: '✈️' },
+        { value: 'night_out', label: 'Night Out', icon: '🌃' },
+        { value: 'exercise', label: 'Exercise', icon: '🏃‍♀️' },
+        { value: 'work', label: 'Work', icon: '💼' },
+        { value: 'general', label: 'General', icon: '📱' },
+      ];
+      
+      const handleQuickTime = (minutes: number) => {
+        setSelectedTime(addMinutes(new Date(), minutes));
+      };
+      
+      const handleSchedule = () => {
+        const checkIn: ScheduledCheckIn = {
+          scheduledTime: selectedTime,
+          activityType: selectedActivity,
+        };
+        
+        onSchedule(checkIn);
+      };
+      
+      const isValidTime = selectedTime > new Date();
+      
+      return (
+        <View style={{
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          ...theme.shadows.sm,
+        }}>
+          <Text style={{
+            fontSize: theme.typography.h2.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.md,
+          }}>
+            Schedule Safety Check-in
+          </Text>
+          
+          {/* Quick time selection */}
+          <Text style={{
+            fontSize: theme.typography.body.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }}>
+            Check-in Time
+          </Text>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: theme.spacing.md }}
+          >
+            {quickTimeOptions.map((option) => (
+              <TouchableOpacity
+                key={option.minutes}
+                onPress={() => handleQuickTime(option.minutes)}
+                style={{
+                  backgroundColor: addMinutes(new Date(), option.minutes).getTime() === selectedTime.getTime()
+                    ? theme.colors.primary
+                    : theme.colors.background,
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.sm,
+                  marginRight: theme.spacing.sm,
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{
+                  color: addMinutes(new Date(), option.minutes).getTime() === selectedTime.getTime()
+                    ? theme.colors.text.inverse
+                    : theme.colors.primary,
+                  fontSize: theme.typography.caption.fontSize,
+                  fontWeight: 'bold',
+                }}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          
+          {/* Selected time display */}
+          <View style={{
+            backgroundColor: theme.colors.background,
+            padding: theme.spacing.md,
+            borderRadius: theme.borderRadius.sm,
+            marginBottom: theme.spacing.md,
+          }}>
+            <Text style={{
+              fontSize: theme.typography.body.fontSize,
+              color: theme.colors.text.primary,
+              textAlign: 'center',
+            }}>
+              Check-in scheduled for:
+            </Text>
+            <Text style={{
+              fontSize: theme.typography.h2.fontSize,
+              fontWeight: 'bold',
+              color: theme.colors.primary,
+              textAlign: 'center',
+              marginTop: theme.spacing.xs,
+            }}>
+              {format(selectedTime, 'MMM d, h:mm a')}
+            </Text>
+          </View>
+          
+          {/* Activity type selection */}
+          <Text style={{
+            fontSize: theme.typography.body.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }}>
+            Activity Type
+          </Text>
+          
+          <View style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginBottom: theme.spacing.md,
+          }}>
+            {activityTypes.map((activity) => (
+              <TouchableOpacity
+                key={activity.value}
+                onPress={() => setSelectedActivity(activity.value)}
+                style={{
+                  backgroundColor: selectedActivity === activity.value
+                    ? theme.colors.primary
+                    : theme.colors.background,
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.sm,
+                  marginRight: theme.spacing.sm,
+                  marginBottom: theme.spacing.sm,
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ marginRight: theme.spacing.xs }}>
+                  {activity.icon}
+                </Text>
+                <Text style={{
+                  color: selectedActivity === activity.value
+                    ? theme.colors.text.inverse
+                    : theme.colors.primary,
+                  fontSize: theme.typography.caption.fontSize,
+                  fontWeight: 'bold',
+                }}>
+                  {activity.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          {/* Schedule button */}
+          <TouchableOpacity
+            onPress={handleSchedule}
+            disabled={!isValidTime}
+            style={{
+              backgroundColor: isValidTime ? theme.colors.primary : theme.colors.text.secondary,
+              paddingVertical: theme.spacing.md,
+              borderRadius: theme.borderRadius.sm,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{
+              color: theme.colors.text.inverse,
+              fontSize: theme.typography.body.fontSize,
+              fontWeight: 'bold',
+            }}>
+              Schedule Check-in
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    };
+    ```
+  </Step>
+</Steps>
+
+## Performance Optimization
+
+### Memo and Callback Optimization
+
+<CardGroup cols={2}>
+  <Card title="Component Memoization" icon="memory">
+    Use React.memo for components that re-render frequently
+  </Card>
+  <Card title="Callback Optimization" icon="bolt">
+    useCallback for event handlers to prevent unnecessary re-renders
+  </Card>
+  <Card title="State Optimization" icon="database">
+    Local state for UI, global state for safety data
+  </Card>
+  <Card title="List Optimization" icon="list">
+    VirtualizedList for large datasets with proper key extraction
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Performance Hooks
+// hooks/usePerformanceOptimization.ts
+import { useCallback, useMemo, useRef } from 'react';
+import { debounce } from 'lodash';
+
+export const useOptimizedCallbacks = () => {
+  // Debounced search for contacts
+  const debouncedSearch = useRef(
+    debounce((query: string, onSearch: (query: string) => void) => {
+      onSearch(query);
+    }, 300)
+  ).current;
+  
+  // Memoized emergency handler
+  const handleEmergency = useCallback(async (type: string) => {
+    try {
+      // Emergency logic here
+      console.log('Emergency triggered:', type);
+    } catch (error) {
+      console.error('Emergency failed:', error);
+    }
+  }, []);
+  
+  // Optimized location update handler
+  const handleLocationUpdate = useCallback((location: any) => {
+    // Only process if location changed significantly
+    const threshold = 10; // 10 meters
+    // Implementation here
+  }, []);
+  
+  return {
+    debouncedSearch,
+    handleEmergency,
+    handleLocationUpdate,
+  };
+};
+
+export const useListOptimization = (data: any[]) => {
+  const keyExtractor = useCallback((item: any, index: number) => {
+    return item.id || `item-${index}`;
+  }, []);
+  
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: 80, // Estimated item height
+    offset: 80 * index,
+    index,
+  }), []);
+  
+  return {
+    keyExtractor,
+    getItemLayout,
+  };
+};
+```
+
+```typescript Optimized List Component
+// components/OptimizedContactList.tsx
+import React, { memo } from 'react';
+import { FlatList, View } from 'react-native';
+import { Contact } from '../types/contact';
+import { ContactCard } from './ContactCard';
+import { useListOptimization } from '../hooks/usePerformanceOptimization';
+
+interface OptimizedContactListProps {
+  contacts: Contact[];
+  onContactPress: (contact: Contact) => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}
+
+const ContactItem = memo<{
+  contact: Contact;
+  onPress: (contact: Contact) => void;
+}>(({ contact, onPress }) => {
+  const handlePress = () => onPress(contact);
+  
+  return (
+    <ContactCard
+      contact={contact}
+      onPress={handlePress}
+    />
+  );
+});
+
+export const OptimizedContactList = memo<OptimizedContactListProps>(({
+  contacts,
+  onContactPress,
+  refreshing = false,
+  onRefresh,
+}) => {
+  const { keyExtractor, getItemLayout } = useListOptimization(contacts);
+  
+  const renderItem = ({ item }: { item: Contact }) => (
+    <ContactItem
+      contact={item}
+      onPress={onContactPress}
+    />
+  );
+  
+  return (
+    <FlatList
+      data={contacts}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      getItemLayout={getItemLayout}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      initialNumToRender={5}
+      updateCellsBatchingPeriod={50}
+    />
+  );
+});
+```
+</CodeGroup>
+
+## Accessibility Features
+
+### Enhanced Accessibility
+
+<Steps>
+  <Step title="Screen Reader Support">
+    Comprehensive VoiceOver and TalkBack integration
+    
+    ```typescript
+    // utils/accessibility.ts
+    import { AccessibilityInfo, Platform } from 'react-native';
+
+    export class AccessibilityHelper {
+      static announceEmergency(message: string) {
+        if (Platform.OS === 'ios') {
+          AccessibilityInfo.announceForAccessibility(
+            `Emergency Alert: ${message}`
+          );
+        } else {
+          AccessibilityInfo.announceForAccessibility(
+            `Emergency Alert: ${message}`,
+            { queue: false } // Interrupt other announcements
+          );
+        }
+      }
+      
+      static announceLocationUpdate(accuracy: number) {
+        const message = accuracy <= 10 
+          ? 'Location updated with high accuracy'
+          : accuracy <= 50 
+          ? 'Location updated with moderate accuracy'
+          : 'Location updated with low accuracy';
+          
+        AccessibilityInfo.announceForAccessibility(message);
+      }
+      
+      static async isScreenReaderEnabled(): Promise<boolean> {
+        return await AccessibilityInfo.isScreenReaderEnabled();
+      }
+      
+      static async isReduceMotionEnabled(): Promise<boolean> {
+        return await AccessibilityInfo.isReduceMotionEnabled();
+      }
+    }
+    ```
+  </Step>
+  <Step title="Voice Control Integration">
+    Voice commands for hands-free emergency activation
+    
+    ```typescript
+    // components/VoiceControlButton.tsx
+    import React, { useEffect, useState } from 'react';
+    import { View, Text, TouchableOpacity } from 'react-native';
+    import Voice from '@react-native-voice/voice';
+    
+    export const VoiceControlButton: React.FC = () => {
+      const [isListening, setIsListening] = useState(false);
+      const [recognizedText, setRecognizedText] = useState('');
+      
+      useEffect(() => {
+        Voice.onSpeechStart = () => setIsListening(true);
+        Voice.onSpeechEnd = () => setIsListening(false);
+        Voice.onSpeechResults = (e) => {
+          if (e.value) {
+            const text = e.value[0].toLowerCase();
+            setRecognizedText(text);
+            
+            // Check for emergency phrases
+            if (text.includes('emergency') || text.includes('help') || text.includes('sos')) {
+              handleEmergencyVoiceCommand();
+            }
+          }
+        };
+        
+        return () => {
+          Voice.destroy().then(Voice.removeAllListeners);
+        };
+      }, []);
+      
+      const startListening = async () => {
+        try {
+          await Voice.start('en-US');
+        } catch (error) {
+          console.error('Voice recognition error:', error);
+        }
+      };
+      
+      const handleEmergencyVoiceCommand = () => {
+        // Trigger emergency with voice confirmation
+        AccessibilityHelper.announceEmergency('Voice emergency command recognized. Activating emergency alert.');
+        // Emergency logic here
+      };
+      
+      return (
+        <TouchableOpacity
+          onPress={startListening}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Voice control for emergency activation"
+          accessibilityHint="Tap and say 'emergency' or 'help' to activate emergency mode"
+        >
+          <Text>{isListening ? 'Listening...' : 'Tap for Voice Control'}</Text>
+        </TouchableOpacity>
+      );
+    };
+    ```
+  </Step>
+</Steps>
+
+## Testing Components
+
+### Component Testing Utilities
+
+<Accordion title="Testing Helpers and Utilities">
+```typescript
+// utils/test-helpers.tsx
+import React from 'react';
+import { render, RenderOptions } from '@testing-library/react-native';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { SafetyProvider } from '../contexts/SafetyContext';
+
+// Custom render function with providers
+const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <ThemeProvider>
+      <SafetyProvider>
+        {children}
+      </SafetyProvider>
+    </ThemeProvider>
+  );
+};
+
+const customRender = (
+  ui: React.ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>
+) => render(ui, { wrapper: AllTheProviders, ...options });
+
+// Mock emergency service for testing
+export const mockEmergencyService = {
+  triggerAlert: jest.fn().mockResolvedValue({ id: 'test-alert-123' }),
+  cancelAlert: jest.fn().mockResolvedValue(true),
+  getActiveAlerts: jest.fn().mockResolvedValue([]),
+};
+
+// Mock location service for testing
+export const mockLocationService = {
+  getCurrentPosition: jest.fn().mockResolvedValue({
+    latitude: 40.7128,
+    longitude: -74.0060,
+    accuracy: 10,
+    timestamp: Date.now(),
+  }),
+  startTracking: jest.fn(),
+  stopTracking: jest.fn(),
+};
+
+// Test data factories
+export const createTestContact = (overrides = {}): Contact => ({
+  id: 'test-contact-1',
+  name: 'Test Contact',
+  phone: '+1234567890',
+  email: 'test@example.com',
+  relationship: 'friend',
+  verified: true,
+  ...overrides,
+});
+
+export const createTestEmergencyAlert = (overrides = {}): EmergencyAlert => ({
+  id: 'test-alert-1',
+  user_id: 'test-user-1',
+  alert_type: 'manual',
+  status: 'active',
+  created_at: new Date().toISOString(),
+  location: {
+    latitude: 40.7128,
+    longitude: -74.0060,
+  },
+  ...overrides,
+});
+
+// Re-export everything
+export * from '@testing-library/react-native';
+export { customRender as render };
+```
+</Accordion>
+
+## Component Documentation Standards
+
+### Documentation Template
+
+<CodeGroup>
+```typescript Component Documentation
+/**
+ * EmergencyButton Component
+ * 
+ * A safety-critical button component for triggering emergency alerts.
+ * Features countdown timer, accessibility support, and haptic feedback.
+ * 
+ * @example
+ * ```tsx
+ * <EmergencyButton
+ *   onPress={() => console.log('Emergency triggered')}
+ *   countdown={true}
+ *   countdownDuration={5}
+ * />
+ * ```
+ * 
+ * @accessibility
+ * - Supports VoiceOver/TalkBack with clear labels
+ * - Announces countdown status
+ * - High contrast mode compatible
+ * - Large touch target (120x120pt)
+ * 
+ * @performance
+ * - Optimized with React.memo
+ * - Minimal re-renders during countdown
+ * - Efficient animation handling
+ * 
+ * @safety
+ * - Prevents accidental activation with countdown
+ * - Visual and haptic feedback
+ * - Logs all emergency interactions
+ * - Fails safely if services unavailable
+ */
+```
+
+```typescript Prop Documentation
+interface EmergencyButtonProps {
+  /** Callback function when emergency is triggered */
+  onPress?: () => void;
+  
+  /** Whether the button is disabled */
+  disabled?: boolean;
+  
+  /** Enable countdown before triggering (recommended for safety) */
+  countdown?: boolean;
+  
+  /** Duration of countdown in seconds @default 5 */
+  countdownDuration?: number;
+  
+  /** Test identifier for automated testing */
+  testID?: string;
+  
+  /** 
+   * Emergency button size variant
+   * - 'small': 80x80pt (for compact layouts)
+   * - 'medium': 120x120pt (default, recommended)
+   * - 'large': 160x160pt (for accessibility)
+   */
+  size?: 'small' | 'medium' | 'large';
+  
+  /**
+   * Visual style variant
+   * - 'filled': Solid background (default)
+   * - 'outlined': Border with transparent background
+   * - 'minimal': Text only (not recommended for emergency)
+   */
+  variant?: 'filled' | 'outlined' | 'minimal';
+}
+```
 </CodeGroup>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**Component Library Growth:** These foundational components form the basis of Shelther's safety-focused UI library. Each component prioritizes accessibility, performance, and reliability in emergency scenarios.
+</Note>
+
+Next in **Phase 4**, I'll continue with `state-management.mdx` to cover Redux Toolkit implementation, local state patterns, and offline synchronization strategies for safety-critical data.
+
+<CardGroup cols={3}>
+  <Card title="State Management" icon="layers" href="/development/state-management">
+    Redux Toolkit patterns for safety data and emergency workflows
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Navigation" icon="compass" href="/development/navigation">
+    React Navigation setup with emergency route handling
+  </Card>
+  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
+    Comprehensive testing approach for safety-critical components
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**Component Safety:** Always test components in realistic emergency scenarios. Use mock services during development to avoid triggering real emergency responses.
+</Warning>

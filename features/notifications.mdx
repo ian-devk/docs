@@ -1,59 +1,1262 @@
 ---
 title: "Notifications"
-description: "Notifications documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Comprehensive notification system for safety alerts, emergency communications, and status updates. Learn about push notifications, SMS fallbacks, email alerts, and intelligent notification management."
+sidebarTitle: "Notifications"
 ---
 
 # Notifications
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Critical Communication Hub:** Shelther's notification system ensures important safety information reaches you and your emergency contacts through multiple channels with intelligent prioritization and delivery confirmation.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+The notification system is the backbone of Shelther's communication infrastructure, delivering critical safety alerts, emergency notifications, and status updates through multiple channels. The system intelligently manages delivery priorities, handles offline scenarios, and provides comprehensive delivery confirmation.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Multi-Channel Delivery" icon="send">
+    Push notifications, SMS, email, and in-app alerts ensure message delivery
+  </Card>
+  <Card title="Priority Management" icon="zap">
+    Intelligent prioritization ensures emergency alerts bypass normal notification limits
+  </Card>
+  <Card title="Delivery Confirmation" icon="check-circle">
+    Real-time tracking of notification delivery and user acknowledgment
+  </Card>
+  <Card title="Offline Resilience" icon="wifi-slash">
+    SMS and call fallbacks when internet connectivity is unavailable
+  </Card>
+</CardGroup>
+
+## Notification Categories
+
+### Emergency Notifications
+
+<Steps>
+  <Step title="Critical Emergency Alerts">
+    Immediate notifications for active emergencies with maximum priority and multiple delivery channels
+  </Step>
+  <Step title="Emergency Contact Alerts">
+    Notifications sent to your emergency contacts when you trigger an alert
+  </Step>
+  <Step title="Emergency Updates">
+    Status updates about ongoing emergency situations and resolution
+  </Step>
+  <Step title="Emergency System Status">
+    Notifications about emergency system functionality and health
+  </Step>
+</Steps>
+
+<Warning>
+**Critical Priority:** Emergency notifications bypass all user notification settings and device restrictions to ensure delivery during safety-critical situations.
+</Warning>
+
+### Safety Notifications
+
+<CardGroup cols={3}>
+  <Card title="Check-in Reminders" icon="clock">
+    Intelligent reminders for scheduled safety check-ins based on your patterns
+  </Card>
+  <Card title="Location Alerts" icon="map-pin">
+    Notifications about venue safety, geofence entries/exits, and location sharing status
+  </Card>
+  <Card title="Safety Tips" icon="lightbulb">
+    Personalized safety recommendations and proactive safety information
+  </Card>
+</CardGroup>
+
+### Social Notifications
+
+<Accordion title="Contact-Related Notifications">
+**Emergency Contact Communications:**
+- Notifications when emergency contacts check in with you
+- Alerts when contacts request your location or safety status
+- Updates about your emergency contacts' safety status
+- Invitations to join safety circles or trusted contact networks
+
+**Community Notifications:**
+- Safety reports from community members in your area
+- Updates about venue safety ratings and incidents
+- Community safety alerts and local emergency information
+- Safety circle activity and group coordination updates
+
+**Notification Examples:**
+```typescript
+interface ContactNotification {
+  type: 'emergency_contact_checkin' | 'safety_request' | 'circle_invitation';
+  from_contact: {
+    id: string;
+    name: string;
+    relationship: string;
+  };
+  message: string;
+  timestamp: Date;
+  requires_response: boolean;
+  response_options?: string[];
+}
+
+const exampleNotifications: ContactNotification[] = [
+  {
+    type: 'emergency_contact_checkin',
+    from_contact: {
+      id: 'contact_1',
+      name: 'Sarah Miller',
+      relationship: 'sister'
+    },
+    message: "Just checking - are you safe? I saw there was an incident in your area.",
+    timestamp: new Date(),
+    requires_response: true,
+    response_options: ['I am safe', 'Need help', 'Call me']
+  },
+  {
+    type: 'safety_request',
+    from_contact: {
+      id: 'contact_2', 
+      name: 'Mom',
+      relationship: 'mother'
+    },
+    message: "Can you share your location while you're out tonight?",
+    timestamp: new Date(),
+    requires_response: true,
+    response_options: ['Share for 2 hours', 'Share until I get home', 'No thanks']
+  }
+];
+```
+</Accordion>
+
+## Notification Channels
+
+### Push Notifications
+
+<Note>
+**Reliable Delivery:** Push notifications use both Apple Push Notification Service (APNs) and Firebase Cloud Messaging (FCM) with intelligent fallback mechanisms to ensure delivery.
+</Note>
 
 <CodeGroup>
+```typescript Push Notification Configuration
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+interface PushNotificationConfig {
+  priority_levels: {
+    critical: NotificationPriority;
+    high: NotificationPriority;
+    normal: NotificationPriority;
+    low: NotificationPriority;
+  };
+  delivery_settings: {
+    retry_attempts: number;
+    retry_delay_seconds: number;
+    fallback_to_sms: boolean;
+    delivery_confirmation: boolean;
+  };
+  user_preferences: {
+    allow_critical_override: boolean;
+    quiet_hours: {
+      enabled: boolean;
+      start_time: string;
+      end_time: string;
+      emergency_override: boolean;
+    };
+    notification_grouping: boolean;
+    sound_profiles: NotificationSoundProfile[];
+  };
+}
+
+export class PushNotificationManager {
+  private config: PushNotificationConfig;
+  
+  async initializePushNotifications(): Promise<string | null> {
+    // Request permissions with emergency justification
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowCriticalAlerts: true, // For emergency notifications
+          allowProvisional: false,
+        },
+      });
+      finalStatus = status;
+    }
+    
+    if (finalStatus !== 'granted') {
+      console.warn('Push notification permission denied');
+      return null;
+    }
+    
+    // Configure notification handling
+    Notifications.setNotificationHandler({
+      handleNotification: async (notification) => {
+        const notificationData = notification.request.content.data;
+        
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: this.shouldPlaySound(notificationData),
+          shouldSetBadge: true,
+          priority: this.getNotificationPriority(notificationData),
+        };
+      },
+    });
+    
+    // Get push token
+    const pushToken = await this.getPushToken();
+    return pushToken;
+  }
+  
+  private async getPushToken(): Promise<string> {
+    let token;
+    
+    if (Constants.isDevice) {
+      token = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      });
+    } else {
+      console.warn('Push notifications require a physical device');
+      return '';
+    }
+    
+    return token.data;
+  }
+  
+  async sendEmergencyNotification(
+    emergency: EmergencyAlert,
+    recipients: NotificationRecipient[]
+  ): Promise<NotificationDeliveryResult[]> {
+    const results: NotificationDeliveryResult[] = [];
+    
+    for (const recipient of recipients) {
+      try {
+        const notificationContent = this.createEmergencyNotificationContent(emergency, recipient);
+        
+        const notificationId = await Notifications.scheduleNotificationAsync({
+          content: notificationContent,
+          trigger: null, // Send immediately
+        });
+        
+        results.push({
+          recipient_id: recipient.id,
+          notification_id: notificationId,
+          channel: 'push',
+          status: 'sent',
+          timestamp: new Date()
+        });
+        
+        // Track delivery
+        this.trackNotificationDelivery(notificationId, recipient.id);
+        
+      } catch (error) {
+        console.error(`Failed to send push notification to ${recipient.id}:`, error);
+        
+        results.push({
+          recipient_id: recipient.id,
+          notification_id: null,
+          channel: 'push',
+          status: 'failed',
+          error: error.message,
+          timestamp: new Date()
+        });
+        
+        // Trigger fallback
+        await this.triggerNotificationFallback(emergency, recipient);
+      }
+    }
+    
+    return results;
+  }
+  
+  private createEmergencyNotificationContent(
+    emergency: EmergencyAlert,
+    recipient: NotificationRecipient
+  ): Notifications.NotificationContentInput {
+    const locationText = emergency.location 
+      ? `Location: ${emergency.location.latitude.toFixed(6)}, ${emergency.location.longitude.toFixed(6)}`
+      : 'Location unavailable';
+    
+    return {
+      title: `🚨 Emergency Alert from ${emergency.user_name}`,
+      body: `Emergency situation reported. ${locationText}. Please respond immediately.`,
+      sound: 'emergency_alert.wav',
+      priority: Notifications.AndroidNotificationPriority.MAX,
+      data: {
+        type: 'emergency_alert',
+        emergency_id: emergency.id,
+        user_id: emergency.user_id,
+        location: emergency.location,
+        timestamp: emergency.timestamp,
+        requires_response: true
+      },
+      categoryIdentifier: 'EMERGENCY_RESPONSE',
+    };
+  }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript Notification Response Handling
+export const useNotificationHandling = () => {
+  const [lastNotificationResponse, setLastNotificationResponse] = useState<Notifications.NotificationResponse | null>(null);
+  
+  useEffect(() => {
+    // Handle notification responses
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      setLastNotificationResponse(response);
+      handleNotificationResponse(response);
+    });
+    
+    // Handle notifications received while app is in foreground
+    const foregroundSubscription = Notifications.addNotificationReceivedListener(notification => {
+      handleForegroundNotification(notification);
+    });
+    
+    return () => {
+      subscription.remove();
+      foregroundSubscription.remove();
+    };
+  }, []);
+  
+  const handleNotificationResponse = async (response: Notifications.NotificationResponse) => {
+    const data = response.notification.request.content.data;
+    
+    switch (data.type) {
+      case 'emergency_alert':
+        await handleEmergencyNotificationResponse(data, response.actionIdentifier);
+        break;
+      case 'check_in_reminder':
+        await handleCheckInReminder(data);
+        break;
+      case 'safety_alert':
+        await handleSafetyAlert(data);
+        break;
+      case 'contact_request':
+        await handleContactRequest(data, response.actionIdentifier);
+        break;
+    }
+  };
+  
+  const handleEmergencyNotificationResponse = async (
+    data: any, 
+    actionIdentifier?: string
+  ) => {
+    const emergencyId = data.emergency_id;
+    
+    switch (actionIdentifier) {
+      case 'RESPOND_SAFE':
+        await respondToEmergency(emergencyId, 'safe');
+        break;
+      case 'RESPOND_HELP':
+        await respondToEmergency(emergencyId, 'need_help');
+        break;
+      case 'CALL_USER':
+        await initiateEmergencyCall(data.user_id);
+        break;
+      default:
+        // Open app to emergency details
+        await openEmergencyDetails(emergencyId);
+        break;
+    }
+  };
+  
+  return { lastNotificationResponse };
 };
 ```
-
 </CodeGroup>
+
+### SMS Notifications
+
+<CardGroup cols={2}>
+  <Card title="Emergency SMS Fallback" icon="message-square">
+    Automatic SMS delivery when push notifications fail or internet is unavailable
+  </Card>
+  <Card title="International Support" icon="globe">
+    Global SMS delivery with country-specific formatting and compliance
+  </Card>
+  <Card title="Delivery Tracking" icon="eye">
+    Real-time SMS delivery confirmation and read receipts where available
+  </Card>
+  <Card title="Cost Optimization" icon="dollar-sign">
+    Intelligent SMS usage to balance reliability with cost efficiency
+  </Card>
+</CardGroup>
+
+<Accordion title="SMS Implementation">
+**SMS Service Configuration:**
+```typescript
+import { Twilio } from 'twilio';
+
+interface SMSConfig {
+  providers: {
+    primary: 'twilio' | 'aws_sns' | 'messagebird';
+    fallback: string[];
+  };
+  delivery_settings: {
+    max_retries: number;
+    retry_delay_minutes: number;
+    delivery_timeout_minutes: number;
+    enable_delivery_receipts: boolean;
+  };
+  cost_optimization: {
+    batch_non_emergency: boolean;
+    prefer_push_when_available: boolean;
+    max_sms_per_user_per_day: number;
+    emergency_sms_unlimited: boolean;
+  };
+  international_support: {
+    country_code_validation: boolean;
+    local_number_formatting: boolean;
+    timezone_aware_delivery: boolean;
+    regulatory_compliance: boolean;
+  };
+}
+
+export class SMSNotificationManager {
+  private twilioClient: Twilio;
+  private config: SMSConfig;
+  
+  constructor(config: SMSConfig) {
+    this.config = config;
+    this.twilioClient = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+  }
+  
+  async sendEmergencySMS(
+    emergency: EmergencyAlert,
+    recipients: SMSRecipient[]
+  ): Promise<SMSDeliveryResult[]> {
+    const results: SMSDeliveryResult[] = [];
+    
+    for (const recipient of recipients) {
+      try {
+        const formattedNumber = this.formatPhoneNumber(recipient.phone, recipient.country_code);
+        const message = this.createEmergencySMSContent(emergency, recipient);
+        
+        const messageResult = await this.twilioClient.messages.create({
+          body: message,
+          from: this.getLocalTwilioNumber(recipient.country_code),
+          to: formattedNumber,
+          statusCallback: `${process.env.API_BASE_URL}/webhooks/sms-status`,
+        });
+        
+        results.push({
+          recipient_id: recipient.id,
+          message_sid: messageResult.sid,
+          phone_number: formattedNumber,
+          status: 'sent',
+          provider: 'twilio',
+          timestamp: new Date(),
+          cost_estimate: this.estimateSMSCost(recipient.country_code)
+        });
+        
+      } catch (error) {
+        console.error(`SMS failed for ${recipient.phone}:`, error);
+        
+        results.push({
+          recipient_id: recipient.id,
+          message_sid: null,
+          phone_number: recipient.phone,
+          status: 'failed',
+          error: error.message,
+          provider: 'twilio',
+          timestamp: new Date()
+        });
+        
+        // Try fallback provider
+        await this.tryFallbackSMSProvider(emergency, recipient);
+      }
+    }
+    
+    return results;
+  }
+  
+  private createEmergencySMSContent(
+    emergency: EmergencyAlert,
+    recipient: SMSRecipient
+  ): string {
+    const locationText = emergency.location 
+      ? `Lat: ${emergency.location.latitude.toFixed(6)}, Lng: ${emergency.location.longitude.toFixed(6)}`
+      : 'Location unavailable';
+      
+    const timestamp = new Date(emergency.timestamp).toLocaleString(
+      recipient.locale || 'en-US',
+      { 
+        timeZone: recipient.timezone || 'UTC',
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      }
+    );
+    
+    return `🚨 EMERGENCY ALERT from ${emergency.user_name} (${timestamp})\n\n` +
+           `Status: ${emergency.status}\n` +
+           `Location: ${locationText}\n` +
+           `Message: ${emergency.message || 'Help needed'}\n\n` +
+           `Respond: https://app.shelther.com/emergency/${emergency.id}\n` +
+           `Call: ${emergency.user_phone || 'Not available'}\n\n` +
+           `Sent via Shelther Safety App`;
+  }
+  
+  async handleSMSDeliveryStatus(webhook: SMSStatusWebhook): Promise<void> {
+    const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = webhook;
+    
+    await this.updateSMSDeliveryStatus({
+      message_sid: MessageSid,
+      status: MessageStatus,
+      error_code: ErrorCode,
+      error_message: ErrorMessage,
+      updated_at: new Date()
+    });
+    
+    // Trigger additional actions based on status
+    if (MessageStatus === 'failed' || MessageStatus === 'undelivered') {
+      await this.handleSMSDeliveryFailure(MessageSid);
+    } else if (MessageStatus === 'delivered') {
+      await this.confirmSMSDelivery(MessageSid);
+    }
+  }
+}
+```
+
+**International SMS Support:**
+```typescript
+interface InternationalSMSConfig {
+  country_configs: Record<string, CountryConfig>;
+  compliance_requirements: ComplianceRequirement[];
+  local_number_pools: Record<string, string[]>;
+}
+
+interface CountryConfig {
+  country_code: string;
+  national_format: string;
+  international_format: string;
+  max_message_length: number;
+  supports_unicode: boolean;
+  delivery_receipt_available: boolean;
+  cost_per_message: number;
+  timezone: string;
+  regulatory_notes: string[];
+}
+
+export class InternationalSMSManager {
+  private config: InternationalSMSConfig;
+  
+  formatPhoneNumber(phone: string, countryCode: string): string {
+    const config = this.config.country_configs[countryCode];
+    if (!config) {
+      throw new Error(`Unsupported country code: ${countryCode}`);
+    }
+    
+    // Remove non-digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Apply country-specific formatting
+    return this.applyCountryFormat(digitsOnly, config);
+  }
+  
+  validatePhoneNumber(phone: string, countryCode: string): boolean {
+    try {
+      const formatted = this.formatPhoneNumber(phone, countryCode);
+      const config = this.config.country_configs[countryCode];
+      
+      // Country-specific validation rules
+      return this.validateByCountryRules(formatted, config);
+    } catch {
+      return false;
+    }
+  }
+  
+  optimizeMessageContent(message: string, countryCode: string): string {
+    const config = this.config.country_configs[countryCode];
+    
+    if (message.length <= config.max_message_length) {
+      return message;
+    }
+    
+    // Truncate intelligently, preserving critical information
+    return this.truncateMessage(message, config.max_message_length);
+  }
+}
+```
+</Accordion>
+
+### Email Notifications
+
+<Steps>
+  <Step title="Rich Content Support">
+    HTML emails with embedded maps, contact information, and response actions
+  </Step>
+  <Step title="Accessibility Compliance">
+    Screen reader compatible emails with alt text and proper markup
+  </Step>
+  <Step title="Multi-Language Support">
+    Localized email content based on recipient preferences
+  </Step>
+  <Step title="Delivery Optimization">
+    Smart sending times and deliverability optimization
+  </Step>
+</Steps>
+
+## Intelligent Notification Management
+
+### Priority-Based Delivery
+
+<Warning>
+**Emergency Override:** Critical emergency notifications bypass all user settings, quiet hours, and device restrictions to ensure delivery during safety-critical situations.
+</Warning>
+
+<CodeGroup>
+```typescript Notification Priority System
+enum NotificationPriority {
+  CRITICAL = 5,    // Emergency alerts - bypass all restrictions
+  HIGH = 4,        // Safety warnings - important but not immediate danger
+  MEDIUM = 3,      // Check-in reminders - time-sensitive
+  LOW = 2,         // Safety tips - helpful but not urgent
+  BACKGROUND = 1   // System updates - minimal user impact
+}
+
+interface NotificationDeliveryRule {
+  priority: NotificationPriority;
+  channels: NotificationChannel[];
+  delivery_method: 'immediate' | 'batched' | 'scheduled';
+  retry_policy: RetryPolicy;
+  quiet_hours_override: boolean;
+  do_not_disturb_override: boolean;
+  battery_optimization_exempt: boolean;
+}
+
+export class IntelligentNotificationManager {
+  private deliveryRules: Record<NotificationPriority, NotificationDeliveryRule> = {
+    [NotificationPriority.CRITICAL]: {
+      priority: NotificationPriority.CRITICAL,
+      channels: ['push', 'sms', 'call', 'email'],
+      delivery_method: 'immediate',
+      retry_policy: {
+        max_attempts: 5,
+        exponential_backoff: true,
+        fallback_channels: ['sms', 'call'],
+      },
+      quiet_hours_override: true,
+      do_not_disturb_override: true,
+      battery_optimization_exempt: true,
+    },
+    [NotificationPriority.HIGH]: {
+      priority: NotificationPriority.HIGH,
+      channels: ['push', 'sms'],
+      delivery_method: 'immediate',
+      retry_policy: {
+        max_attempts: 3,
+        exponential_backoff: false,
+        fallback_channels: ['sms'],
+      },
+      quiet_hours_override: false,
+      do_not_disturb_override: false,
+      battery_optimization_exempt: true,
+    },
+    [NotificationPriority.MEDIUM]: {
+      priority: NotificationPriority.MEDIUM,
+      channels: ['push'],
+      delivery_method: 'scheduled',
+      retry_policy: {
+        max_attempts: 2,
+        exponential_backoff: false,
+        fallback_channels: [],
+      },
+      quiet_hours_override: false,
+      do_not_disturb_override: false,
+      battery_optimization_exempt: false,
+    },
+    // ... other priorities
+  };
+  
+  async sendNotification(
+    notification: SafetyNotification,
+    recipients: NotificationRecipient[]
+  ): Promise<NotificationDeliveryReport> {
+    const rule = this.deliveryRules[notification.priority];
+    const deliveryReport: NotificationDeliveryReport = {
+      notification_id: notification.id,
+      total_recipients: recipients.length,
+      delivery_results: [],
+      started_at: new Date(),
+    };
+    
+    for (const recipient of recipients) {
+      const recipientResult = await this.deliverToRecipient(
+        notification,
+        recipient,
+        rule
+      );
+      deliveryReport.delivery_results.push(recipientResult);
+    }
+    
+    deliveryReport.completed_at = new Date();
+    deliveryReport.success_rate = this.calculateSuccessRate(deliveryReport.delivery_results);
+    
+    return deliveryReport;
+  }
+  
+  private async deliverToRecipient(
+    notification: SafetyNotification,
+    recipient: NotificationRecipient,
+    rule: NotificationDeliveryRule
+  ): Promise<RecipientDeliveryResult> {
+    const result: RecipientDeliveryResult = {
+      recipient_id: recipient.id,
+      attempts: [],
+      final_status: 'pending',
+      channels_tried: [],
+    };
+    
+    // Check user preferences and device settings
+    const deliveryContext = await this.getDeliveryContext(recipient);
+    const effectiveChannels = this.filterChannelsByContext(rule.channels, deliveryContext, rule);
+    
+    for (const channel of effectiveChannels) {
+      const attemptResult = await this.attemptDelivery(notification, recipient, channel);
+      result.attempts.push(attemptResult);
+      result.channels_tried.push(channel);
+      
+      if (attemptResult.success) {
+        result.final_status = 'delivered';
+        break;
+      }
+      
+      // Apply retry policy
+      if (rule.retry_policy.max_attempts > 1 && this.shouldRetry(attemptResult, rule)) {
+        await this.applyRetryDelay(rule.retry_policy);
+        // Retry logic would continue here
+      }
+    }
+    
+    if (result.final_status === 'pending') {
+      result.final_status = 'failed';
+    }
+    
+    return result;
+  }
+  
+  private async getDeliveryContext(recipient: NotificationRecipient): Promise<DeliveryContext> {
+    return {
+      user_preferences: await this.getUserNotificationPreferences(recipient.id),
+      device_settings: await this.getDeviceSettings(recipient.id),
+      current_time: new Date(),
+      timezone: recipient.timezone,
+      do_not_disturb_active: await this.isDoNotDisturbActive(recipient.id),
+      battery_optimization_active: await this.isBatteryOptimizationActive(recipient.id),
+    };
+  }
+}
+```
+</CodeGroup>
+
+### Smart Delivery Timing
+
+<Note>
+**Context-Aware Delivery:** Non-emergency notifications are delivered at optimal times based on user behavior patterns, timezone, and device usage analytics.
+</Note>
+
+<Accordion title="Intelligent Timing Algorithms">
+**User Pattern Analysis:**
+```typescript
+interface UserNotificationPattern {
+  user_id: string;
+  optimal_delivery_windows: TimeWindow[];
+  response_rate_by_hour: Record<number, number>;
+  preferred_channels_by_time: Record<number, NotificationChannel[]>;
+  timezone: string;
+  sleep_schedule: {
+    typical_bedtime: string;
+    typical_wake_time: string;
+    weekend_variation: boolean;
+  };
+  activity_patterns: {
+    work_hours: TimeWindow;
+    commute_times: TimeWindow[];
+    high_activity_periods: TimeWindow[];
+  };
+}
+
+export class SmartDeliveryManager {
+  async calculateOptimalDeliveryTime(
+    notification: SafetyNotification,
+    recipient: NotificationRecipient
+  ): Promise<Date> {
+    const pattern = await this.getUserPattern(recipient.id);
+    const currentTime = new Date();
+    
+    // Emergency notifications deliver immediately
+    if (notification.priority === NotificationPriority.CRITICAL) {
+      return currentTime;
+    }
+    
+    // Calculate next optimal window
+    const nextOptimalWindow = this.findNextOptimalWindow(pattern, currentTime);
+    
+    // Don't delay high-priority notifications too long
+    if (notification.priority === NotificationPriority.HIGH) {
+      const maxDelay = 30 * 60 * 1000; // 30 minutes
+      const optimalTime = nextOptimalWindow.start;
+      
+      return new Date(Math.min(
+        currentTime.getTime() + maxDelay,
+        optimalTime.getTime()
+      ));
+    }
+    
+    return nextOptimalWindow.start;
+  }
+  
+  private findNextOptimalWindow(
+    pattern: UserNotificationPattern,
+    currentTime: Date
+  ): TimeWindow {
+    const userLocalTime = this.convertToUserTimezone(currentTime, pattern.timezone);
+    const currentHour = userLocalTime.getHours();
+    
+    // Find the next high-response-rate window
+    for (let hour = currentHour; hour < currentHour + 24; hour++) {
+      const checkHour = hour % 24;
+      const responseRate = pattern.response_rate_by_hour[checkHour] || 0;
+      
+      if (responseRate > 0.7 && this.isWithinOptimalWindow(checkHour, pattern)) {
+        return {
+          start: this.createTimeInUserTimezone(checkHour, 0, pattern.timezone),
+          end: this.createTimeInUserTimezone(checkHour + 1, 0, pattern.timezone),
+        };
+      }
+    }
+    
+    // Fallback to default optimal window
+    return pattern.optimal_delivery_windows[0] || {
+      start: this.createTimeInUserTimezone(9, 0, pattern.timezone), // 9 AM
+      end: this.createTimeInUserTimezone(10, 0, pattern.timezone),  // 10 AM
+    };
+  }
+  
+  private isWithinOptimalWindow(hour: number, pattern: UserNotificationPattern): boolean {
+    // Avoid sleep hours
+    const bedtime = parseInt(pattern.sleep_schedule.typical_bedtime.split(':')[0]);
+    const waketime = parseInt(pattern.sleep_schedule.typical_wake_time.split(':')[0]);
+    
+    if (bedtime > waketime) { // bedtime crosses midnight
+      if (hour >= bedtime || hour <= waketime) {
+        return false; // Sleep hours
+      }
+    } else {
+      if (hour >= bedtime && hour <= waketime) {
+        return false; // Sleep hours
+      }
+    }
+    
+    // Check if within defined optimal windows
+    return pattern.optimal_delivery_windows.some(window => {
+      const windowStart = new Date(window.start).getHours();
+      const windowEnd = new Date(window.end).getHours();
+      return hour >= windowStart && hour < windowEnd;
+    });
+  }
+}
+```
+
+**Batch Optimization:**
+```typescript
+export class NotificationBatchManager {
+  private batchQueues: Map<string, NotificationBatch> = new Map();
+  
+  async queueForBatch(notification: SafetyNotification, recipient: NotificationRecipient): Promise<void> {
+    const batchKey = this.generateBatchKey(recipient, notification.priority);
+    
+    if (!this.batchQueues.has(batchKey)) {
+      this.batchQueues.set(batchKey, {
+        recipient_id: recipient.id,
+        notifications: [],
+        created_at: new Date(),
+        scheduled_delivery: await this.calculateBatchDeliveryTime(recipient),
+      });
+    }
+    
+    const batch = this.batchQueues.get(batchKey)!;
+    batch.notifications.push(notification);
+    
+    // Check if batch should be delivered early
+    if (this.shouldDeliverBatchEarly(batch)) {
+      await this.deliverBatch(batch);
+      this.batchQueues.delete(batchKey);
+    }
+  }
+  
+  private shouldDeliverBatchEarly(batch: NotificationBatch): boolean {
+    // Deliver early if:
+    // 1. Batch has high priority notification
+    // 2. Batch size reaches threshold
+    // 3. User is currently active
+    
+    const hasHighPriority = batch.notifications.some(n => 
+      n.priority >= NotificationPriority.HIGH
+    );
+    
+    const sizeThreshold = batch.notifications.length >= 3;
+    
+    return hasHighPriority || sizeThreshold;
+  }
+  
+  private async deliverBatch(batch: NotificationBatch): Promise<void> {
+    const combinedNotification = this.createCombinedNotification(batch);
+    await this.sendNotification(combinedNotification, batch.recipient_id);
+  }
+}
+```
+</Accordion>
+
+## Delivery Confirmation & Tracking
+
+### Real-Time Delivery Status
+
+<CardGroup cols={3}>
+  <Card title="Delivery Tracking" icon="truck">
+    Real-time status updates for all notification delivery attempts
+  </Card>
+  <Card title="Read Receipts" icon="mail-open">
+    Confirmation when recipients view critical safety notifications
+  </Card>
+  <Card title="Response Tracking" icon="message-circle">
+    Monitor and track recipient responses to emergency alerts
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Send Confirmation">
+    Immediate confirmation when notification is successfully dispatched
+  </Step>
+  <Step title="Delivery Confirmation">
+    Platform-specific delivery confirmation from push notification services
+  </Step>
+  <Step title="View Confirmation">
+    User interaction tracking to confirm notification was seen
+  </Step>
+  <Step title="Response Tracking">
+    Monitor user responses and actions taken based on notifications
+  </Step>
+</Steps>
+
+### Analytics & Insights
+
+<Note>
+**Continuous Improvement:** Notification analytics help optimize delivery timing, channel effectiveness, and user engagement to improve safety communication.
+</Note>
+
+<CodeGroup>
+```typescript Notification Analytics
+interface NotificationAnalytics {
+  delivery_metrics: {
+    total_sent: number;
+    delivery_rate_by_channel: Record<NotificationChannel, number>;
+    average_delivery_time_seconds: number;
+    failure_rate_by_error_type: Record<string, number>;
+  };
+  engagement_metrics: {
+    open_rate: number;
+    response_rate: number;
+    action_taken_rate: number;
+    time_to_response_seconds: number;
+  };
+  user_behavior: {
+    preferred_channels: NotificationChannel[];
+    optimal_delivery_times: TimeWindow[];
+    response_patterns: ResponsePattern[];
+  };
+  emergency_metrics: {
+    emergency_notification_success_rate: number;
+    average_emergency_response_time: number;
+    emergency_escalation_rate: number;
+    false_positive_rate: number;
+  };
+}
+
+export class NotificationAnalyticsManager {
+  async generateAnalyticsReport(
+    timeframe: DateRange,
+    filters?: AnalyticsFilters
+  ): Promise<NotificationAnalytics> {
+    const deliveryMetrics = await this.calculateDeliveryMetrics(timeframe, filters);
+    const engagementMetrics = await this.calculateEngagementMetrics(timeframe, filters);
+    const userBehavior = await this.analyzeUserBehavior(timeframe, filters);
+    const emergencyMetrics = await this.calculateEmergencyMetrics(timeframe, filters);
+    
+    return {
+      delivery_metrics: deliveryMetrics,
+      engagement_metrics: engagementMetrics,
+      user_behavior: userBehavior,
+      emergency_metrics: emergencyMetrics,
+    };
+  }
+  
+  async trackNotificationEvent(event: NotificationEvent): Promise<void> {
+    // Store event for analytics
+    await this.storeEvent(event);
+    
+    // Update real-time metrics
+    await this.updateRealTimeMetrics(event);
+    
+    // Trigger alerts for anomalies
+    if (this.isAnomalousEvent(event)) {
+      await this.triggerAnomalyAlert(event);
+    }
+  }
+  
+  private async calculateEmergencyMetrics(
+    timeframe: DateRange,
+    filters?: AnalyticsFilters
+  ): Promise<EmergencyMetrics> {
+    const emergencyNotifications = await this.getEmergencyNotifications(timeframe, filters);
+    
+    const successRate = emergencyNotifications.filter(n => 
+      n.delivery_status === 'delivered'
+    ).length / emergencyNotifications.length;
+    
+    const responseTimes = emergencyNotifications
+      .filter(n => n.response_time)
+      .map(n => n.response_time!);
+    
+    const averageResponseTime = responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0;
+    
+    return {
+      emergency_notification_success_rate: successRate,
+      average_emergency_response_time: averageResponseTime,
+      emergency_escalation_rate: await this.calculateEscalationRate(emergencyNotifications),
+      false_positive_rate: await this.calculateFalsePositiveRate(emergencyNotifications),
+    };
+  }
+}
+```
+</CodeGroup>
+
+## User Notification Preferences
+
+### Granular Control Settings
+
+<Warning>
+**Safety Override:** While users can customize notification preferences, emergency notifications always override user settings to ensure critical safety information is delivered.
+</Warning>
+
+<Accordion title="Notification Preference Categories">
+**Channel Preferences:**
+```typescript
+interface NotificationChannelPreferences {
+  emergency_alerts: {
+    push_notifications: boolean;
+    sms_notifications: boolean;
+    email_notifications: boolean;
+    phone_calls: boolean;
+    override_quiet_hours: boolean;
+    override_do_not_disturb: boolean;
+  };
+  safety_reminders: {
+    push_notifications: boolean;
+    sms_notifications: boolean;
+    email_notifications: boolean;
+    batching_enabled: boolean;
+    optimal_timing: boolean;
+  };
+  social_notifications: {
+    contact_requests: boolean;
+    check_in_confirmations: boolean;
+    circle_updates: boolean;
+    community_alerts: boolean;
+  };
+  system_notifications: {
+    app_updates: boolean;
+    feature_announcements: boolean;
+    security_alerts: boolean;
+    maintenance_notices: boolean;
+  };
+}
+
+interface NotificationTimingPreferences {
+  quiet_hours: {
+    enabled: boolean;
+    start_time: string;    // HH:MM format
+    end_time: string;      // HH:MM format
+    timezone: string;
+    emergency_override: boolean;
+    weekend_different: boolean;
+    weekend_start?: string;
+    weekend_end?: string;
+  };
+  delivery_optimization: {
+    batch_non_urgent: boolean;
+    respect_activity_patterns: boolean;
+    delay_during_meetings: boolean;
+    priority_during_travel: boolean;
+  };
+  frequency_limits: {
+    max_notifications_per_hour: number;
+    max_notifications_per_day: number;
+    emergency_unlimited: boolean;
+    throttle_duplicate_types: boolean;
+  };
+}
+
+export class UserNotificationPreferencesManager {
+  async updateUserPreferences(
+    userId: string,
+    preferences: Partial<NotificationChannelPreferences & NotificationTimingPreferences>
+  ): Promise<void> {
+    // Validate preferences
+    const validatedPreferences = await this.validatePreferences(preferences);
+    
+    // Ensure emergency overrides are preserved
+    this.enforceEmergencyOverrides(validatedPreferences);
+    
+    // Save preferences
+    await this.saveUserPreferences(userId, validatedPreferences);
+    
+    // Update delivery rules
+    await this.updateUserDeliveryRules(userId, validatedPreferences);
+  }
+  
+  private enforceEmergencyOverrides(preferences: any): void {
+    // Ensure emergency notifications cannot be completely disabled
+    if (preferences.emergency_alerts) {
+      const hasAtLeastOneChannel = 
+        preferences.emergency_alerts.push_notifications ||
+        preferences.emergency_alerts.sms_notifications ||
+        preferences.emergency_alerts.email_notifications ||
+        preferences.emergency_alerts.phone_calls;
+      
+      if (!hasAtLeastOneChannel) {
+        // Force enable at least SMS for emergency
+        preferences.emergency_alerts.sms_notifications = true;
+      }
+    }
+  }
+}
+```
+
+**Accessibility Integration:**
+```typescript
+interface AccessibilityNotificationPreferences {
+  visual_notifications: {
+    high_contrast_alerts: boolean;
+    large_text_notifications: boolean;
+    screen_flash_for_emergencies: boolean;
+    color_blind_compatible: boolean;
+  };
+  audio_notifications: {
+    enhanced_haptic_feedback: boolean;
+    custom_vibration_patterns: boolean;
+    visual_only_mode: boolean;
+    sign_language_video_alerts: boolean;
+  };
+  motor_accessibility: {
+    voice_response_enabled: boolean;
+    simplified_response_options: boolean;
+    auto_response_timeout_extended: boolean;
+    switch_control_compatible: boolean;
+  };
+  cognitive_accessibility: {
+    simple_language_mode: boolean;
+    repeated_important_alerts: boolean;
+    step_by_step_instructions: boolean;
+    memory_aid_notifications: boolean;
+  };
+}
+```
+</Accordion>
+
+## Performance & Reliability
+
+### System Resilience
+
+<CardGroup cols={2}>
+  <Card title="Redundant Delivery" icon="shield">
+    Multiple delivery channels and fallback mechanisms ensure notification delivery
+  </Card>
+  <Card title="Queue Management" icon="list">
+    Intelligent queue management prevents notification bottlenecks during high volume
+  </Card>
+  <Card title="Error Handling" icon="alert-triangle">
+    Comprehensive error handling and automatic retry mechanisms
+  </Card>
+  <Card title="Performance Monitoring" icon="activity">
+    Real-time monitoring of notification system performance and health
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Load Balancing">
+    Distributed notification processing across multiple servers and regions
+  </Step>
+  <Step title="Rate Limiting">
+    Intelligent rate limiting to comply with platform restrictions while ensuring delivery
+  </Step>
+  <Step title="Circuit Breakers">
+    Automatic failover when notification services experience issues
+  </Step>
+  <Step title="Health Monitoring">
+    Continuous monitoring of notification pipeline health and performance
+  </Step>
+</Steps>
+
+## Best Practices
+
+### Notification Design Guidelines
+
+<Note>
+**User-Centric Design:** All notifications are designed to provide maximum value with minimal interruption, except for safety-critical emergency alerts.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Clear Messaging" icon="message-circle">
+    Concise, actionable messages that clearly communicate the safety situation
+  </Card>
+  <Card title="Appropriate Urgency" icon="clock">
+    Visual and audio cues that match the actual urgency of the situation
+  </Card>
+  <Card title="Actionable Content" icon="play">
+    Every notification includes clear next steps or response options
+  </Card>
+  <Card title="Context Awareness" icon="map">
+    Location and time-appropriate messaging that considers user context
+  </Card>
+</CardGroup>
+
+### Emergency Notification Guidelines
+
+<Steps>
+  <Step title="Immediate Delivery">
+    Emergency notifications deliver instantly regardless of user settings or device state
+  </Step>
+  <Step title="Multi-Modal Alerts">
+    Use visual, audio, and haptic feedback to ensure user attention
+  </Step>
+  <Step title="Clear Actions">
+    Provide immediate, obvious response options for emergency contacts
+  </Step>
+  <Step title="Follow-Up Communication">
+    Continue communication until emergency situation is resolved or escalated
+  </Step>
+</Steps>
+
+---
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Development Guide" icon="code" href="/development/notifications-implementation">
+    Technical implementation guide for the notification system
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="User Experience" icon="users" href="/development/user-experience">
+    UX guidelines for designing effective safety notifications
   </Card>
 </CardGroup>
 
----
-
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Phase 3 Complete:** Congratulations! You've completed all Phase 3 feature documentation. The notification system ties together all safety features with reliable, intelligent communication. Next, we'll move to Phase 4 for developer experience documentation.
 </Note>

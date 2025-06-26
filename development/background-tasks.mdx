@@ -1,59 +1,2238 @@
 ---
 title: "Background Tasks"
-description: "Background Tasks documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to implementing background tasks in Shelther safety applications. Covers location monitoring, automated check-ins, emergency detection, and task scheduling for continuous safety protection."
 ---
 
 # Background Tasks
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Continuous Safety Monitoring:** Background tasks ensure Shelther's safety features work even when the app isn't actively being used. This includes location tracking, automated check-ins, emergency detection, and data synchronization.
 </Info>
 
-## Key Points
+## Background Task Architecture
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's background task system provides continuous safety monitoring:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Location Monitoring" icon="map-pin">
+    Continuous GPS tracking with battery optimization and geofence monitoring
+  </Card>
+  <Card title="Automated Check-ins" icon="clock">
+    Scheduled safety check-ins with missed check-in detection and escalation
+  </Card>
+  <Card title="Emergency Detection" icon="alert-triangle">
+    Pattern analysis and anomaly detection for automatic emergency triggering
+  </Card>
+  <Card title="Data Synchronization" icon="refresh-cw">
+    Offline data sync and real-time updates when connectivity is restored
+  </Card>
+</CardGroup>
+
+## Expo TaskManager Setup
+
+### Core Task Manager Configuration
 
 <CodeGroup>
+```typescript Task Manager Setup
+// services/background/BackgroundTaskManager.ts
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as Location from 'expo-location';
+import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+// Task identifiers
+export const BACKGROUND_TASKS = {
+  LOCATION_TRACKING: 'background-location-tracking',
+  SAFETY_MONITORING: 'background-safety-monitoring',
+  DATA_SYNC: 'background-data-sync',
+  CHECK_IN_MONITOR: 'background-checkin-monitor',
+  EMERGENCY_DETECTION: 'background-emergency-detection',
+} as const;
+
+export type BackgroundTaskName = typeof BACKGROUND_TASKS[keyof typeof BACKGROUND_TASKS];
+
+export class BackgroundTaskManager {
+  private static isInitialized = false;
+  private static activeTasks = new Set<BackgroundTaskName>();
+
+  // Initialize all background tasks
+  static async initialize(): Promise<void> {
+    try {
+      if (this.isInitialized) {
+        logger.warning('Background tasks already initialized');
+        return;
+      }
+
+      // Define all background tasks
+      this.defineLocationTrackingTask();
+      this.defineSafetyMonitoringTask();
+      this.defineDataSyncTask();
+      this.defineCheckInMonitorTask();
+      this.defineEmergencyDetectionTask();
+
+      // Register background fetch
+      await this.registerBackgroundFetch();
+
+      this.isInitialized = true;
+      logger.info('Background tasks initialized successfully');
+
+    } catch (error) {
+      logger.emergency('Failed to initialize background tasks', error);
+      throw error;
+    }
+  }
+
+  // Register background fetch capability
+  private static async registerBackgroundFetch(): Promise<void> {
+    try {
+      const status = await BackgroundFetch.getStatusAsync();
+      
+      if (status === BackgroundFetch.BackgroundFetchStatus.Restricted) {
+        logger.warning('Background fetch is restricted');
+        return;
+      }
+
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_TASKS.SAFETY_MONITORING, {
+        minimumInterval: 15000, // 15 seconds minimum interval
+        stopOnTerminate: false, // Continue after app termination
+        startOnBoot: true, // Start on device boot
+      });
+
+      logger.info('Background fetch registered', { status });
+
+    } catch (error) {
+      logger.emergency('Failed to register background fetch', error);
+    }
+  }
+
+  // Start specific background task
+  static async startTask(taskName: BackgroundTaskName): Promise<void> {
+    try {
+      if (this.activeTasks.has(taskName)) {
+        logger.warning('Task already running', { taskName });
+        return;
+      }
+
+      switch (taskName) {
+        case BACKGROUND_TASKS.LOCATION_TRACKING:
+          await this.startLocationTracking();
+          break;
+        case BACKGROUND_TASKS.SAFETY_MONITORING:
+          await this.startSafetyMonitoring();
+          break;
+        case BACKGROUND_TASKS.DATA_SYNC:
+          await this.startDataSync();
+          break;
+        case BACKGROUND_TASKS.CHECK_IN_MONITOR:
+          await this.startCheckInMonitor();
+          break;
+        case BACKGROUND_TASKS.EMERGENCY_DETECTION:
+          await this.startEmergencyDetection();
+          break;
+        default:
+          throw new Error(`Unknown task: ${taskName}`);
+      }
+
+      this.activeTasks.add(taskName);
+      logger.info('Background task started', { taskName });
+
+    } catch (error) {
+      logger.emergency('Failed to start background task', { taskName, error });
+      throw error;
+    }
+  }
+
+  // Stop specific background task
+  static async stopTask(taskName: BackgroundTaskName): Promise<void> {
+    try {
+      if (!this.activeTasks.has(taskName)) {
+        logger.warning('Task not running', { taskName });
+        return;
+      }
+
+      switch (taskName) {
+        case BACKGROUND_TASKS.LOCATION_TRACKING:
+          await Location.stopLocationUpdatesAsync(taskName);
+          break;
+        case BACKGROUND_TASKS.SAFETY_MONITORING:
+          await BackgroundFetch.unregisterTaskAsync(taskName);
+          break;
+        default:
+          // Other tasks are handled by TaskManager
+          break;
+      }
+
+      this.activeTasks.delete(taskName);
+      logger.info('Background task stopped', { taskName });
+
+    } catch (error) {
+      logger.emergency('Failed to stop background task', { taskName, error });
+    }
+  }
+
+  // Get active task status
+  static getTaskStatus(): Record<BackgroundTaskName, boolean> {
+    const status: Record<string, boolean> = {};
+    
+    Object.values(BACKGROUND_TASKS).forEach(taskName => {
+      status[taskName] = this.activeTasks.has(taskName);
+    });
+
+    return status as Record<BackgroundTaskName, boolean>;
+  }
+
+  // Check if specific task is running
+  static isTaskRunning(taskName: BackgroundTaskName): boolean {
+    return this.activeTasks.has(taskName);
+  }
+
+  // Start all essential tasks
+  static async startEssentialTasks(): Promise<void> {
+    const essentialTasks: BackgroundTaskName[] = [
+      BACKGROUND_TASKS.SAFETY_MONITORING,
+      BACKGROUND_TASKS.DATA_SYNC,
+      BACKGROUND_TASKS.CHECK_IN_MONITOR,
+    ];
+
+    const startPromises = essentialTasks.map(task => this.startTask(task));
+    await Promise.allSettled(startPromises);
+
+    logger.info('Essential background tasks started', { 
+      tasks: essentialTasks,
+      activeCount: this.activeTasks.size,
+    });
+  }
+
+  // Stop all tasks
+  static async stopAllTasks(): Promise<void> {
+    const stopPromises = Array.from(this.activeTasks).map(task => this.stopTask(task));
+    await Promise.allSettled(stopPromises);
+
+    logger.info('All background tasks stopped');
+  }
+
+  // Task-specific start methods
+  private static async startLocationTracking(): Promise<void> {
+    await Location.startLocationUpdatesAsync(BACKGROUND_TASKS.LOCATION_TRACKING, {
+      accuracy: Location.LocationAccuracy.High,
+      timeInterval: 30000, // 30 seconds
+      distanceInterval: 50, // 50 meters
+      foregroundService: {
+        notificationTitle: 'Shelther Safety Active',
+        notificationBody: 'Location monitoring for your safety',
+        notificationColor: '#FF5A5A',
+      },
+      pausesUpdatesAutomatically: true,
+    });
+  }
+
+  private static async startSafetyMonitoring(): Promise<void> {
+    // Safety monitoring is handled by background fetch
+    // The actual logic is in the task definition
+  }
+
+  private static async startDataSync(): Promise<void> {
+    // Data sync runs as part of safety monitoring
+    // Could be separated if needed
+  }
+
+  private static async startCheckInMonitor(): Promise<void> {
+    // Check-in monitoring runs as part of safety monitoring
+    // Could be separated if needed
+  }
+
+  private static async startEmergencyDetection(): Promise<void> {
+    // Emergency detection runs as part of safety monitoring
+    // Could be separated if needed
+  }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
+```typescript Background Task Definitions
+// Define location tracking task
+TaskManager.defineTask(BACKGROUND_TASKS.LOCATION_TRACKING, ({ data, error }) => {
+  if (error) {
+    logger.emergency('Background location task error', error);
+    return;
+  }
+
+  if (data) {
+    const { locations } = data as { locations: Location.LocationObject[] };
+    BackgroundLocationProcessor.processLocations(locations);
+  }
+});
+
+// Define safety monitoring task
+TaskManager.defineTask(BACKGROUND_TASKS.SAFETY_MONITORING, async () => {
+  try {
+    logger.info('Background safety monitoring executing');
+    
+    // Run safety checks
+    await BackgroundSafetyMonitor.performSafetyChecks();
+    
+    // Sync data if needed
+    await BackgroundDataSync.syncPendingData();
+    
+    // Check for missed check-ins
+    await BackgroundCheckInMonitor.checkMissedCheckIns();
+    
+    // Monitor for emergency patterns
+    await BackgroundEmergencyDetection.analyzePatterns();
+    
+    logger.info('Background safety monitoring completed');
+    
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+    
+  } catch (error) {
+    logger.emergency('Background safety monitoring failed', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Define data sync task
+TaskManager.defineTask(BACKGROUND_TASKS.DATA_SYNC, async () => {
+  try {
+    logger.info('Background data sync executing');
+    
+    const syncResult = await BackgroundDataSync.performFullSync();
+    
+    return syncResult.hasNewData 
+      ? BackgroundFetch.BackgroundFetchResult.NewData
+      : BackgroundFetch.BackgroundFetchResult.NoData;
+      
+  } catch (error) {
+    logger.emergency('Background data sync failed', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Define check-in monitor task
+TaskManager.defineTask(BACKGROUND_TASKS.CHECK_IN_MONITOR, async () => {
+  try {
+    logger.info('Background check-in monitor executing');
+    
+    const alerts = await BackgroundCheckInMonitor.checkAllPendingCheckIns();
+    
+    return alerts.length > 0
+      ? BackgroundFetch.BackgroundFetchResult.NewData
+      : BackgroundFetch.BackgroundFetchResult.NoData;
+      
+  } catch (error) {
+    logger.emergency('Background check-in monitoring failed', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Define emergency detection task
+TaskManager.defineTask(BACKGROUND_TASKS.EMERGENCY_DETECTION, async () => {
+  try {
+    logger.info('Background emergency detection executing');
+    
+    const emergencies = await BackgroundEmergencyDetection.detectEmergencyPatterns();
+    
+    return emergencies.length > 0
+      ? BackgroundFetch.BackgroundFetchResult.NewData
+      : BackgroundFetch.BackgroundFetchResult.NoData;
+      
+  } catch (error) {
+    logger.emergency('Background emergency detection failed', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+```
+</CodeGroup>
+
+## Background Location Processing
+
+### Location Data Processing
+
+<Steps>
+  <Step title="Background Location Processor">
+    Process location updates received in background
+    
+    ```typescript
+    // services/background/BackgroundLocationProcessor.ts
+    import * as Location from 'expo-location';
+    import { logger } from '../../utils/logger';
+    import { supabase } from '../../lib/supabase';
+    import AsyncStorage from '@react-native-async-storage/async-storage';
+
+    interface ProcessedLocationData {
+      latitude: number;
+      longitude: number;
+      accuracy: number;
+      timestamp: string;
+      batteryLevel?: number;
+      movementPattern?: 'stationary' | 'walking' | 'driving' | 'unusual';
+      isEmergencyLocation?: boolean;
+    }
+
+    export class BackgroundLocationProcessor {
+      private static readonly LOCATION_CACHE_KEY = 'background_location_cache';
+      private static readonly MAX_CACHE_SIZE = 100;
+      private static lastProcessedLocation: ProcessedLocationData | null = null;
+
+      // Process array of location updates
+      static async processLocations(locations: Location.LocationObject[]): Promise<void> {
+        try {
+          logger.info('Processing background locations', { count: locations.length });
+
+          for (const location of locations) {
+            await this.processLocation(location);
+          }
+
+          // Update location sharing if active
+          await this.updateLocationSharing(locations[locations.length - 1]);
+
+        } catch (error) {
+          logger.emergency('Background location processing failed', error);
+        }
+      }
+
+      // Process single location update
+      private static async processLocation(location: Location.LocationObject): Promise<void> {
+        try {
+          const processedLocation: ProcessedLocationData = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            accuracy: location.coords.accuracy || 999,
+            timestamp: new Date(location.timestamp).toISOString(),
+          };
+
+          // Add movement pattern analysis
+          processedLocation.movementPattern = this.analyzeMovementPattern(
+            processedLocation,
+            this.lastProcessedLocation
+          );
+
+          // Check for emergency indicators
+          processedLocation.isEmergencyLocation = this.checkEmergencyIndicators(
+            processedLocation
+          );
+
+          // Store location locally first (for offline capability)
+          await this.cacheLocation(processedLocation);
+
+          // Try to sync to server
+          await this.syncLocationToServer(processedLocation);
+
+          // Check geofences
+          await this.checkGeofences(processedLocation);
+
+          // Update last processed location
+          this.lastProcessedLocation = processedLocation;
+
+          logger.location('Background location processed', {
+            accuracy: processedLocation.accuracy,
+            pattern: processedLocation.movementPattern,
+            emergency: processedLocation.isEmergencyLocation,
+          });
+
+        } catch (error) {
+          logger.emergency('Single location processing failed', error);
+        }
+      }
+
+      // Analyze movement patterns
+      private static analyzeMovementPattern(
+        current: ProcessedLocationData,
+        previous: ProcessedLocationData | null
+      ): 'stationary' | 'walking' | 'driving' | 'unusual' {
+        if (!previous) {
+          return 'stationary';
+        }
+
+        // Calculate distance and time difference
+        const distance = this.calculateDistance(
+          previous.latitude,
+          previous.longitude,
+          current.latitude,
+          current.longitude
+        );
+
+        const timeDiff = new Date(current.timestamp).getTime() - 
+                        new Date(previous.timestamp).getTime();
+        const speed = distance / (timeDiff / 1000); // meters per second
+
+        // Classify movement pattern
+        if (speed < 0.5) return 'stationary'; // < 0.5 m/s
+        if (speed < 2.0) return 'walking';    // < 2 m/s (~7 km/h)
+        if (speed < 25) return 'driving';     // < 25 m/s (~90 km/h)
+        
+        return 'unusual'; // Very high speed or erratic movement
+      }
+
+      // Check for emergency indicators in location data
+      private static checkEmergencyIndicators(location: ProcessedLocationData): boolean {
+        // Check for unusual accuracy (might indicate indoor emergency)
+        if (location.accuracy > 500) {
+          return true;
+        }
+
+        // Check for unusual movement patterns
+        if (location.movementPattern === 'unusual') {
+          return true;
+        }
+
+        // Additional emergency indicators could include:
+        // - Sudden stop in movement
+        // - Location in known dangerous areas
+        // - Deviation from expected route
+
+        return false;
+      }
+
+      // Cache location locally
+      private static async cacheLocation(location: ProcessedLocationData): Promise<void> {
+        try {
+          // Get existing cache
+          const cached = await AsyncStorage.getItem(this.LOCATION_CACHE_KEY);
+          const locations: ProcessedLocationData[] = cached ? JSON.parse(cached) : [];
+
+          // Add new location
+          locations.unshift(location);
+
+          // Keep only recent locations
+          if (locations.length > this.MAX_CACHE_SIZE) {
+            locations.splice(this.MAX_CACHE_SIZE);
+          }
+
+          // Save back to cache
+          await AsyncStorage.setItem(this.LOCATION_CACHE_KEY, JSON.stringify(locations));
+
+        } catch (error) {
+          logger.emergency('Location caching failed', error);
+        }
+      }
+
+      // Sync location to server
+      private static async syncLocationToServer(location: ProcessedLocationData): Promise<void> {
+        try {
+          const { error } = await supabase
+            .from('location_updates')
+            .insert([{
+              latitude: location.latitude,
+              longitude: location.longitude,
+              accuracy: location.accuracy,
+              timestamp: location.timestamp,
+              movement_pattern: location.movementPattern,
+              is_emergency: location.isEmergencyLocation,
+              processed_in_background: true,
+            }]);
+
+          if (error) {
+            // Store for later sync if failed
+            await this.queueForLaterSync(location);
+            throw error;
+          }
+
+        } catch (error) {
+          logger.warning('Location sync to server failed', error);
+        }
+      }
+
+      // Queue location for later sync
+      private static async queueForLaterSync(location: ProcessedLocationData): Promise<void> {
+        try {
+          const SYNC_QUEUE_KEY = 'location_sync_queue';
+          const queued = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
+          const queue: ProcessedLocationData[] = queued ? JSON.parse(queued) : [];
+
+          queue.push(location);
+
+          // Limit queue size
+          if (queue.length > 500) {
+            queue.splice(0, queue.length - 500);
+          }
+
+          await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+
+        } catch (error) {
+          logger.emergency('Location sync queueing failed', error);
+        }
+      }
+
+      // Check geofences for current location
+      private static async checkGeofences(location: ProcessedLocationData): Promise<void> {
+        try {
+          // This would integrate with GeofenceService
+          // Check if location is entering/exiting any geofences
+          
+          logger.location('Geofence check completed', {
+            latitude: location.latitude,
+            longitude: location.longitude,
+          });
+
+        } catch (error) {
+          logger.emergency('Geofence checking failed', error);
+        }
+      }
+
+      // Update location sharing if active
+      private static async updateLocationSharing(location: Location.LocationObject): Promise<void> {
+        try {
+          // Check if location sharing is active
+          const sharingStatus = await this.getLocationSharingStatus();
+          
+          if (sharingStatus.isActive) {
+            await this.broadcastLocationUpdate(location, sharingStatus.contacts);
+          }
+
+        } catch (error) {
+          logger.emergency('Location sharing update failed', error);
+        }
+      }
+
+      // Get location sharing status
+      private static async getLocationSharingStatus(): Promise<{
+        isActive: boolean;
+        contacts: string[];
+      }> {
+        try {
+          const { data, error } = await supabase
+            .from('location_shares')
+            .select('shared_with_user_id')
+            .eq('is_active', true);
+
+          if (error) throw error;
+
+          return {
+            isActive: (data?.length || 0) > 0,
+            contacts: data?.map(share => share.shared_with_user_id) || [],
+          };
+
+        } catch (error) {
+          logger.emergency('Failed to get location sharing status', error);
+          return { isActive: false, contacts: [] };
+        }
+      }
+
+      // Broadcast location update to shared contacts
+      private static async broadcastLocationUpdate(
+        location: Location.LocationObject,
+        contacts: string[]
+      ): Promise<void> {
+        try {
+          if (contacts.length === 0) return;
+
+          const updateData = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            accuracy: location.coords.accuracy,
+            timestamp: new Date(location.timestamp).toISOString(),
+          };
+
+          // Insert shared location update
+          const { error } = await supabase
+            .from('shared_location_updates')
+            .insert(
+              contacts.map(contactId => ({
+                ...updateData,
+                shared_with_user_id: contactId,
+              }))
+            );
+
+          if (error) throw error;
+
+          logger.info('Location shared with contacts', { 
+            contactCount: contacts.length,
+            accuracy: location.coords.accuracy,
+          });
+
+        } catch (error) {
+          logger.emergency('Location broadcast failed', error);
+        }
+      }
+
+      // Calculate distance between two points
+      private static calculateDistance(
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number {
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      }
+
+      // Get cached locations
+      static async getCachedLocations(): Promise<ProcessedLocationData[]> {
+        try {
+          const cached = await AsyncStorage.getItem(this.LOCATION_CACHE_KEY);
+          return cached ? JSON.parse(cached) : [];
+        } catch (error) {
+          logger.emergency('Failed to get cached locations', error);
+          return [];
+        }
+      }
+
+      // Clear location cache
+      static async clearLocationCache(): Promise<void> {
+        try {
+          await AsyncStorage.removeItem(this.LOCATION_CACHE_KEY);
+          logger.info('Location cache cleared');
+        } catch (error) {
+          logger.emergency('Failed to clear location cache', error);
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Battery-Optimized Location Tracking">
+    Adaptive location tracking based on battery and usage patterns
+    
+    ```typescript
+    // services/background/AdaptiveLocationTracking.ts
+    import * as Battery from 'expo-battery';
+    import * as Location from 'expo-location';
+    import { AppState } from 'react-native';
+    import { logger } from '../../utils/logger';
+
+    export class AdaptiveLocationTracking {
+      private static currentSettings: Location.LocationOptions = {
+        accuracy: Location.LocationAccuracy.High,
+        timeInterval: 30000, // 30 seconds
+        distanceInterval: 50, // 50 meters
+      };
+
+      private static batteryLevel = 100;
+      private static isCharging = false;
+      private static appState = 'active';
+
+      // Initialize adaptive tracking
+      static async initialize(): Promise<void> {
+        try {
+          // Get initial battery state
+          this.batteryLevel = await Battery.getBatteryLevelAsync() * 100;
+          this.isCharging = (await Battery.getPowerStateAsync()).batteryState === Battery.BatteryState.CHARGING;
+
+          // Monitor battery changes
+          Battery.addBatteryLevelListener(({ batteryLevel }) => {
+            this.batteryLevel = batteryLevel * 100;
+            this.adjustTrackingSettings();
+          });
+
+          Battery.addBatteryStateListener(({ batteryState }) => {
+            this.isCharging = batteryState === Battery.BatteryState.CHARGING;
+            this.adjustTrackingSettings();
+          });
+
+          // Monitor app state changes
+          AppState.addEventListener('change', (nextAppState) => {
+            this.appState = nextAppState;
+            this.adjustTrackingSettings();
+          });
+
+          logger.info('Adaptive location tracking initialized', {
+            batteryLevel: this.batteryLevel,
+            isCharging: this.isCharging,
+          });
+
+        } catch (error) {
+          logger.emergency('Failed to initialize adaptive tracking', error);
+        }
+      }
+
+      // Adjust tracking settings based on current conditions
+      private static adjustTrackingSettings(): void {
+        const newSettings = this.calculateOptimalSettings();
+        
+        if (this.settingsChanged(newSettings)) {
+          this.currentSettings = newSettings;
+          this.applyTrackingSettings();
+          
+          logger.info('Location tracking settings adjusted', {
+            batteryLevel: this.batteryLevel,
+            isCharging: this.isCharging,
+            appState: this.appState,
+            settings: newSettings,
+          });
+        }
+      }
+
+      // Calculate optimal tracking settings
+      private static calculateOptimalSettings(): Location.LocationOptions {
+        const settings: Location.LocationOptions = {
+          accuracy: Location.LocationAccuracy.High,
+          timeInterval: 30000,
+          distanceInterval: 50,
+        };
+
+        // Emergency mode - maximum accuracy regardless of battery
+        if (this.isEmergencyMode()) {
+          return {
+            accuracy: Location.LocationAccuracy.Highest,
+            timeInterval: 5000,  // 5 seconds
+            distanceInterval: 5, // 5 meters
+          };
+        }
+
+        // Charging - use best settings
+        if (this.isCharging) {
+          return {
+            accuracy: Location.LocationAccuracy.High,
+            timeInterval: 15000, // 15 seconds
+            distanceInterval: 25, // 25 meters
+          };
+        }
+
+        // Battery-based adjustments
+        if (this.batteryLevel <= 10) {
+          // Critical battery - minimal tracking
+          settings.accuracy = Location.LocationAccuracy.Low;
+          settings.timeInterval = 300000; // 5 minutes
+          settings.distanceInterval = 500; // 500 meters
+        } else if (this.batteryLevel <= 20) {
+          // Low battery - reduced tracking
+          settings.accuracy = Location.LocationAccuracy.Balanced;
+          settings.timeInterval = 120000; // 2 minutes
+          settings.distanceInterval = 200; // 200 meters
+        } else if (this.batteryLevel <= 50) {
+          // Medium battery - balanced tracking
+          settings.accuracy = Location.LocationAccuracy.High;
+          settings.timeInterval = 60000; // 1 minute
+          settings.distanceInterval = 100; // 100 meters
+        }
+        // Above 50% - use default settings
+
+        // App state adjustments
+        if (this.appState === 'background') {
+          // Reduce frequency when in background
+          settings.timeInterval = Math.max(settings.timeInterval * 2, 60000);
+          settings.distanceInterval = Math.max(settings.distanceInterval * 2, 100);
+        }
+
+        return settings;
+      }
+
+      // Check if settings have changed significantly
+      private static settingsChanged(newSettings: Location.LocationOptions): boolean {
+        return (
+          this.currentSettings.accuracy !== newSettings.accuracy ||
+          Math.abs((this.currentSettings.timeInterval || 0) - (newSettings.timeInterval || 0)) > 5000 ||
+          Math.abs((this.currentSettings.distanceInterval || 0) - (newSettings.distanceInterval || 0)) > 25
+        );
+      }
+
+      // Apply new tracking settings
+      private static async applyTrackingSettings(): Promise<void> {
+        try {
+          // Check if location tracking is active
+          const isTracking = await Location.hasStartedLocationUpdatesAsync(
+            BACKGROUND_TASKS.LOCATION_TRACKING
+          );
+
+          if (isTracking) {
+            // Stop current tracking
+            await Location.stopLocationUpdatesAsync(BACKGROUND_TASKS.LOCATION_TRACKING);
+            
+            // Start with new settings
+            await Location.startLocationUpdatesAsync(
+              BACKGROUND_TASKS.LOCATION_TRACKING,
+              {
+                ...this.currentSettings,
+                foregroundService: {
+                  notificationTitle: 'Shelther Safety Active',
+                  notificationBody: this.getNotificationBody(),
+                  notificationColor: '#FF5A5A',
+                },
+              }
+            );
+          }
+
+        } catch (error) {
+          logger.emergency('Failed to apply tracking settings', error);
+        }
+      }
+
+      // Get notification body based on current settings
+      private static getNotificationBody(): string {
+        if (this.isEmergencyMode()) {
+          return 'Emergency monitoring active - high precision tracking';
+        }
+        
+        if (this.batteryLevel <= 20) {
+          return 'Battery saver mode - reduced tracking frequency';
+        }
+        
+        return 'Location monitoring for your safety';
+      }
+
+      // Check if in emergency mode
+      private static isEmergencyMode(): boolean {
+        // This would check Redux state or other emergency indicators
+        // For now, return false as placeholder
+        return false;
+      }
+
+      // Get current tracking configuration
+      static getCurrentSettings(): Location.LocationOptions & {
+        batteryLevel: number;
+        isCharging: boolean;
+        appState: string;
+      } {
+        return {
+          ...this.currentSettings,
+          batteryLevel: this.batteryLevel,
+          isCharging: this.isCharging,
+          appState: this.appState,
+        };
+      }
+
+      // Force high-accuracy mode (for emergencies)
+      static async enableEmergencyMode(): Promise<void> {
+        try {
+          const emergencySettings: Location.LocationOptions = {
+            accuracy: Location.LocationAccuracy.Highest,
+            timeInterval: 5000,
+            distanceInterval: 5,
+          };
+
+          this.currentSettings = emergencySettings;
+          await this.applyTrackingSettings();
+
+          logger.emergency('Emergency location tracking enabled', emergencySettings);
+
+        } catch (error) {
+          logger.emergency('Failed to enable emergency tracking', error);
+        }
+      }
+
+      // Return to adaptive mode
+      static async disableEmergencyMode(): Promise<void> {
+        try {
+          // Recalculate optimal settings
+          this.adjustTrackingSettings();
+          
+          logger.info('Emergency location tracking disabled - returned to adaptive mode');
+
+        } catch (error) {
+          logger.emergency('Failed to disable emergency tracking', error);
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Safety Monitoring Tasks
+
+### Background Safety Monitor
+
+<CodeGroup>
+```typescript Safety Monitoring Service
+// services/background/BackgroundSafetyMonitor.ts
+import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
+import { NotificationService } from '../notifications/NotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface SafetyCheck {
+  type: 'check_in' | 'location' | 'battery' | 'connectivity' | 'geofence';
+  status: 'ok' | 'warning' | 'critical';
+  message: string;
+  timestamp: string;
+  data?: any;
+}
+
+export class BackgroundSafetyMonitor {
+  private static readonly SAFETY_CHECK_INTERVAL = 60000; // 1 minute
+  private static readonly CRITICAL_BATTERY_THRESHOLD = 10; // 10%
+  private static readonly WARNING_BATTERY_THRESHOLD = 20; // 20%
+
+  // Perform comprehensive safety checks
+  static async performSafetyChecks(): Promise<SafetyCheck[]> {
+    try {
+      const checks: SafetyCheck[] = [];
+
+      // Check pending check-ins
+      checks.push(await this.checkPendingCheckIns());
+
+      // Check location accuracy and recency
+      checks.push(await this.checkLocationStatus());
+
+      // Check battery level
+      checks.push(await this.checkBatteryStatus());
+
+      // Check connectivity
+      checks.push(await this.checkConnectivityStatus());
+
+      // Check geofence status
+      checks.push(await this.checkGeofenceStatus());
+
+      // Process any critical issues
+      await this.processCriticalIssues(checks);
+
+      // Store safety check results
+      await this.storeSafetyCheckResults(checks);
+
+      logger.info('Safety checks completed', {
+        total: checks.length,
+        critical: checks.filter(c => c.status === 'critical').length,
+        warnings: checks.filter(c => c.status === 'warning').length,
+      });
+
+      return checks;
+
+    } catch (error) {
+      logger.emergency('Safety checks failed', error);
+      return [];
+    }
+  }
+
+  // Check for overdue check-ins
+  private static async checkPendingCheckIns(): Promise<SafetyCheck> {
+    try {
+      const now = new Date();
+      const { data, error } = await supabase
+        .from('check_ins')
+        .select('*')
+        .eq('status', 'pending')
+        .lt('scheduled_time', now.toISOString());
+
+      if (error) throw error;
+
+      const overdueCheckIns = data || [];
+
+      if (overdueCheckIns.length > 0) {
+        // Find the most overdue check-in
+        const mostOverdue = overdueCheckIns.reduce((prev, current) => 
+          new Date(prev.scheduled_time) < new Date(current.scheduled_time) ? prev : current
+        );
+
+        const overdueMinutes = Math.floor(
+          (now.getTime() - new Date(mostOverdue.scheduled_time).getTime()) / (1000 * 60)
+        );
+
+        const status = overdueMinutes > 30 ? 'critical' : 'warning';
+        
+        return {
+          type: 'check_in',
+          status,
+          message: `${overdueCheckIns.length} overdue check-in(s). Most overdue: ${overdueMinutes} minutes`,
+          timestamp: now.toISOString(),
+          data: { overdueCheckIns, mostOverdueMinutes: overdueMinutes },
+        };
+      }
+
+      return {
+        type: 'check_in',
+        status: 'ok',
+        message: 'All check-ins are on schedule',
+        timestamp: now.toISOString(),
+      };
+
+    } catch (error) {
+      logger.emergency('Check-in status check failed', error);
+      return {
+        type: 'check_in',
+        status: 'critical',
+        message: 'Failed to check check-in status',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Check location status
+  private static async checkLocationStatus(): Promise<SafetyCheck> {
+    try {
+      // Get most recent location update
+      const { data, error } = await supabase
+        .from('location_updates')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (!data) {
+        return {
+          type: 'location',
+          status: 'critical',
+          message: 'No location data available',
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const locationAge = Date.now() - new Date(data.timestamp).getTime();
+      const ageMinutes = Math.floor(locationAge / (1000 * 60));
+
+      let status: 'ok' | 'warning' | 'critical' = 'ok';
+      let message = `Location updated ${ageMinutes} minutes ago`;
+
+      if (ageMinutes > 60) {
+        status = 'critical';
+        message = `Location data is ${ageMinutes} minutes old (critical)`;
+      } else if (ageMinutes > 30) {
+        status = 'warning';
+        message = `Location data is ${ageMinutes} minutes old (warning)`;
+      }
+
+      // Check accuracy
+      if (data.accuracy > 100) {
+        status = status === 'critical' ? 'critical' : 'warning';
+        message += `. Poor accuracy: ${data.accuracy}m`;
+      }
+
+      return {
+        type: 'location',
+        status,
+        message,
+        timestamp: new Date().toISOString(),
+        data: { 
+          lastLocation: data,
+          ageMinutes,
+          accuracy: data.accuracy,
+        },
+      };
+
+    } catch (error) {
+      logger.emergency('Location status check failed', error);
+      return {
+        type: 'location',
+        status: 'critical',
+        message: 'Failed to check location status',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Check battery status
+  private static async checkBatteryStatus(): Promise<SafetyCheck> {
+    try {
+      // Get battery level from cached data or device
+      const batteryLevel = await this.getBatteryLevel();
+
+      let status: 'ok' | 'warning' | 'critical' = 'ok';
+      let message = `Battery level: ${batteryLevel}%`;
+
+      if (batteryLevel <= this.CRITICAL_BATTERY_THRESHOLD) {
+        status = 'critical';
+        message = `Critical battery level: ${batteryLevel}%`;
+      } else if (batteryLevel <= this.WARNING_BATTERY_THRESHOLD) {
+        status = 'warning';
+        message = `Low battery level: ${batteryLevel}%`;
+      }
+
+      return {
+        type: 'battery',
+        status,
+        message,
+        timestamp: new Date().toISOString(),
+        data: { batteryLevel },
+      };
+
+    } catch (error) {
+      logger.emergency('Battery status check failed', error);
+      return {
+        type: 'battery',
+        status: 'warning',
+        message: 'Could not determine battery status',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Check connectivity status
+  private static async checkConnectivityStatus(): Promise<SafetyCheck> {
+    try {
+      // Simple connectivity test
+      const startTime = Date.now();
+      const response = await fetch('https://www.google.com', {
+        method: 'HEAD',
+        timeout: 5000,
+      });
+      const responseTime = Date.now() - startTime;
+
+      if (response.ok) {
+        const status = responseTime > 3000 ? 'warning' : 'ok';
+        return {
+          type: 'connectivity',
+          status,
+          message: `Internet connection ${status} (${responseTime}ms)`,
+          timestamp: new Date().toISOString(),
+          data: { responseTime },
+        };
+      } else {
+        return {
+          type: 'connectivity',
+          status: 'warning',
+          message: 'Poor internet connection',
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+    } catch (error) {
+      return {
+        type: 'connectivity',
+        status: 'critical',
+        message: 'No internet connection',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Check geofence status
+  private static async checkGeofenceStatus(): Promise<SafetyCheck> {
+    try {
+      // Check if user is in expected geofences
+      const { data: geofences, error } = await supabase
+        .from('geofences')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      // This would require current location and geofence calculations
+      // Simplified for example
+      return {
+        type: 'geofence',
+        status: 'ok',
+        message: `${geofences?.length || 0} active geofences monitored`,
+        timestamp: new Date().toISOString(),
+        data: { activeGeofences: geofences?.length || 0 },
+      };
+
+    } catch (error) {
+      logger.emergency('Geofence status check failed', error);
+      return {
+        type: 'geofence',
+        status: 'warning',
+        message: 'Could not check geofence status',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Process critical safety issues
+  private static async processCriticalIssues(checks: SafetyCheck[]): Promise<void> {
+    const criticalIssues = checks.filter(check => check.status === 'critical');
+    
+    if (criticalIssues.length === 0) return;
+
+    try {
+      // Handle overdue check-ins
+      const overdueCheckIn = criticalIssues.find(issue => issue.type === 'check_in');
+      if (overdueCheckIn) {
+        await this.handleOverdueCheckIn(overdueCheckIn);
+      }
+
+      // Handle location issues
+      const locationIssue = criticalIssues.find(issue => issue.type === 'location');
+      if (locationIssue) {
+        await this.handleLocationIssue(locationIssue);
+      }
+
+      // Handle battery issues
+      const batteryIssue = criticalIssues.find(issue => issue.type === 'battery');
+      if (batteryIssue) {
+        await this.handleBatteryIssue(batteryIssue);
+      }
+
+      // Handle connectivity issues
+      const connectivityIssue = criticalIssues.find(issue => issue.type === 'connectivity');
+      if (connectivityIssue) {
+        await this.handleConnectivityIssue(connectivityIssue);
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to process critical issues', error);
+    }
+  }
+
+  // Handle overdue check-in
+  private static async handleOverdueCheckIn(issue: SafetyCheck): Promise<void> {
+    try {
+      // Send notification to user
+      await NotificationService.sendLocalNotification({
+        title: 'Missed Check-in',
+        body: issue.message,
+        data: {
+          type: 'check_in',
+          priority: 'critical',
+          emergency: false,
+        },
+        categoryIdentifier: 'check_in_reminder',
+      });
+
+      // If significantly overdue, consider triggering emergency protocol
+      if (issue.data?.mostOverdueMinutes > 60) {
+        await this.considerEmergencyEscalation(issue);
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle overdue check-in', error);
+    }
+  }
+
+  // Handle location issues
+  private static async handleLocationIssue(issue: SafetyCheck): Promise<void> {
+    try {
+      await NotificationService.sendLocalNotification({
+        title: 'Location Issue',
+        body: issue.message,
+        data: {
+          type: 'location',
+          priority: 'high',
+          emergency: false,
+        },
+      });
+
+    } catch (error) {
+      logger.emergency('Failed to handle location issue', error);
+    }
+  }
+
+  // Handle battery issues
+  private static async handleBatteryIssue(issue: SafetyCheck): Promise<void> {
+    try {
+      await NotificationService.sendLocalNotification({
+        title: 'Low Battery Warning',
+        body: `${issue.message}. Consider charging your device for continued safety monitoring.`,
+        data: {
+          type: 'battery',
+          priority: 'high',
+          emergency: false,
+        },
+      });
+
+    } catch (error) {
+      logger.emergency('Failed to handle battery issue', error);
+    }
+  }
+
+  // Handle connectivity issues
+  private static async handleConnectivityIssue(issue: SafetyCheck): Promise<void> {
+    try {
+      // Store offline for when connectivity returns
+      await AsyncStorage.setItem('connectivity_issue', JSON.stringify(issue));
+
+    } catch (error) {
+      logger.emergency('Failed to handle connectivity issue', error);
+    }
+  }
+
+  // Consider emergency escalation
+  private static async considerEmergencyEscalation(issue: SafetyCheck): Promise<void> {
+    try {
+      logger.emergency('Considering emergency escalation', {
+        issue: issue.type,
+        data: issue.data,
+      });
+
+      // This would integrate with emergency alert system
+      // For now, just log the consideration
+
+    } catch (error) {
+      logger.emergency('Failed to consider emergency escalation', error);
+    }
+  }
+
+  // Store safety check results
+  private static async storeSafetyCheckResults(checks: SafetyCheck[]): Promise<void> {
+    try {
+      // Store locally
+      await AsyncStorage.setItem(
+        'last_safety_check',
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          checks,
+        })
+      );
+
+      // Try to store remotely
+      const { error } = await supabase
+        .from('safety_check_logs')
+        .insert([{
+          checks: checks,
+          timestamp: new Date().toISOString(),
+        }]);
+
+      if (error) {
+        // Queue for later sync
+        await this.queueSafetyCheckForSync(checks);
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to store safety check results', error);
+    }
+  }
+
+  // Queue safety check for sync
+  private static async queueSafetyCheckForSync(checks: SafetyCheck[]): Promise<void> {
+    try {
+      const SYNC_QUEUE_KEY = 'safety_check_sync_queue';
+      const queued = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
+      const queue = queued ? JSON.parse(queued) : [];
+
+      queue.push({
+        checks,
+        timestamp: new Date().toISOString(),
+      });
+
+      await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+
+    } catch (error) {
+      logger.emergency('Failed to queue safety check for sync', error);
+    }
+  }
+
+  // Get battery level (placeholder - would use actual battery API)
+  private static async getBatteryLevel(): Promise<number> {
+    try {
+      // This would use expo-battery or similar
+      return 75; // Placeholder
+    } catch (error) {
+      return 100; // Default to full battery if unable to determine
+    }
+  }
+
+  // Get last safety check results
+  static async getLastSafetyCheck(): Promise<{
+    timestamp: string;
+    checks: SafetyCheck[];
+  } | null> {
+    try {
+      const lastCheck = await AsyncStorage.getItem('last_safety_check');
+      return lastCheck ? JSON.parse(lastCheck) : null;
+    } catch (error) {
+      logger.emergency('Failed to get last safety check', error);
+      return null;
+    }
+  }
+}
 ```
 
+```typescript Check-in Monitor
+// services/background/BackgroundCheckInMonitor.ts
+import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
+import { NotificationService } from '../notifications/NotificationService';
+
+export class BackgroundCheckInMonitor {
+  // Check all pending check-ins
+  static async checkAllPendingCheckIns(): Promise<any[]> {
+    try {
+      const now = new Date();
+      const { data: pendingCheckIns, error } = await supabase
+        .from('check_ins')
+        .select('*')
+        .eq('status', 'pending')
+        .lt('scheduled_time', now.toISOString());
+
+      if (error) throw error;
+
+      const alerts = [];
+
+      for (const checkIn of pendingCheckIns || []) {
+        const alert = await this.processOverdueCheckIn(checkIn);
+        if (alert) alerts.push(alert);
+      }
+
+      logger.info('Check-in monitoring completed', {
+        pendingCount: pendingCheckIns?.length || 0,
+        alertsGenerated: alerts.length,
+      });
+
+      return alerts;
+
+    } catch (error) {
+      logger.emergency('Check-in monitoring failed', error);
+      return [];
+    }
+  }
+
+  // Process individual overdue check-in
+  private static async processOverdueCheckIn(checkIn: any): Promise<any> {
+    try {
+      const now = new Date();
+      const scheduledTime = new Date(checkIn.scheduled_time);
+      const overdueMinutes = Math.floor((now.getTime() - scheduledTime.getTime()) / (1000 * 60));
+
+      // Grace period before marking as missed
+      const gracePeriod = 15; // 15 minutes
+      
+      if (overdueMinutes <= gracePeriod) {
+        return null; // Still within grace period
+      }
+
+      // Mark as missed
+      await supabase
+        .from('check_ins')
+        .update({ 
+          status: 'missed',
+          missed_at: now.toISOString(),
+        })
+        .eq('id', checkIn.id);
+
+      // Send notification
+      await NotificationService.sendLocalNotification({
+        title: 'Missed Safety Check-in',
+        body: `You missed a safety check-in scheduled for ${scheduledTime.toLocaleTimeString()}. Please confirm you're safe.`,
+        data: {
+          type: 'check_in',
+          priority: 'high',
+          emergency: false,
+          alertId: checkIn.id,
+        },
+        categoryIdentifier: 'check_in_reminder',
+      });
+
+      // Consider escalation for significantly overdue check-ins
+      if (overdueMinutes > 60) {
+        await this.escalateMissedCheckIn(checkIn, overdueMinutes);
+      }
+
+      return {
+        checkInId: checkIn.id,
+        overdueMinutes,
+        escalated: overdueMinutes > 60,
+      };
+
+    } catch (error) {
+      logger.emergency('Failed to process overdue check-in', error);
+      return null;
+    }
+  }
+
+  // Escalate significantly overdue check-ins
+  private static async escalateMissedCheckIn(checkIn: any, overdueMinutes: number): Promise<void> {
+    try {
+      logger.emergency('Escalating missed check-in', {
+        checkInId: checkIn.id,
+        overdueMinutes,
+      });
+
+      // This could trigger emergency contacts notification
+      // or automatic emergency alert depending on user settings
+
+    } catch (error) {
+      logger.emergency('Failed to escalate missed check-in', error);
+    }
+  }
+
+  // Check for missed check-ins (called from main safety monitor)
+  static async checkMissedCheckIns(): Promise<void> {
+    try {
+      await this.checkAllPendingCheckIns();
+    } catch (error) {
+      logger.emergency('Missed check-in monitoring failed', error);
+    }
+  }
+}
+```
 </CodeGroup>
+
+## Data Synchronization
+
+### Background Data Sync
+
+<Steps>
+  <Step title="Offline Data Synchronization">
+    Sync queued data when connectivity is restored
+    
+    ```typescript
+    // services/background/BackgroundDataSync.ts
+    import AsyncStorage from '@react-native-async-storage/async-storage';
+    import { logger } from '../../utils/logger';
+    import { supabase } from '../../lib/supabase';
+
+    export interface SyncResult {
+      hasNewData: boolean;
+      syncedItems: number;
+      failedItems: number;
+      errors: string[];
+    }
+
+    export class BackgroundDataSync {
+      private static readonly SYNC_KEYS = [
+        'location_sync_queue',
+        'emergency_alert_sync_queue',
+        'check_in_sync_queue',
+        'safety_check_sync_queue',
+      ];
+
+      // Perform full data synchronization
+      static async performFullSync(): Promise<SyncResult> {
+        try {
+          logger.info('Starting background data sync');
+
+          const result: SyncResult = {
+            hasNewData: false,
+            syncedItems: 0,
+            failedItems: 0,
+            errors: [],
+          };
+
+          // Sync each queue type
+          for (const queueKey of this.SYNC_KEYS) {
+            const queueResult = await this.syncQueue(queueKey);
+            
+            result.syncedItems += queueResult.syncedItems;
+            result.failedItems += queueResult.failedItems;
+            result.errors.push(...queueResult.errors);
+            
+            if (queueResult.hasNewData) {
+              result.hasNewData = true;
+            }
+          }
+
+          // Download new data from server
+          const downloadResult = await this.downloadNewData();
+          if (downloadResult.hasNewData) {
+            result.hasNewData = true;
+          }
+
+          logger.info('Background data sync completed', {
+            syncedItems: result.syncedItems,
+            failedItems: result.failedItems,
+            hasNewData: result.hasNewData,
+            errorCount: result.errors.length,
+          });
+
+          return result;
+
+        } catch (error) {
+          logger.emergency('Background data sync failed', error);
+          return {
+            hasNewData: false,
+            syncedItems: 0,
+            failedItems: 0,
+            errors: [error.message],
+          };
+        }
+      }
+
+      // Sync specific queue
+      private static async syncQueue(queueKey: string): Promise<SyncResult> {
+        const result: SyncResult = {
+          hasNewData: false,
+          syncedItems: 0,
+          failedItems: 0,
+          errors: [],
+        };
+
+        try {
+          const queueData = await AsyncStorage.getItem(queueKey);
+          if (!queueData) {
+            return result; // No data to sync
+          }
+
+          const queue = JSON.parse(queueData);
+          if (!Array.isArray(queue) || queue.length === 0) {
+            return result;
+          }
+
+          logger.info('Syncing queue', { queueKey, itemCount: queue.length });
+
+          // Process items in batches
+          const batchSize = 10;
+          const syncedItems = [];
+          
+          for (let i = 0; i < queue.length; i += batchSize) {
+            const batch = queue.slice(i, i + batchSize);
+            
+            for (const item of batch) {
+              try {
+                await this.syncItem(queueKey, item);
+                syncedItems.push(item);
+                result.syncedItems++;
+              } catch (error) {
+                result.failedItems++;
+                result.errors.push(`${queueKey}: ${error.message}`);
+                logger.warning('Item sync failed', { queueKey, error: error.message });
+              }
+            }
+          }
+
+          // Update queue (remove synced items)
+          const remainingItems = queue.filter(item => !syncedItems.includes(item));
+          
+          if (remainingItems.length === 0) {
+            await AsyncStorage.removeItem(queueKey);
+          } else {
+            await AsyncStorage.setItem(queueKey, JSON.stringify(remainingItems));
+          }
+
+          if (result.syncedItems > 0) {
+            result.hasNewData = true;
+          }
+
+        } catch (error) {
+          result.errors.push(`Queue sync failed: ${error.message}`);
+          logger.emergency('Queue sync failed', { queueKey, error });
+        }
+
+        return result;
+      }
+
+      // Sync individual item based on queue type
+      private static async syncItem(queueKey: string, item: any): Promise<void> {
+        switch (queueKey) {
+          case 'location_sync_queue':
+            await this.syncLocationUpdate(item);
+            break;
+          case 'emergency_alert_sync_queue':
+            await this.syncEmergencyAlert(item);
+            break;
+          case 'check_in_sync_queue':
+            await this.syncCheckIn(item);
+            break;
+          case 'safety_check_sync_queue':
+            await this.syncSafetyCheck(item);
+            break;
+          default:
+            throw new Error(`Unknown queue type: ${queueKey}`);
+        }
+      }
+
+      // Sync location update
+      private static async syncLocationUpdate(locationData: any): Promise<void> {
+        const { error } = await supabase
+          .from('location_updates')
+          .insert([{
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            accuracy: locationData.accuracy,
+            timestamp: locationData.timestamp,
+            movement_pattern: locationData.movementPattern,
+            is_emergency: locationData.isEmergencyLocation,
+            synced_from_background: true,
+          }]);
+
+        if (error) throw error;
+      }
+
+      // Sync emergency alert
+      private static async syncEmergencyAlert(alertData: any): Promise<void> {
+        const { error } = await supabase
+          .from('emergency_alerts')
+          .insert([alertData]);
+
+        if (error) throw error;
+      }
+
+      // Sync check-in
+      private static async syncCheckIn(checkInData: any): Promise<void> {
+        const { error } = await supabase
+          .from('check_ins')
+          .upsert([checkInData]);
+
+        if (error) throw error;
+      }
+
+      // Sync safety check
+      private static async syncSafetyCheck(safetyCheckData: any): Promise<void> {
+        const { error } = await supabase
+          .from('safety_check_logs')
+          .insert([safetyCheckData]);
+
+        if (error) throw error;
+      }
+
+      // Download new data from server
+      private static async downloadNewData(): Promise<{ hasNewData: boolean }> {
+        try {
+          // Get last sync timestamp
+          const lastSync = await AsyncStorage.getItem('last_sync_timestamp');
+          const lastSyncTime = lastSync ? new Date(lastSync) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+          let hasNewData = false;
+
+          // Check for new emergency alerts
+          const { data: newAlerts } = await supabase
+            .from('emergency_alerts')
+            .select('*')
+            .gt('created_at', lastSyncTime.toISOString())
+            .limit(50);
+
+          if (newAlerts && newAlerts.length > 0) {
+            hasNewData = true;
+            await this.cacheNewData('new_emergency_alerts', newAlerts);
+          }
+
+          // Check for new shared location updates
+          const { data: newLocations } = await supabase
+            .from('shared_location_updates')
+            .select('*')
+            .gt('timestamp', lastSyncTime.toISOString())
+            .limit(100);
+
+          if (newLocations && newLocations.length > 0) {
+            hasNewData = true;
+            await this.cacheNewData('new_shared_locations', newLocations);
+          }
+
+          // Update last sync timestamp
+          await AsyncStorage.setItem('last_sync_timestamp', new Date().toISOString());
+
+          return { hasNewData };
+
+        } catch (error) {
+          logger.emergency('Failed to download new data', error);
+          return { hasNewData: false };
+        }
+      }
+
+      // Cache new data locally
+      private static async cacheNewData(cacheKey: string, data: any[]): Promise<void> {
+        try {
+          const existing = await AsyncStorage.getItem(cacheKey);
+          const cached = existing ? JSON.parse(existing) : [];
+          
+          // Merge new data
+          const merged = [...cached, ...data];
+          
+          // Keep only recent data (last 1000 items)
+          const recent = merged.slice(-1000);
+          
+          await AsyncStorage.setItem(cacheKey, JSON.stringify(recent));
+
+        } catch (error) {
+          logger.emergency('Failed to cache new data', error);
+        }
+      }
+
+      // Sync pending data (called when connectivity is restored)
+      static async syncPendingData(): Promise<void> {
+        try {
+          const result = await this.performFullSync();
+          
+          if (result.syncedItems > 0) {
+            logger.info('Pending data synced', {
+              syncedItems: result.syncedItems,
+              failedItems: result.failedItems,
+            });
+          }
+
+        } catch (error) {
+          logger.emergency('Pending data sync failed', error);
+        }
+      }
+
+      // Get sync statistics
+      static async getSyncStatistics(): Promise<{
+        queueSizes: Record<string, number>;
+        lastSyncTime: string | null;
+        totalPendingItems: number;
+      }> {
+        try {
+          const queueSizes: Record<string, number> = {};
+          let totalPendingItems = 0;
+
+          for (const queueKey of this.SYNC_KEYS) {
+            const queueData = await AsyncStorage.getItem(queueKey);
+            const queue = queueData ? JSON.parse(queueData) : [];
+            queueSizes[queueKey] = Array.isArray(queue) ? queue.length : 0;
+            totalPendingItems += queueSizes[queueKey];
+          }
+
+          const lastSyncTime = await AsyncStorage.getItem('last_sync_timestamp');
+
+          return {
+            queueSizes,
+            lastSyncTime,
+            totalPendingItems,
+          };
+
+        } catch (error) {
+          logger.emergency('Failed to get sync statistics', error);
+          return {
+            queueSizes: {},
+            lastSyncTime: null,
+            totalPendingItems: 0,
+          };
+        }
+      }
+
+      // Clear all sync queues
+      static async clearAllQueues(): Promise<void> {
+        try {
+          const clearPromises = this.SYNC_KEYS.map(key => AsyncStorage.removeItem(key));
+          await Promise.all(clearPromises);
+          
+          logger.info('All sync queues cleared');
+
+        } catch (error) {
+          logger.emergency('Failed to clear sync queues', error);
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Background Task Management
+
+### Task Lifecycle Management
+
+<Accordion title="Task Management Utilities">
+```typescript
+// hooks/useBackgroundTasks.ts
+import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
+import { BackgroundTaskManager, BACKGROUND_TASKS } from '../services/background/BackgroundTaskManager';
+import { useAppSelector } from './redux';
+import { logger } from '../utils/logger';
+
+export const useBackgroundTasks = () => {
+  const [taskStatus, setTaskStatus] = useState(BackgroundTaskManager.getTaskStatus());
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+  const locationSharingActive = useAppSelector(state => state.location.isSharing);
+
+  // Initialize background tasks
+  useEffect(() => {
+    const initializeTasks = async () => {
+      try {
+        await BackgroundTaskManager.initialize();
+        await BackgroundTaskManager.startEssentialTasks();
+        
+        setTaskStatus(BackgroundTaskManager.getTaskStatus());
+        setIsInitialized(true);
+        
+        logger.info('Background tasks initialized via hook');
+
+      } catch (error) {
+        logger.emergency('Background task initialization failed', error);
+      }
+    };
+
+    initializeTasks();
+
+    // Cleanup on unmount
+    return () => {
+      BackgroundTaskManager.stopAllTasks();
+    };
+  }, []);
+
+  // Handle app state changes
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // App became active - ensure essential tasks are running
+        BackgroundTaskManager.startEssentialTasks();
+      } else if (nextAppState === 'background') {
+        // App went to background - optimize task frequency
+        logger.info('App backgrounded - tasks will continue');
+      }
+      
+      setTaskStatus(BackgroundTaskManager.getTaskStatus());
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, []);
+
+  // Handle emergency mode changes
+  useEffect(() => {
+    const updateTasksForEmergencyMode = async () => {
+      if (emergencyMode) {
+        // Start all tasks in emergency mode
+        await Promise.all([
+          BackgroundTaskManager.startTask(BACKGROUND_TASKS.LOCATION_TRACKING),
+          BackgroundTaskManager.startTask(BACKGROUND_TASKS.EMERGENCY_DETECTION),
+          BackgroundTaskManager.startTask(BACKGROUND_TASKS.SAFETY_MONITORING),
+        ]);
+        
+        logger.emergency('Background tasks activated for emergency mode');
+      }
+      
+      setTaskStatus(BackgroundTaskManager.getTaskStatus());
+    };
+
+    updateTasksForEmergencyMode();
+  }, [emergencyMode]);
+
+  // Handle location sharing changes
+  useEffect(() => {
+    const updateTasksForLocationSharing = async () => {
+      if (locationSharingActive) {
+        await BackgroundTaskManager.startTask(BACKGROUND_TASKS.LOCATION_TRACKING);
+      } else if (!emergencyMode) {
+        // Only stop if not in emergency mode
+        await BackgroundTaskManager.stopTask(BACKGROUND_TASKS.LOCATION_TRACKING);
+      }
+      
+      setTaskStatus(BackgroundTaskManager.getTaskStatus());
+    };
+
+    updateTasksForLocationSharing();
+  }, [locationSharingActive, emergencyMode]);
+
+  const startTask = async (taskName: keyof typeof BACKGROUND_TASKS) => {
+    try {
+      await BackgroundTaskManager.startTask(BACKGROUND_TASKS[taskName]);
+      setTaskStatus(BackgroundTaskManager.getTaskStatus());
+    } catch (error) {
+      logger.emergency('Failed to start task via hook', { taskName, error });
+    }
+  };
+
+  const stopTask = async (taskName: keyof typeof BACKGROUND_TASKS) => {
+    try {
+      await BackgroundTaskManager.stopTask(BACKGROUND_TASKS[taskName]);
+      setTaskStatus(BackgroundTaskManager.getTaskStatus());
+    } catch (error) {
+      logger.emergency('Failed to stop task via hook', { taskName, error });
+    }
+  };
+
+  const refreshTaskStatus = () => {
+    setTaskStatus(BackgroundTaskManager.getTaskStatus());
+  };
+
+  return {
+    taskStatus,
+    isInitialized,
+    startTask,
+    stopTask,
+    refreshTaskStatus,
+  };
+};
+
+// Background task monitoring component
+export const BackgroundTaskMonitor: React.FC = () => {
+  const { taskStatus, isInitialized } = useBackgroundTasks();
+
+  if (!__DEV__ || !isInitialized) return null;
+
+  return (
+    <View style={{
+      position: 'absolute',
+      bottom: 100,
+      right: 10,
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      padding: 10,
+      borderRadius: 8,
+      minWidth: 200,
+    }}>
+      <Text style={{ color: 'white', fontWeight: 'bold', marginBottom: 5 }}>
+        Background Tasks
+      </Text>
+      {Object.entries(taskStatus).map(([task, isActive]) => (
+        <Text key={task} style={{ 
+          color: isActive ? 'green' : 'red', 
+          fontSize: 12 
+        }}>
+          {task.replace('background-', '')}: {isActive ? '✓' : '✗'}
+        </Text>
+      ))}
+    </View>
+  );
+};
+```
+</Accordion>
+
+## Testing Background Tasks
+
+### Background Task Testing
+
+<Steps>
+  <Step title="Background Task Test Utilities">
+    Testing utilities for background task functionality
+    
+    ```typescript
+    // utils/backgroundTaskTestUtils.ts
+    import { BackgroundTaskManager, BACKGROUND_TASKS } from '../services/background/BackgroundTaskManager';
+    import { BackgroundSafetyMonitor } from '../services/background/BackgroundSafetyMonitor';
+    import { BackgroundDataSync } from '../services/background/BackgroundDataSync';
+
+    export class BackgroundTaskTestUtils {
+      // Test background task initialization
+      static async testTaskInitialization(): Promise<void> {
+        try {
+          console.log('🧪 Testing background task initialization...');
+          
+          await BackgroundTaskManager.initialize();
+          const status = BackgroundTaskManager.getTaskStatus();
+          
+          console.log('✅ Background tasks initialized', { status });
+
+        } catch (error) {
+          console.error('❌ Background task initialization failed:', error);
+        }
+      }
+
+      // Test safety monitoring
+      static async testSafetyMonitoring(): Promise<void> {
+        try {
+          console.log('🧪 Testing safety monitoring...');
+          
+          const checks = await BackgroundSafetyMonitor.performSafetyChecks();
+          
+          console.log('✅ Safety monitoring completed', {
+            totalChecks: checks.length,
+            criticalIssues: checks.filter(c => c.status === 'critical').length,
+            warnings: checks.filter(c => c.status === 'warning').length,
+            checks,
+          });
+
+        } catch (error) {
+          console.error('❌ Safety monitoring test failed:', error);
+        }
+      }
+
+      // Test data synchronization
+      static async testDataSync(): Promise<void> {
+        try {
+          console.log('🧪 Testing data synchronization...');
+          
+          const result = await BackgroundDataSync.performFullSync();
+          
+          console.log('✅ Data sync completed', {
+            hasNewData: result.hasNewData,
+            syncedItems: result.syncedItems,
+            failedItems: result.failedItems,
+            errors: result.errors,
+          });
+
+        } catch (error) {
+          console.error('❌ Data sync test failed:', error);
+        }
+      }
+
+      // Test task lifecycle
+      static async testTaskLifecycle(): Promise<void> {
+        try {
+          console.log('🧪 Testing task lifecycle...');
+          
+          // Start essential tasks
+          await BackgroundTaskManager.startEssentialTasks();
+          let status = BackgroundTaskManager.getTaskStatus();
+          console.log('Tasks started:', status);
+          
+          // Stop specific task
+          await BackgroundTaskManager.stopTask(BACKGROUND_TASKS.DATA_SYNC);
+          status = BackgroundTaskManager.getTaskStatus();
+          console.log('After stopping data sync:', status);
+          
+          // Restart task
+          await BackgroundTaskManager.startTask(BACKGROUND_TASKS.DATA_SYNC);
+          status = BackgroundTaskManager.getTaskStatus();
+          console.log('After restarting data sync:', status);
+          
+          console.log('✅ Task lifecycle test completed');
+
+        } catch (error) {
+          console.error('❌ Task lifecycle test failed:', error);
+        }
+      }
+
+      // Comprehensive background task test
+      static async runFullTest(): Promise<void> {
+        console.log('🚀 Starting comprehensive background task test suite...');
+        
+        await this.testTaskInitialization();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testSafetyMonitoring();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testDataSync();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testTaskLifecycle();
+        
+        console.log('🎉 Background task test suite completed!');
+      }
+
+      // Monitor task performance
+      static async monitorTaskPerformance(duration: number = 60000): Promise<void> {
+        console.log(`🧪 Monitoring task performance for ${duration / 1000} seconds...`);
+        
+        const startTime = Date.now();
+        const stats = {
+          safetyChecks: 0,
+          dataSync: 0,
+          errors: 0,
+        };
+
+        const monitor = setInterval(async () => {
+          try {
+            // Simulate background task execution
+            await BackgroundSafetyMonitor.performSafetyChecks();
+            stats.safetyChecks++;
+            
+            const syncResult = await BackgroundDataSync.performFullSync();
+            if (syncResult.hasNewData) {
+              stats.dataSync++;
+            }
+            
+          } catch (error) {
+            stats.errors++;
+            console.error('Background task error during monitoring:', error);
+          }
+        }, 10000); // Every 10 seconds
+
+        setTimeout(() => {
+          clearInterval(monitor);
+          
+          const duration = Date.now() - startTime;
+          console.log('✅ Performance monitoring completed', {
+            duration: `${duration / 1000}s`,
+            safetyChecks: stats.safetyChecks,
+            dataSync: stats.dataSync,
+            errors: stats.errors,
+            averageCheckInterval: duration / stats.safetyChecks,
+          });
+        }, duration);
+      }
+    }
+
+    // Development helper for manual testing
+    export const backgroundTaskTester = {
+      init: () => BackgroundTaskTestUtils.testTaskInitialization(),
+      safety: () => BackgroundTaskTestUtils.testSafetyMonitoring(),
+      sync: () => BackgroundTaskTestUtils.testDataSync(),
+      lifecycle: () => BackgroundTaskTestUtils.testTaskLifecycle(),
+      monitor: (duration?: number) => BackgroundTaskTestUtils.monitorTaskPerformance(duration),
+      runAll: () => BackgroundTaskTestUtils.runFullTest(),
+    };
+
+    // Make available globally in development
+    if (__DEV__) {
+      (global as any).backgroundTaskTester = backgroundTaskTester;
+    }
+    ```
+  </Step>
+</Steps>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**Phase 4 Completion:** With background tasks implemented, we've completed the core Developer Experience documentation. The next step is the testing strategy to ensure all safety features work reliably.
+</Note>
+
+Next, I'll complete **Phase 4** by creating the final testing documentation files:
+
+<CardGroup cols={3}>
+  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
+    Comprehensive testing approach for safety-critical background features
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Unit Testing" icon="check" href="/development/unit-testing">
+    Unit testing patterns for background tasks and safety monitoring
+  </Card>
+  <Card title="Integration Testing" icon="link" href="/development/integration-testing">
+    Integration testing for background services and real-time features
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**Background Task Reliability:** Background tasks are critical for safety monitoring. Always test thoroughly on real devices and ensure proper handling of system limitations and battery optimizations.
+</Warning>

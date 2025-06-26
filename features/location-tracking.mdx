@@ -1,59 +1,1187 @@
 ---
 title: "Location Tracking"
-description: "Location Tracking documentation for Core Features. Learn about implementation, configuration, and best practices."
+description: "Intelligent location tracking for enhanced safety with Shelther. Learn about real-time sharing, geofencing, privacy controls, and battery-optimized positioning services."
 ---
 
 # Location Tracking
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Smart Safety Positioning:** Shelther's location tracking balances precise safety monitoring with privacy protection and battery efficiency. Share your location when it matters most while maintaining control over your data.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's intelligent location tracking provides the geographic foundation for all safety features. The system uses advanced algorithms to optimize battery life while ensuring accurate positioning when you need help most. With granular privacy controls, you decide who sees your location and when.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="High-Accuracy Positioning" icon="crosshairs">
+    GPS combined with network positioning delivers &lt;10-meter accuracy for emergencies
+  </Card>
+  <Card title="Battery-Optimized Tracking" icon="battery">
+    Adaptive algorithms extend battery life while maintaining safety monitoring
+  </Card>
+  <Card title="Privacy-First Sharing" icon="eye-off">
+    Granular controls over location precision and sharing duration
+  </Card>
+  <Card title="Offline Capabilities" icon="wifi-slash">
+    Core location features work without internet connectivity
+  </Card>
+</CardGroup>
+
+## Location Sharing Modes
+
+### Sharing Configuration
+
+<Steps>
+  <Step title="Always Private">
+    Location data stored locally only, shared exclusively during emergencies
+  </Step>
+  <Step title="Trusted Contacts">
+    Real-time location sharing with selected Circle of Trust members
+  </Step>
+  <Step title="Activity-Based">
+    Temporary location sharing during specific activities or journeys
+  </Step>
+  <Step title="Emergency Override">
+    Automatic high-precision sharing activated during emergency situations
+  </Step>
+</Steps>
 
 <CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+```typescript Location Sharing Configuration
+interface LocationSharingConfig {
+  mode: LocationSharingMode;
+  precision: LocationPrecision;
+  duration: SharingDuration;
+  sharedWith: ContactPermission[];
+  conditions: SharingCondition[];
+  privacy: PrivacySettings;
 }
-```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+type LocationSharingMode = 
+  | 'private'           // No sharing except emergencies
+  | 'contacts_only'     // Share with Circle of Trust
+  | 'activity_based'    // Share during specific activities
+  | 'scheduled'         // Share during scheduled times
+  | 'emergency_only';   // Only during emergency situations
+
+type LocationPrecision = 
+  | 'exact'            // Full GPS precision (±3-10 meters)
+  | 'approximate'      // Neighborhood level (±100-500 meters)  
+  | 'city_only'        // City/district level (±1-5 kilometers)
+  | 'general_area';    // Region level (±10+ kilometers)
+
+interface ContactPermission {
+  contactId: string;
+  permissions: {
+    viewCurrentLocation: boolean;
+    viewLocationHistory: boolean;
+    receiveLocationAlerts: boolean;
+    accessDuringEmergency: boolean;
+  };
+  precisionLevel: LocationPrecision;
+  timeRestrictions?: TimeRestriction[];
+}
+
+export const useLocationSharing = () => {
+  const [sharingConfig, setSharingConfig] = useState<LocationSharingConfig>();
+  const [activeShares, setActiveShares] = useState<ActiveLocationShare[]>([]);
+
+  const startLocationSharing = async (config: LocationSharingConfig) => {
+    try {
+      // Validate permissions
+      const hasPermission = await checkLocationPermissions();
+      if (!hasPermission) {
+        await requestLocationPermissions();
+      }
+
+      // Apply privacy filtering
+      const filteredConfig = applyPrivacyFilters(config);
+      
+      // Start location monitoring
+      await LocationService.startTracking(filteredConfig);
+      
+      // Notify contacts of sharing start
+      await NotificationService.notifyLocationSharingStarted(filteredConfig);
+      
+      setSharingConfig(filteredConfig);
+      
+    } catch (error) {
+      console.error('Failed to start location sharing:', error);
+      throw error;
+    }
+  };
+
+  const stopLocationSharing = async (shareId?: string) => {
+    try {
+      if (shareId) {
+        // Stop specific share
+        await LocationService.stopSpecificShare(shareId);
+        setActiveShares(prev => prev.filter(share => share.id !== shareId));
+      } else {
+        // Stop all sharing
+        await LocationService.stopAllSharing();
+        setActiveShares([]);
+      }
+      
+      // Notify contacts of sharing stop
+      await NotificationService.notifyLocationSharingStopped(shareId);
+      
+    } catch (error) {
+      console.error('Failed to stop location sharing:', error);
+    }
+  };
+
+  return {
+    sharingConfig,
+    activeShares,
+    startLocationSharing,
+    stopLocationSharing,
+    updateSharingConfig: setSharingConfig,
+  };
 };
 ```
 
+```typescript Location Privacy Controls
+export class LocationPrivacyManager {
+  static applyPrivacyLevel(
+    location: GeoLocation,
+    precision: LocationPrecision,
+    context: SharingContext
+  ): GeoLocation {
+    // Emergency override - always use exact location
+    if (context.isEmergency) {
+      return location;
+    }
+
+    switch (precision) {
+      case 'exact':
+        // Add minimal noise to prevent exact tracking
+        return this.addMinimalNoise(location);
+        
+      case 'approximate':
+        // Round to ~100m precision
+        return {
+          latitude: Math.round(location.latitude * 1000) / 1000,
+          longitude: Math.round(location.longitude * 1000) / 1000,
+          accuracy: 100,
+        };
+        
+      case 'city_only':
+        // Round to city-level precision
+        return {
+          latitude: Math.round(location.latitude * 100) / 100,
+          longitude: Math.round(location.longitude * 100) / 100,
+          accuracy: 1000,
+        };
+        
+      case 'general_area':
+        // Very coarse location
+        return {
+          latitude: Math.round(location.latitude * 10) / 10,
+          longitude: Math.round(location.longitude * 10) / 10,
+          accuracy: 10000,
+        };
+        
+      default:
+        return location;
+    }
+  }
+
+  static addMinimalNoise(location: GeoLocation): GeoLocation {
+    // Add small amount of noise while maintaining emergency utility
+    const noiseMagnitude = 0.0001; // ~10 meters
+    const latNoise = (Math.random() - 0.5) * noiseMagnitude;
+    const lonNoise = (Math.random() - 0.5) * noiseMagnitude;
+    
+    return {
+      latitude: location.latitude + latNoise,
+      longitude: location.longitude + lonNoise,
+      accuracy: location.accuracy || 10,
+    };
+  }
+
+  static canShareWithContact(
+    userId: string,
+    contactId: string,
+    sharingType: SharingType,
+    currentTime: Date
+  ): boolean {
+    const permission = this.getContactPermission(userId, contactId);
+    
+    if (!permission) return false;
+    
+    // Check time restrictions
+    if (permission.timeRestrictions) {
+      const allowed = permission.timeRestrictions.some(restriction =>
+        this.isTimeWithinRestriction(currentTime, restriction)
+      );
+      if (!allowed) return false;
+    }
+    
+    // Check sharing type permissions
+    switch (sharingType) {
+      case 'current_location':
+        return permission.permissions.viewCurrentLocation;
+      case 'location_history':
+        return permission.permissions.viewLocationHistory;
+      case 'emergency':
+        return permission.permissions.accessDuringEmergency;
+      default:
+        return false;
+    }
+  }
+}
+```
 </CodeGroup>
 
-## Next Steps
+## Intelligent Geofencing
+
+### Smart Safety Zones
+
+<CardGroup cols={3}>
+  <Card title="Home & Work Zones" icon="home">
+    Automatic safe zone detection for your most frequent locations
+  </Card>
+  <Card title="Custom Safety Areas" icon="map">
+    User-defined safe zones with customizable entry/exit notifications
+  </Card>
+  <Card title="Temporary Zones" icon="clock">
+    Activity-specific zones that activate during events or journeys
+  </Card>
+</CardGroup>
+
+<Accordion title="Geofence Types and Configurations">
+**Safe Zones (Green Zones):**
+- Home, work, school, and other trusted locations
+- Automatic check-ins when entering safe zones
+- Reduced location tracking frequency while in safe areas
+- Configurable notifications to contacts about safe arrivals
+
+**Caution Zones (Yellow Zones):**
+- Areas requiring increased awareness (unfamiliar neighborhoods, late hours)
+- Enhanced location tracking and more frequent check-ins
+- Proactive safety tips and local safety information
+- Optional contact notifications about entries into caution areas
+
+**Risk Zones (Red Zones):**
+- High-risk areas based on crime data, personal experience, or community reports
+- Mandatory contact notifications and increased monitoring
+- Automatic emergency contact alerts if extended time in risk zones
+- Enhanced evidence collection and ready emergency triggers
+
+**Custom Activity Zones:**
+- Temporary zones for specific events (concerts, dates, travel)
+- Route-based zones for journey monitoring
+- Time-limited zones that automatically expire
+- Activity-specific safety protocols and contact notifications
+
+**Implementation Example:**
+```typescript
+interface GeofenceConfiguration {
+  id: string;
+  name: string;
+  type: GeofenceType;
+  riskLevel: RiskLevel;
+  
+  // Geographic definition
+  geometry: GeofenceGeometry;
+  
+  // Trigger settings
+  entryTriggers: GeofenceTrigger[];
+  exitTriggers: GeofenceTrigger[];
+  dwellTimeTriggers: DwellTimeTrigger[];
+  
+  // Safety protocols
+  safetyProtocol: SafetyProtocol;
+  contactNotifications: ContactNotification[];
+  
+  // Scheduling
+  activeSchedule: GeofenceSchedule;
+  isTemporary: boolean;
+  expiresAt?: string;
+}
+
+type GeofenceType = 'safe_zone' | 'caution_zone' | 'risk_zone' | 'activity_zone' | 'route_zone';
+type RiskLevel = 'very_safe' | 'safe' | 'caution' | 'high_risk' | 'emergency_only';
+
+interface SafetyProtocol {
+  trackingFrequency: TrackingFrequency;
+  checkInRequirements: CheckInRequirement[];
+  emergencyTriggerSensitivity: TriggerSensitivity;
+  evidenceCollection: EvidenceCollectionConfig;
+  automaticEscalation: EscalationConfig;
+}
+```
+</Accordion>
+
+### Dynamic Geofence Management
+
+<Steps>
+  <Step title="Automatic Zone Detection">
+    AI identifies frequently visited locations and suggests creating safe zones
+  </Step>
+  <Step title="Community-Driven Zones">
+    Crowd-sourced safety information creates dynamic risk assessments
+  </Step>
+  <Step title="Contextual Activation">
+    Geofences activate based on time, weather, local events, and personal factors
+  </Step>
+  <Step title="Performance Optimization">
+    Battery-efficient geofence monitoring with intelligent radius adjustment
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Dynamic Geofence Service
+export class DynamicGeofenceService {
+  async suggestGeofenceCreation(userId: string): Promise<GeofenceSuggestion[]> {
+    const locationHistory = await this.getLocationHistory(userId, 30); // 30 days
+    const frequentLocations = this.analyzeFrequentLocations(locationHistory);
+    const suggestions: GeofenceSuggestion[] = [];
+
+    for (const location of frequentLocations) {
+      if (location.visitCount >= 5 && location.averageStayDuration > 3600) { // 1 hour
+        const suggestion = await this.createLocationSuggestion(location);
+        suggestions.push(suggestion);
+      }
+    }
+
+    return suggestions;
+  }
+
+  private async createLocationSuggestion(
+    location: FrequentLocation
+  ): Promise<GeofenceSuggestion> {
+    // Analyze location context
+    const placeDetails = await this.getPlaceDetails(location.center);
+    const safetyScore = await this.calculateLocationSafety(location.center);
+    const suggestedType = this.inferGeofenceType(placeDetails, location.patterns);
+
+    return {
+      id: generateId(),
+      suggestedName: placeDetails.name || this.generateLocationName(location),
+      center: location.center,
+      suggestedRadius: this.calculateOptimalRadius(location.bounds),
+      type: suggestedType,
+      confidence: location.confidence,
+      reasoning: this.generateSuggestionReasoning(location, placeDetails),
+      safetyScore,
+      visitPatterns: location.patterns,
+    };
+  }
+
+  async activateContextualGeofences(
+    userId: string,
+    context: LocationContext
+  ): Promise<void> {
+    const activeGeofences = await this.getUserGeofences(userId);
+    
+    for (const geofence of activeGeofences) {
+      const shouldActivate = this.evaluateActivationConditions(geofence, context);
+      
+      if (shouldActivate && !geofence.isActive) {
+        await this.activateGeofence(geofence.id);
+      } else if (!shouldActivate && geofence.isActive) {
+        await this.deactivateGeofence(geofence.id);
+      }
+    }
+  }
+
+  private evaluateActivationConditions(
+    geofence: Geofence,
+    context: LocationContext
+  ): boolean {
+    const { time, weather, localEvents, userActivity } = context;
+    
+    // Time-based activation
+    if (geofence.activeSchedule && !this.isWithinSchedule(geofence.activeSchedule, time)) {
+      return false;
+    }
+    
+    // Weather-based activation (e.g., increased risk zones during storms)
+    if (geofence.type === 'risk_zone' && weather.conditions.includes('severe')) {
+      return true;
+    }
+    
+    // Event-based activation (e.g., caution zones during large events)
+    if (geofence.type === 'caution_zone' && localEvents.some(e => e.crowdSize > 1000)) {
+      return true;
+    }
+    
+    // Activity-based activation
+    if (geofence.type === 'activity_zone' && userActivity === geofence.associatedActivity) {
+      return true;
+    }
+    
+    return geofence.defaultActive;
+  }
+}
+
+interface LocationContext {
+  time: Date;
+  weather: WeatherConditions;
+  localEvents: LocalEvent[];
+  userActivity: UserActivity;
+  batteryLevel: number;
+  networkQuality: NetworkQuality;
+}
+
+interface GeofenceSuggestion {
+  id: string;
+  suggestedName: string;
+  center: GeoLocation;
+  suggestedRadius: number;
+  type: GeofenceType;
+  confidence: number;
+  reasoning: string;
+  safetyScore: number;
+  visitPatterns: VisitPattern;
+}
+```
+
+```typescript Geofence Performance Optimization
+export class GeofencePerformanceManager {
+  private activeGeofences: Map<string, Geofence> = new Map();
+  private lastLocationUpdate: GeoLocation | null = null;
+  private batteryOptimizationEnabled = true;
+
+  async optimizeGeofenceMonitoring(
+    geofences: Geofence[],
+    currentLocation: GeoLocation,
+    batteryLevel: number
+  ): Promise<void> {
+    // Prioritize geofences by proximity and importance
+    const prioritizedGeofences = this.prioritizeGeofences(geofences, currentLocation);
+    
+    // Adjust monitoring frequency based on battery
+    const monitoringFrequency = this.calculateMonitoringFrequency(batteryLevel);
+    
+    // Use distance-based optimization
+    const relevantGeofences = this.filterRelevantGeofences(
+      prioritizedGeofences,
+      currentLocation,
+      monitoringFrequency
+    );
+    
+    // Update active monitoring set
+    await this.updateActiveMonitoring(relevantGeofences);
+  }
+
+  private prioritizeGeofences(
+    geofences: Geofence[],
+    currentLocation: GeoLocation
+  ): Geofence[] {
+    return geofences
+      .map(geofence => ({
+        ...geofence,
+        distance: this.calculateDistance(currentLocation, geofence.center),
+        priority: this.calculateGeofencePriority(geofence),
+      }))
+      .sort((a, b) => {
+        // Primary sort: priority (higher is better)
+        if (a.priority !== b.priority) {
+          return b.priority - a.priority;
+        }
+        // Secondary sort: distance (closer is better)
+        return a.distance - b.distance;
+      });
+  }
+
+  private calculateGeofencePriority(geofence: Geofence): number {
+    let priority = 0;
+    
+    // Risk level priority
+    switch (geofence.riskLevel) {
+      case 'emergency_only': priority += 100; break;
+      case 'high_risk': priority += 80; break;
+      case 'caution': priority += 60; break;
+      case 'safe': priority += 40; break;
+      case 'very_safe': priority += 20; break;
+    }
+    
+    // Type priority
+    if (geofence.type === 'risk_zone') priority += 50;
+    if (geofence.type === 'activity_zone') priority += 30;
+    if (geofence.type === 'safe_zone') priority += 10;
+    
+    // Temporal relevance
+    if (geofence.isTemporary) priority += 25;
+    
+    return priority;
+  }
+
+  private calculateMonitoringFrequency(batteryLevel: number): MonitoringFrequency {
+    if (batteryLevel > 70) return 'high';      // Check every 10 seconds
+    if (batteryLevel > 40) return 'normal';    // Check every 30 seconds
+    if (batteryLevel > 20) return 'reduced';   // Check every 60 seconds
+    return 'minimal';                          // Check every 5 minutes
+  }
+
+  private filterRelevantGeofences(
+    geofences: Geofence[],
+    currentLocation: GeoLocation,
+    frequency: MonitoringFrequency
+  ): Geofence[] {
+    const maxDistance = this.getMaxRelevantDistance(frequency);
+    const maxGeofences = this.getMaxActiveGeofences(frequency);
+    
+    return geofences
+      .filter(g => g.distance <= maxDistance)
+      .slice(0, maxGeofences);
+  }
+
+  async checkGeofenceEvents(
+    currentLocation: GeoLocation,
+    previousLocation?: GeoLocation
+  ): Promise<GeofenceEvent[]> {
+    const events: GeofenceEvent[] = [];
+    
+    for (const [id, geofence] of this.activeGeofences) {
+      const wasInside = previousLocation ? 
+        this.isLocationInsideGeofence(previousLocation, geofence) : false;
+      const isInside = this.isLocationInsideGeofence(currentLocation, geofence);
+      
+      if (!wasInside && isInside) {
+        // Entry event
+        events.push(await this.createGeofenceEvent(geofence, 'entry', currentLocation));
+      } else if (wasInside && !isInside) {
+        // Exit event
+        events.push(await this.createGeofenceEvent(geofence, 'exit', currentLocation));
+      } else if (isInside) {
+        // Check dwell time triggers
+        const dwellEvents = await this.checkDwellTimeTriggers(geofence, currentLocation);
+        events.push(...dwellEvents);
+      }
+    }
+    
+    return events;
+  }
+}
+```
+</CodeGroup>
+
+## Battery-Optimized Tracking
+
+### Adaptive Power Management
+
+<Note>
+**Smart Power Usage:** Shelther's location tracking adapts to your device's battery level, charging status, and usage patterns to maximize protection while minimizing battery drain.
+</Note>
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Activity-Aware Tracking" icon="activity">
+    Reduced frequency when stationary, increased precision when moving
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Battery-Level Adaptation" icon="battery">
+    Automatic adjustment of tracking intensity based on remaining battery
+  </Card>
+  <Card title="Charging Status Optimization" icon="plug">
+    Enhanced tracking when plugged in, conservation mode when on battery
+  </Card>
+  <Card title="Emergency Override" icon="alert-triangle">
+    Maximum accuracy during emergencies regardless of battery impact
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Baseline Establishment">
+    Learn your normal movement patterns to optimize tracking efficiency
+  </Step>
+  <Step title="Significant Change Detection">
+    Monitor only for meaningful location changes to reduce GPS usage
+  </Step>
+  <Step title="Predictive Positioning">
+    Use route prediction to reduce active GPS polling during familiar journeys
+  </Step>
+  <Step title="Network-Assisted Positioning">
+    Combine GPS with WiFi and cell tower data for power-efficient location updates
+  </Step>
+</Steps>
+
+<Accordion title="Battery Optimization Strategies">
+**High Battery (&gt;70%):**
+- GPS updates every 10-30 seconds
+- High accuracy mode enabled
+- Full geofence monitoring active
+- Real-time location sharing available
+- All safety features at maximum sensitivity
+
+**Medium Battery (30-70%):**
+- GPS updates every 30-60 seconds
+- Balanced accuracy mode
+- Priority geofence monitoring only
+- Location sharing with slight delay
+- Standard safety feature sensitivity
+
+**Low Battery (10-30%):**
+- GPS updates every 2-5 minutes
+- Power-saving accuracy mode
+- Critical geofences only
+- Reduced location sharing precision
+- Emergency-only location features
+
+**Critical Battery (&lt;10%):**
+- GPS updates every 5-15 minutes
+- Minimal accuracy requirements
+- Emergency geofences only
+- Location sharing disabled except emergencies
+- All non-essential location features disabled
+
+**Emergency Override:**
+- Maximum GPS accuracy regardless of battery level
+- Continuous location updates during active emergencies
+- All location sharing restrictions bypassed
+- User notified of battery impact during emergencies
+</Accordion>
+
+<CodeGroup>
+```typescript Battery-Optimized Location Manager
+export class BatteryOptimizedLocationManager {
+  private currentStrategy: LocationStrategy = 'balanced';
+  private lastSignificantMove: Date = new Date();
+  private movementThreshold = 50; // meters
+
+  async updateLocationStrategy(
+    batteryLevel: number,
+    isCharging: boolean,
+    isEmergencyActive: boolean,
+    userActivity: DeviceActivity
+  ): Promise<void> {
+    let newStrategy: LocationStrategy;
+
+    // Emergency override
+    if (isEmergencyActive) {
+      newStrategy = 'emergency_override';
+    }
+    // Charging - can be more aggressive
+    else if (isCharging) {
+      newStrategy = batteryLevel > 80 ? 'high_performance' : 'balanced';
+    }
+    // Battery level based strategy
+    else if (batteryLevel > 70) {
+      newStrategy = 'high_performance';
+    } else if (batteryLevel > 30) {
+      newStrategy = 'balanced';
+    } else if (batteryLevel > 10) {
+      newStrategy = 'power_saving';
+    } else {
+      newStrategy = 'critical_battery';
+    }
+
+    // Activity adjustments
+    if (userActivity === 'stationary' && newStrategy !== 'emergency_override') {
+      newStrategy = this.reduceStrategyIntensity(newStrategy);
+    }
+
+    if (newStrategy !== this.currentStrategy) {
+      await this.applyLocationStrategy(newStrategy);
+      this.currentStrategy = newStrategy;
+    }
+  }
+
+  private async applyLocationStrategy(strategy: LocationStrategy): Promise<void> {
+    const config = this.getStrategyConfig(strategy);
+    
+    // Update location service configuration
+    await LocationService.updateConfiguration({
+      updateInterval: config.updateInterval,
+      accuracy: config.accuracy,
+      timeout: config.timeout,
+      maximumAge: config.maximumAge,
+      enableHighAccuracy: config.enableHighAccuracy,
+    });
+
+    // Update geofence monitoring
+    await GeofenceService.updateMonitoringIntensity(config.geofenceIntensity);
+
+    // Notify user of significant changes
+    if (strategy === 'critical_battery' || strategy === 'emergency_override') {
+      await this.notifyUserOfStrategyChange(strategy);
+    }
+  }
+
+  private getStrategyConfig(strategy: LocationStrategy): LocationConfig {
+    const configs: Record<LocationStrategy, LocationConfig> = {
+      high_performance: {
+        updateInterval: 15000,      // 15 seconds
+        accuracy: 10,               // 10 meters
+        timeout: 15000,
+        maximumAge: 30000,
+        enableHighAccuracy: true,
+        geofenceIntensity: 'high',
+      },
+      balanced: {
+        updateInterval: 30000,      // 30 seconds
+        accuracy: 20,               // 20 meters
+        timeout: 10000,
+        maximumAge: 60000,
+        enableHighAccuracy: true,
+        geofenceIntensity: 'normal',
+      },
+      power_saving: {
+        updateInterval: 120000,     // 2 minutes
+        accuracy: 50,               // 50 meters
+        timeout: 8000,
+        maximumAge: 180000,
+        enableHighAccuracy: false,
+        geofenceIntensity: 'low',
+      },
+      critical_battery: {
+        updateInterval: 300000,     // 5 minutes
+        accuracy: 100,              // 100 meters
+        timeout: 5000,
+        maximumAge: 600000,
+        enableHighAccuracy: false,
+        geofenceIntensity: 'minimal',
+      },
+      emergency_override: {
+        updateInterval: 5000,       // 5 seconds
+        accuracy: 3,                // 3 meters
+        timeout: 20000,
+        maximumAge: 10000,
+        enableHighAccuracy: true,
+        geofenceIntensity: 'maximum',
+      },
+    };
+
+    return configs[strategy];
+  }
+
+  async processLocationUpdate(newLocation: GeoLocation): Promise<boolean> {
+    const lastLocation = await this.getLastKnownLocation();
+    
+    if (!lastLocation) {
+      // First location update
+      await this.saveLocationUpdate(newLocation);
+      return true;
+    }
+
+    // Check if this is a significant location change
+    const distance = this.calculateDistance(lastLocation, newLocation);
+    const timeDelta = Date.now() - new Date(lastLocation.timestamp).getTime();
+    
+    const isSignificantChange = this.isSignificantLocationChange(
+      distance,
+      timeDelta,
+      this.currentStrategy
+    );
+
+    if (isSignificantChange) {
+      await this.saveLocationUpdate(newLocation);
+      this.lastSignificantMove = new Date();
+      
+      // Check for geofence events
+      await this.checkGeofenceEvents(newLocation, lastLocation);
+      
+      // Update shared locations if active
+      await this.updateSharedLocations(newLocation);
+      
+      return true;
+    }
+
+    return false; // Location change not significant enough to process
+  }
+
+  private isSignificantLocationChange(
+    distance: number,
+    timeDelta: number,
+    strategy: LocationStrategy
+  ): boolean {
+    // Distance-based significance
+    const distanceThresholds: Record<LocationStrategy, number> = {
+      high_performance: 10,    // 10 meters
+      balanced: 25,           // 25 meters
+      power_saving: 50,       // 50 meters
+      critical_battery: 100,  // 100 meters
+      emergency_override: 5,  // 5 meters
+    };
+
+    if (distance >= distanceThresholds[strategy]) {
+      return true;
+    }
+
+    // Time-based significance (always update after certain time)
+    const timeThresholds: Record<LocationStrategy, number> = {
+      high_performance: 60000,    // 1 minute
+      balanced: 300000,          // 5 minutes
+      power_saving: 600000,      // 10 minutes
+      critical_battery: 1800000, // 30 minutes
+      emergency_override: 15000, // 15 seconds
+    };
+
+    return timeDelta >= timeThresholds[strategy];
+  }
+}
+```
+</CodeGroup>
+
+## Real-Time Location Sharing
+
+### Live Location Features
+
+<CardGroup cols={3}>
+  <Card title="Real-Time Updates" icon="refresh">
+    Live location updates with &lt;10 second latency for emergency contacts
+  </Card>
+  <Card title="Historical Tracking" icon="history">
+    Location history with configurable retention and automatic cleanup
+  </Card>
+  <Card title="Journey Progress" icon="route">
+    Real-time journey tracking with ETA updates and route deviation alerts
+  </Card>
+</CardGroup>
+
+<Accordion title="Live Sharing Implementation">
+**Real-Time Streaming:**
+- WebSocket connections for sub-second location updates
+- Automatic reconnection and offline queue management
+- Efficient data compression to minimize bandwidth usage
+- Battery-aware update frequency adjustment
+
+**Contact Dashboard:**
+- Real-time map view for contacts receiving location shares
+- Historical location trail with time-based filtering
+- Journey progress indicators with estimated arrival times
+- Emergency alert integration with one-tap response options
+
+**Privacy-Preserving Sharing:**
+- End-to-end encryption for all location data
+- Configurable location precision per contact
+- Automatic sharing expiration with renewal options
+- Instant revocation capabilities with immediate effect
+
+**Example Implementation:**
+```typescript
+export class LiveLocationSharingService {
+  private wsConnection: WebSocket | null = null;
+  private pendingUpdates: LocationUpdate[] = [];
+  
+  async startLiveSharing(shareConfig: LiveSharingConfig): Promise<void> {
+    // Establish WebSocket connection
+    await this.establishWebSocketConnection();
+    
+    // Start location monitoring
+    const locationStream = await LocationService.startContinuousTracking({
+      accuracy: shareConfig.requiredAccuracy,
+      updateInterval: shareConfig.updateFrequency,
+    });
+    
+    // Process and share location updates
+    locationStream.subscribe(async (location) => {
+      const filteredLocation = this.applyPrivacyFiltering(location, shareConfig);
+      await this.shareLocationUpdate(filteredLocation);
+    });
+  }
+  
+  private async shareLocationUpdate(location: FilteredLocationUpdate): Promise<void> {
+    if (this.wsConnection?.readyState === WebSocket.OPEN) {
+      // Send immediately via WebSocket
+      this.wsConnection.send(JSON.stringify({
+        type: 'location_update',
+        data: location,
+        timestamp: Date.now(),
+      }));
+    } else {
+      // Queue for when connection is restored
+      this.pendingUpdates.push(location);
+      await this.savePendingUpdate(location);
+    }
+  }
+}
+```
+</Accordion>
+
+### Journey Monitoring
+
+<Steps>
+  <Step title="Route Planning">
+    Set expected routes with waypoints and estimated travel times
+  </Step>
+  <Step title="Progress Tracking">
+    Real-time monitoring of journey progress against planned route
+  </Step>
+  <Step title="Deviation Detection">
+    Automatic alerts when deviating significantly from planned route
+  </Step>
+  <Step title="Arrival Confirmation">
+    Automatic check-ins when reaching destinations safely
+  </Step>
+</Steps>
+
+## Offline Location Capabilities
+
+### Offline-First Architecture
+
+<Warning>
+**Offline Safety Priority:** Location tracking continues to function during network outages, with intelligent synchronization when connectivity returns.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Local GPS Tracking" icon="satellite">
+    Continuous GPS tracking without network dependency
+  </Card>
+  <Card title="Offline Geofencing" icon="shield">
+    Local geofence monitoring with cached boundary data
+  </Card>
+  <Card title="Emergency SMS" icon="message-square">
+    Location sharing via SMS during network outages
+  </Card>
+  <Card title="Smart Synchronization" icon="refresh-cw">
+    Intelligent data sync prioritizing safety-critical information
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Offline Location Manager
+export class OfflineLocationManager {
+  private offlineQueue: OfflineLocationUpdate[] = [];
+  private cachedGeofences: CachedGeofence[] = [];
+  private lastSyncAttempt: Date = new Date();
+
+  async handleNetworkDisconnection(): Promise<void> {
+    console.log('Network disconnected - switching to offline mode');
+    
+    // Switch to offline location tracking
+    await this.startOfflineTracking();
+    
+    // Cache current geofences
+    await this.cacheActiveGeofences();
+    
+    // Prepare emergency SMS capabilities
+    await this.prepareSMSFallback();
+    
+    // Start monitoring for connectivity restoration
+    this.startConnectivityMonitoring();
+  }
+
+  private async startOfflineTracking(): Promise<void> {
+    // Configure GPS-only tracking
+    await LocationService.updateConfiguration({
+      useNetworkProvider: false,
+      useGPSOnly: true,
+      updateInterval: 30000, // Reduced frequency to save battery
+      enableHighAccuracy: false, // Save power when offline
+    });
+
+    // Start local location storage
+    LocationService.onLocationUpdate(async (location) => {
+      await this.storeLocationOffline(location);
+      await this.checkOfflineGeofences(location);
+    });
+  }
+
+  private async storeLocationOffline(location: GeoLocation): Promise<void> {
+    const offlineUpdate: OfflineLocationUpdate = {
+      id: generateId(),
+      location,
+      timestamp: new Date().toISOString(),
+      synced: false,
+      priority: this.calculateUpdatePriority(location),
+    };
+
+    // Store in local database
+    await this.localDB.locationUpdates.add(offlineUpdate);
+    this.offlineQueue.push(offlineUpdate);
+
+    // If queue is getting large, remove oldest non-critical updates
+    if (this.offlineQueue.length > 1000) {
+      await this.cleanupOfflineQueue();
+    }
+  }
+
+  private async checkOfflineGeofences(location: GeoLocation): Promise<void> {
+    for (const geofence of this.cachedGeofences) {
+      const isInside = this.isLocationInsideGeofence(location, geofence);
+      const wasInside = geofence.lastKnownStatus === 'inside';
+
+      if (!wasInside && isInside) {
+        await this.handleOfflineGeofenceEntry(geofence, location);
+      } else if (wasInside && !isInside) {
+        await this.handleOfflineGeofenceExit(geofence, location);
+      }
+
+      geofence.lastKnownStatus = isInside ? 'inside' : 'outside';
+    }
+  }
+
+  private async handleOfflineGeofenceEntry(
+    geofence: CachedGeofence,
+    location: GeoLocation
+  ): Promise<void> {
+    // Create offline geofence event
+    const event: OfflineGeofenceEvent = {
+      id: generateId(),
+      geofenceId: geofence.id,
+      eventType: 'entry',
+      location,
+      timestamp: new Date().toISOString(),
+      synced: false,
+    };
+
+    await this.localDB.geofenceEvents.add(event);
+
+    // Check if this requires immediate SMS notification
+    if (geofence.notifyContactsOnEntry) {
+      await this.sendOfflineSMSNotification(geofence, event);
+    }
+  }
+
+  async handleNetworkReconnection(): Promise<void> {
+    console.log('Network reconnected - starting sync process');
+    
+    try {
+      // Sync location updates
+      await this.syncOfflineLocationUpdates();
+      
+      // Sync geofence events
+      await this.syncOfflineGeofenceEvents();
+      
+      // Resume normal location tracking
+      await this.resumeNormalTracking();
+      
+      // Notify contacts of reconnection if they were being updated
+      await this.notifyContactsOfReconnection();
+      
+    } catch (error) {
+      console.error('Sync failed after reconnection:', error);
+      // Continue in offline mode and retry later
+      setTimeout(() => this.handleNetworkReconnection(), 30000);
+    }
+  }
+
+  private async syncOfflineLocationUpdates(): Promise<void> {
+    // Sort by priority (emergency updates first)
+    const sortedUpdates = this.offlineQueue.sort((a, b) => b.priority - a.priority);
+    
+    // Batch sync for efficiency
+    const batchSize = 50;
+    for (let i = 0; i < sortedUpdates.length; i += batchSize) {
+      const batch = sortedUpdates.slice(i, i + batchSize);
+      
+      try {
+        await this.syncLocationBatch(batch);
+        
+        // Remove successfully synced updates
+        await this.markUpdatesSynced(batch.map(u => u.id));
+        
+      } catch (error) {
+        console.error('Batch sync failed:', error);
+        // Continue with next batch
+      }
+    }
+  }
+
+  private async sendOfflineSMSNotification(
+    geofence: CachedGeofence,
+    event: OfflineGeofenceEvent
+  ): Promise<void> {
+    const emergencyContacts = await this.getCachedEmergencyContacts();
+    const message = this.buildOfflineLocationSMS(geofence, event);
+
+    for (const contact of emergencyContacts) {
+      try {
+        // Send SMS directly without internet
+        await SMSService.sendDirectSMS(contact.phoneNumber, message);
+      } catch (error) {
+        console.error(`Failed to send offline SMS to ${contact.phoneNumber}:`, error);
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Privacy and Security
+
+### Location Data Protection
+
+<Info>
+**Privacy by Design:** Shelther implements multiple layers of privacy protection while ensuring location data remains useful for safety purposes.
+</Info>
+
+<Steps>
+  <Step title="Data Minimization">
+    Collect only location data necessary for safety features with automatic cleanup
+  </Step>
+  <Step title="Encryption at Rest">
+    All stored location data encrypted with user-specific keys
+  </Step>
+  <Step title="Transport Security">
+    End-to-end encryption for all location sharing and emergency communications
+  </Step>
+  <Step title="Access Controls">
+    Granular permissions for who can access location data and under what circumstances
+  </Step>
+</Steps>
+
+### User Control and Transparency
+
+<CardGroup cols={2}>
+  <Card title="Sharing Dashboard" icon="eye">
+    Complete visibility into who has access to your location and when
+  </Card>
+  <Card title="Instant Revocation" icon="x-circle">
+    Immediately stop location sharing with any contact or service
+  </Card>
+  <Card title="Data Audit Trail" icon="list">
+    Complete log of location data access and sharing activities
+  </Card>
+  <Card title="Retention Controls" icon="clock">
+    User-configurable data retention periods with automatic deletion
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+## Integration with Safety Features
+
+<CardGroup cols={4}>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Emergency alerts automatically include high-accuracy location data
+  </Card>
+  <Card title="Circle of Trust" icon="users" href="/features/circle-of-trust">
+    Share location with trusted contacts based on configured permissions
+  </Card>
+  <Card title="Check-ins" icon="clock" href="/features/check-ins">
+    Location-based automatic check-ins and missed check-in detection
+  </Card>
+  <Card title="Journey Monitoring" icon="route" href="/features/journey-monitoring">
+    Real-time journey tracking with route deviation and arrival monitoring
+  </Card>
+</CardGroup>
+
+## Implementation Guidelines
+
+<Warning>
+**Critical Location Tracking Requirements:**
+- Location tracking must function reliably offline with GPS-only positioning
+- Emergency location sharing must bypass all privacy restrictions
+- Battery optimization cannot compromise emergency location accuracy
+- All location data must be encrypted both in transit and at rest
+- Users must have complete control over location sharing permissions
+- Location data retention must comply with user preferences and legal requirements
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Emergency Alert Setup" icon="bell" href="/features/emergency-alerts">
+    Configure emergency location sharing for immediate help
+  </Card>
+  <Card title="Geofence Management" icon="map" href="/features/safety-triggers">
+    Set up smart safety zones for automatic monitoring
+  </Card>
+  <Card title="Privacy Configuration" icon="lock" href="/features/circle-of-trust">
+    Configure location sharing permissions for each contact
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configure Location Sharing" icon="settings" href="/quickstart/setup">
+    Set up location sharing preferences with your Circle of Trust
+  </Card>
+  <Card title="Create Safety Zones" icon="shield" href="/features/safety-triggers">
+    Learn how to create and manage geofences for enhanced safety
+  </Card>
+</CardGroup>

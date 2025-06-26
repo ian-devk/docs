@@ -68,6 +68,7 @@
         "pages": [
           "quickstart/installation",
           "quickstart/expo-setup",
+          "quickstart/backend-setup",
           "quickstart/supabase-setup",
           "quickstart/first-app",
           "quickstart/configuration"
@@ -131,6 +132,7 @@
           "development/state-management",
           "development/navigation",
           "development/location-services",
+          "development/local-development",
           "development/push-notifications",
           "development/background-tasks"
         ]

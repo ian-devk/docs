@@ -1,59 +1,986 @@
 ---
 title: "Location Model"
-description: "Location Model documentation for Data Models. Learn about implementation, configuration, and best practices."
+description: "Advanced location tracking and geographic safety systems for Shelther. Learn about real-time location sharing, geofencing, offline capabilities, and privacy-preserving location services."
 ---
 
 # Location Model
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Privacy-First Location Services:** Shelther's location model balances precision safety monitoring with strong privacy controls, ensuring location data serves protection without compromising user autonomy.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+The location model powers Shelther's core safety features through intelligent geographic tracking, geofencing capabilities, and privacy-preserving location sharing. Every component is designed to work offline-first with seamless synchronization when connectivity returns.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Real-time Tracking" icon="map-pin">
+    High-accuracy location updates with battery-optimized algorithms for continuous monitoring
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Smart Geofencing" icon="shield">
+    Dynamic safety zones with automatic check-ins and alert triggering capabilities
+  </Card>
+  <Card title="Offline Capabilities" icon="wifi-slash">
+    Complete location functionality without internet connectivity using cached maps and local storage
+  </Card>
+  <Card title="Privacy Controls" icon="eye-off">
+    Granular location sharing permissions with automatic expiration and precision controls
   </Card>
 </CardGroup>
 
----
+## Core Location Entities
+
+### Location Updates Schema
+
+<CodeGroup>
+```sql Location Updates Table
+CREATE TABLE location_updates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Geographic coordinates
+  location GEOGRAPHY(POINT, 4326) NOT NULL,
+  altitude REAL,
+  accuracy REAL NOT NULL, -- meters
+  heading REAL, -- degrees
+  speed REAL, -- meters per second
+  
+  -- Context information
+  location_source VARCHAR(20) NOT NULL, -- gps, network, passive, manual
+  activity_type VARCHAR(30), -- walking, driving, stationary, unknown
+  confidence_score DECIMAL(3,2), -- 0.0 to 1.0
+  
+  -- Device and battery context
+  battery_level INTEGER,
+  is_charging BOOLEAN DEFAULT false,
+  device_motion_activity VARCHAR(20), -- still, walking, running, automotive
+  
+  -- Safety context
+  is_emergency BOOLEAN DEFAULT false,
+  safety_mode VARCHAR(20) DEFAULT 'standard',
+  geofence_events JSONB DEFAULT '[]'::jsonb,
+  
+  -- Privacy and sharing
+  shared_with JSONB DEFAULT '[]'::jsonb, -- Array of user_ids with permissions
+  visibility_level VARCHAR(20) DEFAULT 'private', -- private, contacts, emergency_only
+  expires_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Metadata
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Offline support
+  offline_stored BOOLEAN DEFAULT false,
+  sync_status VARCHAR(20) DEFAULT 'synced' -- synced, pending, failed
+);
+
+-- Critical indexes for performance
+CREATE INDEX idx_location_updates_user_time ON location_updates(user_id, timestamp DESC);
+CREATE INDEX idx_location_updates_geography ON location_updates USING GIST(location);
+CREATE INDEX idx_location_updates_emergency ON location_updates(user_id, timestamp DESC) 
+  WHERE is_emergency = true;
+CREATE INDEX idx_location_updates_shared ON location_updates(user_id, timestamp DESC)
+  WHERE shared_with != '[]'::jsonb;
+CREATE INDEX idx_location_updates_pending_sync ON location_updates(sync_status, timestamp)
+  WHERE sync_status != 'synced';
+
+-- Partition by time for performance
+CREATE TABLE location_updates_y2024m01 PARTITION OF location_updates
+  FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+-- Additional monthly partitions...
+```
+
+```typescript Location Update Interface
+interface LocationUpdate {
+  id: string;
+  userId: string;
+  
+  // Geographic data
+  location: GeoLocation;
+  altitude?: number;
+  accuracy: number; // meters
+  heading?: number; // degrees 0-360
+  speed?: number; // meters per second
+  
+  // Context
+  locationSource: LocationSource;
+  activityType?: ActivityType;
+  confidenceScore?: number; // 0.0 to 1.0
+  
+  // Device context
+  batteryLevel?: number; // 0-100
+  isCharging: boolean;
+  deviceMotionActivity?: MotionActivity;
+  
+  // Safety context
+  isEmergency: boolean;
+  safetyMode: SafetyMode;
+  geofenceEvents: GeofenceEvent[];
+  
+  // Privacy and sharing
+  sharedWith: LocationShare[];
+  visibilityLevel: VisibilityLevel;
+  expiresAt?: string;
+  
+  // Metadata
+  timestamp: string;
+  processedAt: string;
+  
+  // Sync status
+  offlineStored: boolean;
+  syncStatus: SyncStatus;
+}
+
+interface GeoLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+}
+
+type LocationSource = 'gps' | 'network' | 'passive' | 'manual';
+type ActivityType = 'walking' | 'driving' | 'stationary' | 'unknown';
+type MotionActivity = 'still' | 'walking' | 'running' | 'automotive';
+type VisibilityLevel = 'private' | 'contacts' | 'emergency_only';
+type SyncStatus = 'synced' | 'pending' | 'failed';
+```
+</CodeGroup>
+
+### Geofencing System
+
+<CodeGroup>
+```sql Geofences Table
+CREATE TABLE geofences (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Geofence definition
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  fence_type VARCHAR(30) NOT NULL, -- circular, polygon, route
+  
+  -- Geographic boundaries
+  center_location GEOGRAPHY(POINT, 4326), -- For circular fences
+  radius_meters REAL, -- For circular fences
+  boundary_polygon GEOGRAPHY(POLYGON, 4326), -- For polygon fences
+  route_path GEOGRAPHY(LINESTRING, 4326), -- For route monitoring
+  route_buffer_meters REAL DEFAULT 100, -- Route deviation tolerance
+  
+  -- Trigger configuration
+  entry_triggers JSONB DEFAULT '{
+    "enabled": false,
+    "notification": false,
+    "auto_checkin": false,
+    "safety_mode_change": null
+  }'::jsonb,
+  
+  exit_triggers JSONB DEFAULT '{
+    "enabled": false,
+    "notification": false,
+    "auto_checkout": false,
+    "alert_contacts": false
+  }'::jsonb,
+  
+  dwell_time_triggers JSONB DEFAULT '{
+    "enabled": false,
+    "min_duration_minutes": 15,
+    "max_duration_minutes": 480,
+    "check_in_required": false
+  }'::jsonb,
+  
+  -- Schedule and conditions
+  active_schedule JSONB DEFAULT '{
+    "always_active": true,
+    "time_ranges": [],
+    "days_of_week": [1,2,3,4,5,6,7]
+  }'::jsonb,
+  
+  weather_conditions JSONB DEFAULT '{}'::jsonb,
+  
+  -- Safety configuration
+  is_safe_zone BOOLEAN DEFAULT true,
+  risk_level VARCHAR(20) DEFAULT 'low', -- low, medium, high, critical
+  emergency_contact_override BOOLEAN DEFAULT false,
+  
+  -- Activity tracking
+  entry_count INTEGER DEFAULT 0,
+  last_entry_at TIMESTAMP WITH TIME ZONE,
+  last_exit_at TIMESTAMP WITH TIME ZONE,
+  total_time_minutes INTEGER DEFAULT 0,
+  
+  -- Status
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Spatial indexes for geofence queries
+CREATE INDEX idx_geofences_geography_circular ON geofences USING GIST(center_location)
+  WHERE fence_type = 'circular';
+CREATE INDEX idx_geofences_geography_polygon ON geofences USING GIST(boundary_polygon)
+  WHERE fence_type = 'polygon';
+CREATE INDEX idx_geofences_geography_route ON geofences USING GIST(route_path)
+  WHERE fence_type = 'route';
+CREATE INDEX idx_geofences_user_active ON geofences(user_id) WHERE is_active = true;
+```
+
+```typescript Geofence Interface
+interface Geofence {
+  id: string;
+  userId: string;
+  
+  // Basic information
+  name: string;
+  description?: string;
+  fenceType: FenceType;
+  
+  // Geographic definition
+  centerLocation?: GeoLocation; // For circular fences
+  radiusMeters?: number;
+  boundaryPolygon?: GeoPolygon; // For polygon fences
+  routePath?: GeoLineString; // For route monitoring
+  routeBufferMeters?: number;
+  
+  // Trigger configuration
+  entryTriggers: GeofenceTriggers;
+  exitTriggers: GeofenceTriggers;
+  dwellTimeTriggers: DwellTimeTriggers;
+  
+  // Scheduling
+  activeSchedule: GeofenceSchedule;
+  weatherConditions: WeatherConditions;
+  
+  // Safety properties
+  isSafeZone: boolean;
+  riskLevel: RiskLevel;
+  emergencyContactOverride: boolean;
+  
+  // Analytics
+  entryCount: number;
+  lastEntryAt?: string;
+  lastExitAt?: string;
+  totalTimeMinutes: number;
+  
+  // Status
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+type FenceType = 'circular' | 'polygon' | 'route';
+
+interface GeofenceTriggers {
+  enabled: boolean;
+  notification: boolean;
+  autoCheckin?: boolean;
+  autoCheckout?: boolean;
+  alertContacts?: boolean;
+  safetyModeChange?: SafetyMode;
+}
+
+interface DwellTimeTriggers {
+  enabled: boolean;
+  minDurationMinutes: number;
+  maxDurationMinutes: number;
+  checkInRequired: boolean;
+}
+```
+</CodeGroup>
+
+## Location Services Architecture
+
+### Battery-Optimized Tracking
+
+<Accordion title="Adaptive Location Algorithms">
+**Smart Power Management:**
+- Dynamic update frequency based on battery level and charging status
+- Activity-aware tracking that reduces frequency during stationary periods
+- Significant location change detection to minimize GPS usage
+- Intelligent use of network and passive location sources
+
+**Performance Optimization:**
+- Cached location providers for faster positioning
+- Predictive location updates during regular routes
+- Background location processing with minimal CPU usage
+- Automatic accuracy adjustment based on safety requirements
+
+**Implementation Strategy:**
+```typescript
+interface LocationTrackingConfig {
+  // Battery optimization
+  batteryLevel: number;
+  isCharging: boolean;
+  powerSaveMode: boolean;
+  
+  // Accuracy requirements
+  minAccuracy: number; // meters
+  maxAge: number; // milliseconds
+  timeout: number; // milliseconds
+  
+  // Update frequency (adaptive)
+  normalUpdateInterval: number; // milliseconds
+  emergencyUpdateInterval: number; // milliseconds
+  lowBatteryUpdateInterval: number; // milliseconds
+  
+  // Activity-based adjustments
+  activityType: ActivityType;
+  isStationary: boolean;
+  significantLocationChange: boolean;
+  
+  // Safety context
+  safetyMode: SafetyMode;
+  isInSafeZone: boolean;
+  emergencyActive: boolean;
+}
+
+class AdaptiveLocationManager {
+  private calculateUpdateInterval(config: LocationTrackingConfig): number {
+    let interval = config.normalUpdateInterval;
+    
+    // Emergency override
+    if (config.emergencyActive) {
+      return config.emergencyUpdateInterval;
+    }
+    
+    // Battery considerations
+    if (config.batteryLevel < 20 && !config.isCharging) {
+      interval = Math.max(interval * 3, config.lowBatteryUpdateInterval);
+    }
+    
+    // Activity adjustments
+    if (config.isStationary) {
+      interval *= 2; // Reduce frequency when not moving
+    }
+    
+    // Safety mode adjustments
+    switch (config.safetyMode) {
+      case 'maximum':
+        interval /= 2;
+        break;
+      case 'minimal':
+        interval *= 3;
+        break;
+    }
+    
+    return interval;
+  }
+}
+```
+</Accordion>
+
+### Real-time Location Sharing
+
+<Steps>
+  <Step title="Permission-Based Sharing">
+    Granular controls for who can see location data with automatic expiration
+  </Step>
+  <Step title="Real-time Subscriptions">
+    WebSocket-based location updates with &lt;1 second latency for emergency situations
+  </Step>
+  <Step title="Privacy Precision Controls">
+    Adjustable location precision from exact coordinates to city-level approximations
+  </Step>
+  <Step title="Temporary Sharing Sessions">
+    Time-limited location sharing for specific activities with automatic cleanup
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Location Sharing Table
+CREATE TABLE location_sharing_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  shared_with_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Sharing configuration
+  sharing_type VARCHAR(30) NOT NULL, -- continuous, activity, emergency, manual
+  precision_level VARCHAR(20) DEFAULT 'exact', -- exact, approximate, city_only
+  
+  -- Permissions
+  can_view_history BOOLEAN DEFAULT false,
+  can_view_details BOOLEAN DEFAULT true, -- battery, activity, etc.
+  can_receive_alerts BOOLEAN DEFAULT true,
+  emergency_override BOOLEAN DEFAULT true,
+  
+  -- Schedule and duration
+  starts_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  max_duration_hours INTEGER DEFAULT 24,
+  
+  -- Activity context
+  activity_description TEXT,
+  expected_route GEOGRAPHY(LINESTRING, 4326),
+  planned_destinations JSONB DEFAULT '[]'::jsonb,
+  
+  -- Status tracking
+  is_active BOOLEAN DEFAULT true,
+  last_location_shared_at TIMESTAMP WITH TIME ZONE,
+  total_locations_shared INTEGER DEFAULT 0,
+  
+  -- Privacy and audit
+  consent_given_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  revoked_at TIMESTAMP WITH TIME ZONE,
+  revocation_reason VARCHAR(100),
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(user_id, shared_with_user_id, starts_at)
+);
+
+-- Real-time sharing indexes
+CREATE INDEX idx_location_sharing_active ON location_sharing_sessions(user_id, expires_at)
+  WHERE is_active = true;
+CREATE INDEX idx_location_sharing_recipient ON location_sharing_sessions(shared_with_user_id, expires_at)
+  WHERE is_active = true;
+```
+
+```typescript Location Sharing Interface
+interface LocationSharingSession {
+  id: string;
+  userId: string;
+  sharedWithUserId: string;
+  
+  // Configuration
+  sharingType: SharingType;
+  precisionLevel: PrecisionLevel;
+  
+  // Permissions
+  canViewHistory: boolean;
+  canViewDetails: boolean;
+  canReceiveAlerts: boolean;
+  emergencyOverride: boolean;
+  
+  // Duration
+  startsAt: string;
+  expiresAt?: string;
+  maxDurationHours: number;
+  
+  // Context
+  activityDescription?: string;
+  expectedRoute?: GeoLineString;
+  plannedDestinations: PlannedDestination[];
+  
+  // Status
+  isActive: boolean;
+  lastLocationSharedAt?: string;
+  totalLocationsShared: number;
+  
+  // Privacy controls
+  consentGivenAt: string;
+  revokedAt?: string;
+  revocationReason?: string;
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+
+type SharingType = 'continuous' | 'activity' | 'emergency' | 'manual';
+type PrecisionLevel = 'exact' | 'approximate' | 'city_only';
+
+interface PlannedDestination {
+  name: string;
+  location: GeoLocation;
+  estimatedArrival?: string;
+  safetyRating?: number;
+}
+```
+</CodeGroup>
+
+## Offline Location Management
+
+### Local Storage Strategy
+
+<CardGroup cols={2}>
+  <Card title="Critical Data Caching" icon="database">
+    Local storage of essential location data for offline emergency features
+  </Card>
+  <Card title="Map Data Management" icon="map">
+    Intelligent map tile caching for offline navigation and venue information
+  </Card>
+  <Card title="Geofence Persistence" icon="shield">
+    Offline geofence monitoring with local trigger processing
+  </Card>
+  <Card title="Sync Queue Management" icon="refresh">
+    Robust synchronization system for offline-collected location data
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Offline Location Manager
+interface OfflineLocationData {
+  // Essential cached data
+  lastKnownLocation: LocationUpdate;
+  nearbyEmergencyServices: EmergencyService[];
+  activeGeofences: Geofence[];
+  emergencyContacts: EmergencyContact[];
+  
+  // Map data
+  cachedMapTiles: MapTile[];
+  offlineAreas: OfflineMapArea[];
+  venueDatabase: VenueInfo[];
+  
+  // Pending sync data
+  pendingLocationUpdates: LocationUpdate[];
+  pendingGeofenceEvents: GeofenceEvent[];
+  pendingEmergencyAlerts: EmergencyAlert[];
+  
+  // Configuration
+  lastSyncTimestamp: string;
+  offlineCapabilityLevel: OfflineCapability;
+  storageQuotaUsed: number; // bytes
+  storageQuotaLimit: number; // bytes
+}
+
+class OfflineLocationManager {
+  private async cacheEssentialData(): Promise<void> {
+    // Cache emergency services within 50km
+    const emergencyServices = await this.fetchNearbyEmergencyServices(50000);
+    await AsyncStorage.setItem('emergency_services', JSON.stringify(emergencyServices));
+    
+    // Cache active geofences
+    const geofences = await this.fetchActiveGeofences();
+    await AsyncStorage.setItem('active_geofences', JSON.stringify(geofences));
+    
+    // Cache map tiles for current area
+    await this.cacheMapTilesForArea(this.getCurrentLocation(), 10000); // 10km radius
+  }
+  
+  private async processOfflineLocation(location: LocationUpdate): Promise<void> {
+    // Store locally with offline flag
+    const offlineLocation = {
+      ...location,
+      offlineStored: true,
+      syncStatus: 'pending' as SyncStatus
+    };
+    
+    // Check geofences offline
+    const geofenceEvents = await this.checkGeofencesOffline(location);
+    
+    // Queue for sync when online
+    await this.queueForSync('location_updates', offlineLocation);
+    
+    // Process any geofence events
+    for (const event of geofenceEvents) {
+      await this.processGeofenceEventOffline(event);
+    }
+  }
+}
+
+type OfflineCapability = 'basic' | 'enhanced' | 'full';
+```
+</CodeGroup>
+
+### Sync and Conflict Resolution
+
+<Accordion title="Intelligent Data Synchronization">
+**Sync Priority System:**
+1. **Emergency data** - Immediate sync with multiple retry attempts
+2. **Safety-critical updates** - High priority with conflict resolution
+3. **Regular location data** - Batched sync with compression
+4. **Historical data** - Background sync during low usage
+
+**Conflict Resolution:**
+- Server-side timestamp authority for location data
+- User preference priority for settings conflicts
+- Safety data always takes precedence over non-safety data
+- Automatic conflict resolution with user notification for manual review
+
+**Implementation:**
+```typescript
+interface SyncOperation {
+  id: string;
+  dataType: 'location' | 'geofence' | 'emergency' | 'settings';
+  priority: 'critical' | 'high' | 'normal' | 'low';
+  data: any;
+  localTimestamp: string;
+  retryCount: number;
+  maxRetries: number;
+  conflictResolution: ConflictResolutionStrategy;
+}
+
+type ConflictResolutionStrategy = 'server_wins' | 'client_wins' | 'merge' | 'user_choice';
+
+class LocationSyncManager {
+  async syncPendingData(): Promise<SyncResult> {
+    const pendingOperations = await this.getPendingOperations();
+    const results: SyncResult[] = [];
+    
+    // Sort by priority
+    const sortedOps = pendingOperations.sort((a, b) => 
+      this.getPriorityWeight(a.priority) - this.getPriorityWeight(b.priority)
+    );
+    
+    for (const operation of sortedOps) {
+      try {
+        const result = await this.syncOperation(operation);
+        results.push(result);
+      } catch (error) {
+        await this.handleSyncError(operation, error);
+      }
+    }
+    
+    return this.consolidateSyncResults(results);
+  }
+}
+```
+</Accordion>
+
+## Location Analytics and Insights
+
+### Movement Pattern Analysis
+
+<Steps>
+  <Step title="Route Learning">
+    Machine learning algorithms identify regular routes and detect deviations
+  </Step>
+  <Step title="Safety Scoring">
+    Historical analysis of locations to generate personalized safety scores
+  </Step>
+  <Step title="Behavioral Insights">
+    Pattern recognition for unusual movement that might indicate distress
+  </Step>
+  <Step title="Predictive Alerts">
+    Proactive safety suggestions based on location and time patterns
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Location Analytics Tables
+-- Route patterns for learning user behavior
+CREATE TABLE route_patterns (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Route identification
+  route_name VARCHAR(100),
+  start_location GEOGRAPHY(POINT, 4326),
+  end_location GEOGRAPHY(POINT, 4326),
+  route_path GEOGRAPHY(LINESTRING, 4326),
+  
+  -- Pattern analysis
+  frequency_score DECIMAL(3,2), -- How often this route is taken
+  time_patterns JSONB, -- Times/days when route is typically used
+  duration_statistics JSONB, -- Min, max, average duration
+  safety_score DECIMAL(3,2), -- Overall safety rating
+  
+  -- Learning data
+  total_trips INTEGER DEFAULT 0,
+  last_trip_at TIMESTAMP WITH TIME ZONE,
+  confidence_level DECIMAL(3,2), -- AI confidence in pattern
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Location safety insights
+CREATE TABLE location_safety_insights (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  location GEOGRAPHY(POINT, 4326),
+  
+  -- Geographic context
+  area_type VARCHAR(30), -- residential, commercial, transit, entertainment
+  population_density VARCHAR(20), -- low, medium, high, very_high
+  lighting_quality VARCHAR(20), -- poor, fair, good, excellent
+  
+  -- Safety metrics
+  overall_safety_score DECIMAL(3,2),
+  crime_statistics JSONB,
+  incident_reports JSONB,
+  community_rating DECIMAL(3,2),
+  
+  -- Time-based factors
+  safety_by_time_of_day JSONB,
+  day_of_week_patterns JSONB,
+  seasonal_variations JSONB,
+  
+  -- Data sources
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  data_sources JSONB, -- crime_data, user_reports, official_stats
+  confidence_score DECIMAL(3,2)
+);
+
+CREATE INDEX idx_location_safety_geography ON location_safety_insights USING GIST(location);
+CREATE INDEX idx_route_patterns_user ON route_patterns(user_id);
+CREATE INDEX idx_route_patterns_geography_start ON route_patterns USING GIST(start_location);
+CREATE INDEX idx_route_patterns_geography_end ON route_patterns USING GIST(end_location);
+```
+
+```typescript Location Analytics Interface
+interface RoutePattern {
+  id: string;
+  userId: string;
+  
+  // Route definition
+  routeName?: string;
+  startLocation: GeoLocation;
+  endLocation: GeoLocation;
+  routePath: GeoLineString;
+  
+  // Pattern analysis
+  frequencyScore: number; // 0.0 to 1.0
+  timePatterns: TimePattern;
+  durationStatistics: DurationStats;
+  safetyScore: number; // 0.0 to 1.0
+  
+  // Learning metrics
+  totalTrips: number;
+  lastTripAt?: string;
+  confidenceLevel: number; // 0.0 to 1.0
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface LocationSafetyInsight {
+  id: string;
+  location: GeoLocation;
+  
+  // Context
+  areaType: AreaType;
+  populationDensity: PopulationDensity;
+  lightingQuality: LightingQuality;
+  
+  // Safety metrics
+  overallSafetyScore: number; // 0.0 to 1.0
+  crimeStatistics: CrimeStatistics;
+  incidentReports: IncidentReport[];
+  communityRating: number; // 0.0 to 1.0
+  
+  // Temporal patterns
+  safetyByTimeOfDay: SafetyByTime;
+  dayOfWeekPatterns: SafetyPattern[];
+  seasonalVariations: SeasonalSafety;
+  
+  // Metadata
+  lastUpdated: string;
+  dataSources: DataSource[];
+  confidenceScore: number; // 0.0 to 1.0
+}
+
+interface TimePattern {
+  commonDepartureTimes: TimeRange[];
+  commonArrivalTimes: TimeRange[];
+  daysOfWeek: number[]; // 0-6, Sunday = 0
+  seasonalVariations: boolean;
+}
+
+type AreaType = 'residential' | 'commercial' | 'transit' | 'entertainment' | 'industrial';
+type PopulationDensity = 'low' | 'medium' | 'high' | 'very_high';
+type LightingQuality = 'poor' | 'fair' | 'good' | 'excellent';
+```
+</CodeGroup>
+
+## Privacy-Preserving Location Features
+
+### Differential Privacy Implementation
 
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Privacy-First Analytics:** Location analytics use differential privacy techniques to protect individual privacy while enabling valuable safety insights for the community.
 </Note>
+
+<CardGroup cols={3}>
+  <Card title="Location Obfuscation" icon="eye-off">
+    Smart noise addition to protect precise locations while maintaining safety utility
+  </Card>
+  <Card title="Temporal Aggregation" icon="clock">
+    Time-based data aggregation to prevent tracking patterns while preserving safety insights
+  </Card>
+  <Card title="k-Anonymity" icon="users">
+    Group-based anonymization ensuring individual location data is indistinguishable
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Privacy-Preserving Location
+class PrivacyLocationProcessor {
+  // Apply differential privacy to location data
+  private addLocationNoise(
+    location: GeoLocation, 
+    privacyLevel: PrivacyLevel,
+    purpose: DataPurpose
+  ): GeoLocation {
+    const epsilon = this.getEpsilonForPrivacyLevel(privacyLevel);
+    const sensitivity = this.calculateLocationSensitivity(purpose);
+    
+    // Laplacian noise for differential privacy
+    const noiseScale = sensitivity / epsilon;
+    const latNoise = this.sampleLaplacian(0, noiseScale);
+    const lonNoise = this.sampleLaplacian(0, noiseScale);
+    
+    return {
+      latitude: location.latitude + latNoise,
+      longitude: location.longitude + lonNoise,
+      accuracy: location.accuracy ? location.accuracy + Math.abs(noiseScale * 111000) : undefined
+    };
+  }
+  
+  // Temporal cloaking for location history
+  private temporalCloak(
+    locations: LocationUpdate[],
+    kValue: number = 5
+  ): LocationUpdate[] {
+    const groupedByTime = this.groupLocationsByTimeWindow(locations, 3600000); // 1 hour windows
+    
+    return groupedByTime
+      .filter(group => group.length >= kValue) // Ensure k-anonymity
+      .map(group => this.createRepresentativeLocation(group))
+      .flat();
+  }
+  
+  // Location precision control based on sharing context
+  applyPrecisionControl(
+    location: GeoLocation,
+    precisionLevel: PrecisionLevel,
+    context: SharingContext
+  ): GeoLocation {
+    switch (precisionLevel) {
+      case 'exact':
+        return context.isEmergency ? location : this.addMinimalNoise(location);
+      
+      case 'approximate':
+        return {
+          latitude: Math.round(location.latitude * 100) / 100, // ~1km precision
+          longitude: Math.round(location.longitude * 100) / 100,
+          accuracy: 1000
+        };
+      
+      case 'city_only':
+        return this.getCityLevelLocation(location);
+      
+      default:
+        return location;
+    }
+  }
+}
+
+interface SharingContext {
+  isEmergency: boolean;
+  sharingDuration: number; // minutes
+  relationshipType: RelationshipType;
+  userConsent: ConsentLevel;
+}
+
+type PrivacyLevel = 'minimal' | 'standard' | 'high' | 'maximum';
+type DataPurpose = 'emergency' | 'safety_analytics' | 'route_optimization' | 'social_sharing';
+```
+</CodeGroup>
+
+## Location-Based Safety Features
+
+### Dynamic Safety Zones
+
+<Accordion title="Intelligent Geofence Management">
+**Adaptive Safety Zones:**
+- AI-powered suggestion of safety zones based on user behavior
+- Dynamic risk assessment for automatic geofence creation
+- Community-driven safety zone recommendations
+- Integration with public safety data and real-time incidents
+
+**Smart Triggering:**
+- Context-aware entry/exit detection using multiple data sources
+- False positive reduction through machine learning
+- Battery-optimized geofence monitoring
+- Emergency override capabilities for all geofence restrictions
+
+**Zone Types:**
+```typescript
+interface SafetyZone extends Geofence {
+  zoneCategory: SafetyZoneCategory;
+  automaticallyCreated: boolean;
+  communityVerified: boolean;
+  riskFactors: RiskFactor[];
+  safetyFeatures: SafetyFeature[];
+  emergencyServices: NearbyEmergencyService[];
+  accessibilityInfo: AccessibilityInfo;
+  
+  // Dynamic properties
+  currentOccupancy?: number;
+  realtimeRiskLevel?: RiskLevel;
+  weatherImpact?: WeatherImpact;
+  temporaryRestrictions?: Restriction[];
+}
+
+type SafetyZoneCategory = 
+  | 'home' | 'work' | 'education' | 'healthcare' 
+  | 'transportation' | 'emergency_service' | 'public_space'
+  | 'entertainment' | 'commercial' | 'temporary_safe';
+
+interface RiskFactor {
+  type: string;
+  severity: number; // 0.0 to 1.0
+  timeDependent: boolean;
+  mitigationMeasures: string[];
+}
+```
+</Accordion>
+
+### Emergency Location Services
+
+<Steps>
+  <Step title="High-Accuracy Emergency Positioning">
+    Enhanced GPS with assisted positioning for precise emergency location
+  </Step>
+  <Step title="Indoor Location Support">
+    WiFi and Bluetooth beacon positioning for indoor emergency scenarios
+  </Step>
+  <Step title="Location Verification">
+    Multiple positioning methods for location confidence in emergency situations
+  </Step>
+  <Step title="Emergency Service Integration">
+    Direct location sharing with emergency services through standardized protocols
+  </Step>
+</Steps>
+
+## Performance Optimization
+
+### Location Query Performance
+
+<CardGroup cols={2}>
+  <Card title="Spatial Indexing" icon="grid">
+    Advanced PostGIS indexing for sub-100ms geographic queries
+  </Card>
+  <Card title="Query Optimization" icon="zap">
+    Optimized database queries for real-time location operations
+  </Card>
+  <Card title="Caching Strategy" icon="database">
+    Multi-level caching for frequently accessed location data
+  </Card>
+  <Card title="Connection Pooling" icon="share">
+    Efficient database connection management for high-frequency updates
+  </Card>
+</CardGroup>
+
+<Note>
+**Performance Targets:**
+- Location update processing: &lt;100ms
+- Geofence evaluation: &lt;50ms  
+- Emergency location sharing: &lt;500ms
+- Offline location access: &lt;10ms
+- Sync operation completion: &lt;2 seconds
+</Note>
+
+---
+
+## Implementation Guidelines
+
+<Warning>
+**Critical Location Considerations:**
+- Always implement location permissions with clear user consent
+- Ensure offline functionality for all safety-critical location features
+- Use battery optimization to prevent device drain during extended monitoring
+- Implement privacy controls that never compromise emergency response capabilities
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Emergency Model" icon="bell" href="/architecture/emergency-model">
+    Emergency response systems that integrate with location services
+  </Card>
+  <Card title="Security Design" icon="shield" href="/architecture/security-design">
+    Security architecture protecting sensitive location data
+  </Card>
+  <Card title="Data Flow" icon="workflow" href="/architecture/data-flow">
+    How location data flows through the entire Shelther system
+  </Card>
+</CardGroup>

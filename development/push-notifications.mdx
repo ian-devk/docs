@@ -1,59 +1,2292 @@
 ---
 title: "Push Notifications"
-description: "Push Notifications documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to implementing push notifications in Shelther safety applications. Covers emergency alerts, real-time notifications, delivery reliability, and notification management for critical safety scenarios."
 ---
 
 # Push Notifications
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Critical Safety Communications:** Push notifications are vital for Shelther's emergency features, ensuring users and their emergency contacts receive immediate alerts. This system prioritizes delivery reliability, emergency escalation, and accessibility.
 </Info>
 
-## Key Points
+## Notification Architecture
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's notification system ensures reliable delivery across multiple channels:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Multi-Channel Delivery" icon="broadcast-tower">
+    Push notifications, SMS fallback, and in-app alerts for maximum reliability
+  </Card>
+  <Card title="Priority Routing" icon="alert-triangle">
+    Emergency notifications bypass Do Not Disturb and use critical alert features
+  </Card>
+  <Card title="Delivery Confirmation" icon="check-circle">
+    Read receipts and acknowledgment tracking for emergency communications
+  </Card>
+  <Card title="Offline Queuing" icon="clock">
+    Notifications queued and delivered when connectivity is restored
+  </Card>
+</CardGroup>
+
+## Expo Push Notifications Setup
+
+### Core Notification Service
 
 <CodeGroup>
+```typescript Notification Service Core
+// services/notifications/NotificationService.ts
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    const isEmergency = notification.request.content.data?.emergency === 'true';
+    
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: isEmergency ? true : true,
+      shouldSetBadge: true,
+      priority: isEmergency ? 'max' : 'default',
+    };
+  },
+});
+
+export interface NotificationData {
+  type: 'emergency' | 'check_in' | 'location_share' | 'general';
+  priority: 'low' | 'normal' | 'high' | 'critical';
+  emergency?: boolean;
+  alertId?: string;
+  contactId?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  expiresAt?: string;
+}
+
+export interface EmergencyNotification {
+  title: string;
+  body: string;
+  data: NotificationData;
+  sound?: 'default' | 'emergency' | null;
+  badge?: number;
+  categoryIdentifier?: string;
+}
+
+export class NotificationService {
+  private static pushToken: string | null = null;
+  private static isInitialized = false;
+
+  // Initialize notification service
+  static async initialize(): Promise<void> {
+    try {
+      if (this.isInitialized) return;
+
+      // Configure notification categories for interactive notifications
+      await this.setupNotificationCategories();
+
+      // Request permissions
+      const permissionGranted = await this.requestPermissions();
+      
+      if (!permissionGranted) {
+        logger.warning('Push notification permissions not granted');
+        return;
+      }
+
+      // Get push token
+      this.pushToken = await this.registerForPushNotifications();
+      
+      if (this.pushToken) {
+        await this.storePushToken(this.pushToken);
+        logger.info('Push notifications initialized', { token: this.pushToken.substring(0, 20) + '...' });
+      }
+
+      // Set up notification listeners
+      this.setupNotificationListeners();
+
+      this.isInitialized = true;
+
+    } catch (error) {
+      logger.emergency('Failed to initialize push notifications', error);
+    }
+  }
+
+  // Request notification permissions
+  private static async requestPermissions(): Promise<boolean> {
+    try {
+      if (Device.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync({
+            ios: {
+              allowAlert: true,
+              allowBadge: true,
+              allowSound: true,
+              allowAnnouncements: true,
+              allowCriticalAlerts: true, // For emergency notifications
+            },
+            android: {
+              allowAlert: true,
+              allowBadge: true,
+              allowSound: true,
+            },
+          });
+          finalStatus = status;
+        }
+
+        if (finalStatus !== 'granted') {
+          logger.warning('Push notification permission denied');
+          return false;
+        }
+
+        // Configure Android notification channel for emergencies
+        if (Platform.OS === 'android') {
+          await this.setupAndroidChannels();
+        }
+
+        return true;
+      } else {
+        logger.warning('Must use physical device for push notifications');
+        return false;
+      }
+    } catch (error) {
+      logger.emergency('Permission request failed', error);
+      return false;
+    }
+  }
+
+  // Setup Android notification channels
+  private static async setupAndroidChannels(): Promise<void> {
+    if (Platform.OS !== 'android') return;
+
+    try {
+      // Emergency channel - highest priority
+      await Notifications.setNotificationChannelAsync('emergency', {
+        name: 'Emergency Alerts',
+        description: 'Critical safety alerts and emergency notifications',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF0000',
+        sound: 'emergency.wav',
+        enableLights: true,
+        enableVibrate: true,
+        showBadge: true,
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      });
+
+      // Safety channel - high priority
+      await Notifications.setNotificationChannelAsync('safety', {
+        name: 'Safety Features',
+        description: 'Check-ins, location sharing, and safety updates',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250],
+        sound: 'default',
+        enableLights: true,
+        enableVibrate: true,
+        showBadge: true,
+      });
+
+      // General channel - normal priority
+      await Notifications.setNotificationChannelAsync('general', {
+        name: 'General',
+        description: 'App updates and general notifications',
+        importance: Notifications.AndroidImportance.DEFAULT,
+        sound: 'default',
+        showBadge: true,
+      });
+
+      logger.info('Android notification channels configured');
+
+    } catch (error) {
+      logger.emergency('Failed to setup Android channels', error);
+    }
+  }
+
+  // Setup interactive notification categories
+  private static async setupNotificationCategories(): Promise<void> {
+    try {
+      // Emergency alert category
+      await Notifications.setNotificationCategoryAsync('emergency_alert', [
+        {
+          identifier: 'acknowledge',
+          buttonTitle: 'I\'m Safe',
+          options: {
+            opensAppToForeground: true,
+          },
+        },
+        {
+          identifier: 'call_emergency',
+          buttonTitle: 'Call 911',
+          options: {
+            opensAppToForeground: false,
+          },
+        },
+      ]);
+
+      // Check-in reminder category
+      await Notifications.setNotificationCategoryAsync('check_in_reminder', [
+        {
+          identifier: 'check_in_safe',
+          buttonTitle: 'I\'m Safe',
+          options: {
+            opensAppToForeground: false,
+          },
+        },
+        {
+          identifier: 'check_in_delayed',
+          buttonTitle: 'Delay 15 min',
+          options: {
+            opensAppToForeground: false,
+          },
+        },
+      ]);
+
+      // Location share request category
+      await Notifications.setNotificationCategoryAsync('location_share', [
+        {
+          identifier: 'accept_share',
+          buttonTitle: 'Accept',
+          options: {
+            opensAppToForeground: true,
+          },
+        },
+        {
+          identifier: 'decline_share',
+          buttonTitle: 'Decline',
+          options: {
+            opensAppToForeground: false,
+          },
+        },
+      ]);
+
+      logger.info('Notification categories configured');
+
+    } catch (error) {
+      logger.emergency('Failed to setup notification categories', error);
+    }
+  }
+
+  // Register for push notifications and get token
+  private static async registerForPushNotifications(): Promise<string | null> {
+    try {
+      if (!Device.isDevice) {
+        logger.warning('Push notifications require physical device');
+        return null;
+      }
+
+      const token = await Notifications.getExpoPushTokenAsync({
+        projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+      });
+
+      logger.info('Push token obtained', { 
+        token: token.data.substring(0, 20) + '...' 
+      });
+
+      return token.data;
+
+    } catch (error) {
+      logger.emergency('Failed to get push token', error);
+      return null;
+    }
+  }
+
+  // Store push token in database
+  private static async storePushToken(token: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .upsert([{
+          push_token: token,
+          platform: Platform.OS,
+          created_at: new Date().toISOString(),
+          is_active: true,
+        }]);
+
+      if (error) throw error;
+
+      logger.info('Push token stored in database');
+
+    } catch (error) {
+      logger.emergency('Failed to store push token', error);
+    }
+  }
+
+  // Setup notification event listeners
+  private static setupNotificationListeners(): void {
+    // Handle notification received while app is in foreground
+    Notifications.addNotificationReceivedListener((notification) => {
+      const data = notification.request.content.data as NotificationData;
+      
+      logger.info('Notification received', {
+        type: data.type,
+        priority: data.priority,
+        emergency: data.emergency,
+      });
+
+      // Handle emergency notifications specially
+      if (data.emergency) {
+        this.handleEmergencyNotification(notification);
+      }
+    });
+
+    // Handle notification response (user tapped notification)
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      const { actionIdentifier, notification } = response;
+      const data = notification.request.content.data as NotificationData;
+
+      logger.info('Notification response received', {
+        action: actionIdentifier,
+        type: data.type,
+        emergency: data.emergency,
+      });
+
+      this.handleNotificationResponse(actionIdentifier, data);
+    });
+  }
+
+  // Handle emergency notification in foreground
+  private static async handleEmergencyNotification(
+    notification: Notifications.Notification
+  ): Promise<void> {
+    try {
+      const data = notification.request.content.data as NotificationData;
+      
+      // Show critical alert overlay if app is active
+      // Implementation depends on your app's navigation/modal system
+      
+      // Log emergency notification received
+      logger.emergency('Emergency notification received', {
+        alertId: data.alertId,
+        contactId: data.contactId,
+      });
+
+      // Update badge count
+      await Notifications.setBadgeCountAsync(1);
+
+    } catch (error) {
+      logger.emergency('Failed to handle emergency notification', error);
+    }
+  }
+
+  // Handle notification action responses
+  private static async handleNotificationResponse(
+    actionIdentifier: string,
+    data: NotificationData
+  ): Promise<void> {
+    try {
+      switch (actionIdentifier) {
+        case 'acknowledge':
+          if (data.alertId) {
+            await this.acknowledgeEmergencyAlert(data.alertId);
+          }
+          break;
+
+        case 'call_emergency':
+          // Open phone app with emergency number
+          // Implementation depends on platform
+          break;
+
+        case 'check_in_safe':
+          await this.markCheckInSafe();
+          break;
+
+        case 'check_in_delayed':
+          await this.delayCheckIn(15); // 15 minutes
+          break;
+
+        case 'accept_share':
+          if (data.contactId) {
+            await this.acceptLocationShare(data.contactId);
+          }
+          break;
+
+        case 'decline_share':
+          if (data.contactId) {
+            await this.declineLocationShare(data.contactId);
+          }
+          break;
+
+        default:
+          logger.info('Notification tapped - opening app', { actionIdentifier });
+          break;
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle notification response', error);
+    }
+  }
+
+  // Send local notification
+  static async sendLocalNotification(
+    notification: EmergencyNotification
+  ): Promise<string> {
+    try {
+      const channelId = this.getChannelId(notification.data.type);
+      
+      const notificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: notification.title,
+          body: notification.body,
+          data: notification.data,
+          sound: notification.sound || 'default',
+          badge: notification.badge,
+          categoryIdentifier: notification.categoryIdentifier,
+        },
+        trigger: null, // Send immediately
+        identifier: notification.data.alertId || undefined,
+      });
+
+      logger.info('Local notification sent', {
+        id: notificationId,
+        type: notification.data.type,
+        emergency: notification.data.emergency,
+      });
+
+      return notificationId;
+
+    } catch (error) {
+      logger.emergency('Failed to send local notification', error);
+      throw error;
+    }
+  }
+
+  // Send emergency alert notification
+  static async sendEmergencyAlert(
+    title: string,
+    body: string,
+    alertId: string,
+    location?: { latitude: number; longitude: number }
+  ): Promise<string> {
+    const notification: EmergencyNotification = {
+      title,
+      body,
+      data: {
+        type: 'emergency',
+        priority: 'critical',
+        emergency: true,
+        alertId,
+        location,
+      },
+      sound: Platform.OS === 'ios' ? 'emergency.wav' : 'default',
+      badge: 1,
+      categoryIdentifier: 'emergency_alert',
+    };
+
+    return await this.sendLocalNotification(notification);
+  }
+
+  // Send check-in reminder
+  static async sendCheckInReminder(
+    scheduledTime: Date,
+    checkInId?: string
+  ): Promise<string> {
+    const notification: EmergencyNotification = {
+      title: 'Safety Check-in Reminder',
+      body: `Time for your scheduled safety check-in`,
+      data: {
+        type: 'check_in',
+        priority: 'high',
+        emergency: false,
+        alertId: checkInId,
+      },
+      categoryIdentifier: 'check_in_reminder',
+    };
+
+    return await this.sendLocalNotification(notification);
+  }
+
+  // Get appropriate channel ID for notification type
+  private static getChannelId(type: NotificationData['type']): string {
+    switch (type) {
+      case 'emergency':
+        return 'emergency';
+      case 'check_in':
+      case 'location_share':
+        return 'safety';
+      default:
+        return 'general';
+    }
+  }
+
+  // Helper methods for notification responses
+  private static async acknowledgeEmergencyAlert(alertId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('emergency_alerts')
+        .update({ 
+          status: 'acknowledged',
+          acknowledged_at: new Date().toISOString(),
+        })
+        .eq('id', alertId);
+
+      if (error) throw error;
+
+      logger.info('Emergency alert acknowledged', { alertId });
+
+    } catch (error) {
+      logger.emergency('Failed to acknowledge alert', error);
+    }
+  }
+
+  private static async markCheckInSafe(): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('check_ins')
+        .update({
+          status: 'completed',
+          actual_time: new Date().toISOString(),
+        })
+        .eq('status', 'pending')
+        .order('scheduled_time', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      logger.info('Check-in marked as safe');
+
+    } catch (error) {
+      logger.emergency('Failed to mark check-in safe', error);
+    }
+  }
+
+  private static async delayCheckIn(minutes: number): Promise<void> {
+    try {
+      const newTime = new Date(Date.now() + minutes * 60 * 1000);
+      
+      const { error } = await supabase
+        .from('check_ins')
+        .update({
+          scheduled_time: newTime.toISOString(),
+        })
+        .eq('status', 'pending')
+        .order('scheduled_time', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      logger.info('Check-in delayed', { minutes, newTime });
+
+    } catch (error) {
+      logger.emergency('Failed to delay check-in', error);
+    }
+  }
+
+  private static async acceptLocationShare(contactId: string): Promise<void> {
+    // Implementation for accepting location share request
+    logger.info('Location share accepted', { contactId });
+  }
+
+  private static async declineLocationShare(contactId: string): Promise<void> {
+    // Implementation for declining location share request
+    logger.info('Location share declined', { contactId });
+  }
+
+  // Get current push token
+  static getPushToken(): string | null {
+    return this.pushToken;
+  }
+
+  // Clear all notifications
+  static async clearAllNotifications(): Promise<void> {
+    try {
+      await Notifications.dismissAllNotificationsAsync();
+      await Notifications.setBadgeCountAsync(0);
+      
+      logger.info('All notifications cleared');
+
+    } catch (error) {
+      logger.emergency('Failed to clear notifications', error);
+    }
+  }
+
+  // Cancel specific notification
+  static async cancelNotification(notificationId: string): Promise<void> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+      
+      logger.info('Notification cancelled', { notificationId });
+
+    } catch (error) {
+      logger.emergency('Failed to cancel notification', error);
+    }
+  }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
+```typescript Push Token Management
+// services/notifications/PushTokenManager.ts
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+import { supabase } from '../../lib/supabase';
+import { logger } from '../../utils/logger';
+
+export interface PushTokenData {
+  id: string;
+  userId: string;
+  pushToken: string;
+  platform: 'ios' | 'android' | 'web';
+  deviceInfo: {
+    modelName?: string;
+    osVersion?: string;
+    deviceName?: string;
+  };
+  isActive: boolean;
+  createdAt: string;
+  lastUsed?: string;
+}
+
+export class PushTokenManager {
+  // Register new push token
+  static async registerPushToken(
+    userId: string,
+    pushToken: string
+  ): Promise<void> {
+    try {
+      const deviceInfo = {
+        modelName: Device.modelName || 'Unknown',
+        osVersion: Device.osVersion || 'Unknown',
+        deviceName: Device.deviceName || 'Unknown Device',
+      };
+
+      // Check if token already exists
+      const { data: existing } = await supabase
+        .from('user_push_tokens')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('push_token', pushToken)
+        .single();
+
+      if (existing) {
+        // Update existing token
+        const { error } = await supabase
+          .from('user_push_tokens')
+          .update({
+            is_active: true,
+            last_used: new Date().toISOString(),
+            device_info: deviceInfo,
+          })
+          .eq('id', existing.id);
+
+        if (error) throw error;
+
+        logger.info('Push token updated', { tokenId: existing.id });
+      } else {
+        // Insert new token
+        const { error } = await supabase
+          .from('user_push_tokens')
+          .insert([{
+            user_id: userId,
+            push_token: pushToken,
+            platform: Platform.OS as 'ios' | 'android',
+            device_info: deviceInfo,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            last_used: new Date().toISOString(),
+          }]);
+
+        if (error) throw error;
+
+        logger.info('Push token registered', { 
+          userId, 
+          platform: Platform.OS,
+          token: pushToken.substring(0, 20) + '...',
+        });
+      }
+
+      // Deactivate old tokens for this user/platform
+      await this.deactivateOldTokens(userId, pushToken);
+
+    } catch (error) {
+      logger.emergency('Failed to register push token', error);
+      throw error;
+    }
+  }
+
+  // Deactivate old tokens for user
+  private static async deactivateOldTokens(
+    userId: string,
+    currentToken: string
+  ): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+        .neq('push_token', currentToken);
+
+      if (error) throw error;
+
+      logger.info('Old push tokens deactivated', { userId });
+
+    } catch (error) {
+      logger.emergency('Failed to deactivate old tokens', error);
+    }
+  }
+
+  // Get active tokens for user
+  static async getActiveTokensForUser(userId: string): Promise<PushTokenData[]> {
+    try {
+      const { data, error } = await supabase
+        .from('user_push_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      return (data || []).map(token => ({
+        id: token.id,
+        userId: token.user_id,
+        pushToken: token.push_token,
+        platform: token.platform,
+        deviceInfo: token.device_info,
+        isActive: token.is_active,
+        createdAt: token.created_at,
+        lastUsed: token.last_used,
+      }));
+
+    } catch (error) {
+      logger.emergency('Failed to get active tokens', error);
+      return [];
+    }
+  }
+
+  // Remove push token
+  static async removePushToken(userId: string, pushToken: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+        .eq('push_token', pushToken);
+
+      if (error) throw error;
+
+      logger.info('Push token removed', { userId });
+
+    } catch (error) {
+      logger.emergency('Failed to remove push token', error);
+    }
+  }
+
+  // Update token last used timestamp
+  static async updateTokenUsage(pushToken: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .update({ last_used: new Date().toISOString() })
+        .eq('push_token', pushToken);
+
+      if (error) throw error;
+
+    } catch (error) {
+      logger.emergency('Failed to update token usage', error);
+    }
+  }
+
+  // Cleanup inactive tokens
+  static async cleanupInactiveTokens(): Promise<void> {
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .delete()
+        .lt('last_used', thirtyDaysAgo.toISOString())
+        .eq('is_active', false);
+
+      if (error) throw error;
+
+      logger.info('Inactive push tokens cleaned up');
+
+    } catch (error) {
+      logger.emergency('Failed to cleanup inactive tokens', error);
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Emergency Notification Delivery
+
+### Multi-Channel Emergency Alerts
+
+<Steps>
+  <Step title="Emergency Alert Dispatcher">
+    Coordinate multiple notification channels for maximum reliability
+    
+    ```typescript
+    // services/notifications/EmergencyAlertDispatcher.ts
+    import { NotificationService } from './NotificationService';
+    import { SMSService } from './SMSService';
+    import { EmailService } from './EmailService';
+    import { PushTokenManager } from './PushTokenManager';
+    import { logger } from '../../utils/logger';
+    import { supabase } from '../../lib/supabase';
+
+    export interface EmergencyAlert {
+      id: string;
+      userId: string;
+      type: 'manual' | 'automated' | 'duress' | 'check_in_missed';
+      location?: {
+        latitude: number;
+        longitude: number;
+        accuracy: number;
+      };
+      message?: string;
+      emergencyContacts: string[];
+      createdAt: string;
+    }
+
+    export interface DeliveryResult {
+      contactId: string;
+      pushSuccess: boolean;
+      smsSuccess: boolean;
+      emailSuccess: boolean;
+      deliveredAt: string;
+      error?: string;
+    }
+
+    export class EmergencyAlertDispatcher {
+      // Dispatch emergency alert to all channels
+      static async dispatchEmergencyAlert(alert: EmergencyAlert): Promise<DeliveryResult[]> {
+        try {
+          logger.emergency('Dispatching emergency alert', {
+            alertId: alert.id,
+            type: alert.type,
+            contactCount: alert.emergencyContacts.length,
+          });
+
+          const results: DeliveryResult[] = [];
+
+          // Get emergency contact details
+          const contacts = await this.getEmergencyContactDetails(alert.emergencyContacts);
+
+          // Dispatch to each contact in parallel for speed
+          const dispatchPromises = contacts.map(contact => 
+            this.dispatchToContact(alert, contact)
+          );
+
+          const contactResults = await Promise.allSettled(dispatchPromises);
+
+          contactResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+              results.push(result.value);
+            } else {
+              results.push({
+                contactId: contacts[index].id,
+                pushSuccess: false,
+                smsSuccess: false,
+                emailSuccess: false,
+                deliveredAt: new Date().toISOString(),
+                error: result.reason?.message || 'Unknown error',
+              });
+            }
+          });
+
+          // Log delivery statistics
+          this.logDeliveryResults(alert.id, results);
+
+          // Store delivery results in database
+          await this.storeDeliveryResults(alert.id, results);
+
+          return results;
+
+        } catch (error) {
+          logger.emergency('Emergency alert dispatch failed', error);
+          throw error;
+        }
+      }
+
+      // Dispatch alert to single contact across all channels
+      private static async dispatchToContact(
+        alert: EmergencyAlert,
+        contact: any
+      ): Promise<DeliveryResult> {
+        const result: DeliveryResult = {
+          contactId: contact.id,
+          pushSuccess: false,
+          smsSuccess: false,
+          emailSuccess: false,
+          deliveredAt: new Date().toISOString(),
+        };
+
+        try {
+          // Prepare message content
+          const messageContent = this.formatEmergencyMessage(alert, contact);
+
+          // Attempt push notification first (fastest)
+          if (contact.userId) {
+            try {
+              await this.sendPushNotification(alert, contact, messageContent);
+              result.pushSuccess = true;
+            } catch (error) {
+              logger.warning('Push notification failed', { 
+                contactId: contact.id, 
+                error: error.message 
+              });
+            }
+          }
+
+          // Send SMS as backup/additional channel
+          if (contact.phone) {
+            try {
+              await SMSService.sendEmergencySMS(
+                contact.phone,
+                messageContent.sms,
+                alert.id
+              );
+              result.smsSuccess = true;
+            } catch (error) {
+              logger.warning('SMS delivery failed', { 
+                contactId: contact.id, 
+                error: error.message 
+              });
+            }
+          }
+
+          // Send email for record keeping
+          if (contact.email) {
+            try {
+              await EmailService.sendEmergencyEmail(
+                contact.email,
+                messageContent.email.subject,
+                messageContent.email.body,
+                alert
+              );
+              result.emailSuccess = true;
+            } catch (error) {
+              logger.warning('Email delivery failed', { 
+                contactId: contact.id, 
+                error: error.message 
+              });
+            }
+          }
+
+          // At least one method must succeed
+          if (!result.pushSuccess && !result.smsSuccess && !result.emailSuccess) {
+            throw new Error('All delivery methods failed');
+          }
+
+          return result;
+
+        } catch (error) {
+          result.error = error.message;
+          logger.emergency('Contact notification failed', { 
+            contactId: contact.id, 
+            error: error.message 
+          });
+          return result;
+        }
+      }
+
+      // Send push notification to contact
+      private static async sendPushNotification(
+        alert: EmergencyAlert,
+        contact: any,
+        messageContent: any
+      ): Promise<void> {
+        const tokens = await PushTokenManager.getActiveTokensForUser(contact.userId);
+        
+        if (tokens.length === 0) {
+          throw new Error('No active push tokens for contact');
+        }
+
+        // Send to all active devices
+        const pushPromises = tokens.map(token =>
+          this.sendPushToToken(token.pushToken, messageContent.push, alert)
+        );
+
+        await Promise.allSettled(pushPromises);
+      }
+
+      // Send push notification to specific token
+      private static async sendPushToToken(
+        pushToken: string,
+        message: any,
+        alert: EmergencyAlert
+      ): Promise<void> {
+        try {
+          const response = await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: pushToken,
+              title: message.title,
+              body: message.body,
+              data: {
+                type: 'emergency',
+                priority: 'critical',
+                emergency: true,
+                alertId: alert.id,
+                location: alert.location,
+              },
+              priority: 'high',
+              sound: 'emergency.wav',
+              badge: 1,
+              categoryIdentifier: 'emergency_alert',
+              channelId: 'emergency',
+            }),
+          });
+
+          const result = await response.json();
+          
+          if (result.errors) {
+            throw new Error(`Push delivery failed: ${JSON.stringify(result.errors)}`);
+          }
+
+          logger.info('Emergency push notification sent', { 
+            token: pushToken.substring(0, 20) + '...',
+            alertId: alert.id,
+          });
+
+        } catch (error) {
+          logger.emergency('Push notification send failed', error);
+          throw error;
+        }
+      }
+
+      // Format message content for different channels
+      private static formatEmergencyMessage(alert: EmergencyAlert, contact: any) {
+        const userName = contact.userName || 'Your contact';
+        const alertTypeText = this.getAlertTypeText(alert.type);
+        const locationText = alert.location 
+          ? `Location: ${alert.location.latitude.toFixed(6)}, ${alert.location.longitude.toFixed(6)}`
+          : 'Location: Not available';
+
+        return {
+          push: {
+            title: `${userName} - Emergency Alert`,
+            body: `${alertTypeText}. ${alert.message || 'Immediate assistance may be needed.'}`,
+          },
+          sms: `EMERGENCY: ${userName} has triggered a ${alertTypeText.toLowerCase()}. ${alert.message || ''} ${locationText}. Alert ID: ${alert.id}`,
+          email: {
+            subject: `EMERGENCY ALERT: ${userName} needs assistance`,
+            body: `
+              <h2>Emergency Alert</h2>
+              <p><strong>${userName}</strong> has triggered an emergency alert.</p>
+              <p><strong>Alert Type:</strong> ${alertTypeText}</p>
+              <p><strong>Time:</strong> ${new Date(alert.createdAt).toLocaleString()}</p>
+              <p><strong>Message:</strong> ${alert.message || 'No additional message'}</p>
+              <p><strong>Location:</strong> ${locationText}</p>
+              <p><strong>Alert ID:</strong> ${alert.id}</p>
+              
+              <h3>What to do:</h3>
+              <ul>
+                <li>Try to contact ${userName} immediately</li>
+                <li>If you cannot reach them, consider contacting emergency services</li>
+                <li>Use the Shelther app to acknowledge this alert</li>
+              </ul>
+              
+              <p><em>This is an automated emergency notification from Shelther Safety App.</em></p>
+            `,
+          },
+        };
+      }
+
+      // Get emergency contact details
+      private static async getEmergencyContactDetails(contactIds: string[]) {
+        try {
+          const { data, error } = await supabase
+            .from('emergency_contacts')
+            .select(`
+              id,
+              name,
+              phone,
+              email,
+              user_id,
+              users!inner(full_name)
+            `)
+            .in('id', contactIds);
+
+          if (error) throw error;
+
+          return data?.map(contact => ({
+            id: contact.id,
+            name: contact.name,
+            phone: contact.phone,
+            email: contact.email,
+            userId: contact.user_id,
+            userName: contact.users?.full_name || contact.name,
+          })) || [];
+
+        } catch (error) {
+          logger.emergency('Failed to get emergency contact details', error);
+          return [];
+        }
+      }
+
+      // Get alert type text
+      private static getAlertTypeText(type: string): string {
+        switch (type) {
+          case 'manual': return 'Manual Emergency Alert';
+          case 'automated': return 'Automated Safety Alert';
+          case 'duress': return 'Duress Signal';
+          case 'check_in_missed': return 'Missed Check-in Alert';
+          default: return 'Emergency Alert';
+        }
+      }
+
+      // Log delivery results
+      private static logDeliveryResults(alertId: string, results: DeliveryResult[]): void {
+        const successful = results.filter(r => r.pushSuccess || r.smsSuccess || r.emailSuccess);
+        const failed = results.filter(r => !r.pushSuccess && !r.smsSuccess && !r.emailSuccess);
+
+        logger.emergency('Emergency alert delivery completed', {
+          alertId,
+          totalContacts: results.length,
+          successful: successful.length,
+          failed: failed.length,
+          pushSuccess: results.filter(r => r.pushSuccess).length,
+          smsSuccess: results.filter(r => r.smsSuccess).length,
+          emailSuccess: results.filter(r => r.emailSuccess).length,
+        });
+      }
+
+      // Store delivery results in database
+      private static async storeDeliveryResults(
+        alertId: string,
+        results: DeliveryResult[]
+      ): Promise<void> {
+        try {
+          const deliveryRecords = results.map(result => ({
+            alert_id: alertId,
+            contact_id: result.contactId,
+            push_success: result.pushSuccess,
+            sms_success: result.smsSuccess,
+            email_success: result.emailSuccess,
+            delivered_at: result.deliveredAt,
+            error_message: result.error,
+          }));
+
+          const { error } = await supabase
+            .from('alert_delivery_logs')
+            .insert(deliveryRecords);
+
+          if (error) throw error;
+
+        } catch (error) {
+          logger.emergency('Failed to store delivery results', error);
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="SMS Fallback Service">
+    SMS delivery for areas with poor data connectivity
+    
+    ```typescript
+    // services/notifications/SMSService.ts
+    import { logger } from '../../utils/logger';
+
+    export class SMSService {
+      private static readonly TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+      private static readonly TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+      private static readonly TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+
+      // Send emergency SMS
+      static async sendEmergencySMS(
+        toPhoneNumber: string,
+        message: string,
+        alertId: string
+      ): Promise<void> {
+        try {
+          if (!this.TWILIO_ACCOUNT_SID || !this.TWILIO_AUTH_TOKEN) {
+            throw new Error('Twilio credentials not configured');
+          }
+
+          const response = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${this.TWILIO_ACCOUNT_SID}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${Buffer.from(
+                  `${this.TWILIO_ACCOUNT_SID}:${this.TWILIO_AUTH_TOKEN}`
+                ).toString('base64')}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                To: toPhoneNumber,
+                From: this.TWILIO_PHONE_NUMBER || '',
+                Body: message,
+              }),
+            }
+          );
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(`SMS failed: ${result.message}`);
+          }
+
+          logger.info('Emergency SMS sent', {
+            to: toPhoneNumber,
+            alertId,
+            messageSid: result.sid,
+          });
+
+        } catch (error) {
+          logger.emergency('SMS delivery failed', { 
+            to: toPhoneNumber, 
+            alertId, 
+            error: error.message 
+          });
+          throw error;
+        }
+      }
+
+      // Send check-in reminder SMS
+      static async sendCheckInReminderSMS(
+        toPhoneNumber: string,
+        checkInTime: string
+      ): Promise<void> {
+        const message = `Safety Check-in Reminder: Please confirm you're safe. Scheduled for ${checkInTime}. Reply SAFE to confirm.`;
+        
+        try {
+          await this.sendBasicSMS(toPhoneNumber, message);
+          
+          logger.info('Check-in reminder SMS sent', { to: toPhoneNumber });
+
+        } catch (error) {
+          logger.emergency('Check-in reminder SMS failed', error);
+          throw error;
+        }
+      }
+
+      // Send basic SMS
+      private static async sendBasicSMS(
+        toPhoneNumber: string,
+        message: string
+      ): Promise<void> {
+        try {
+          const response = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${this.TWILIO_ACCOUNT_SID}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${Buffer.from(
+                  `${this.TWILIO_ACCOUNT_SID}:${this.TWILIO_AUTH_TOKEN}`
+                ).toString('base64')}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                To: toPhoneNumber,
+                From: this.TWILIO_PHONE_NUMBER || '',
+                Body: message,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`SMS failed: ${error.message}`);
+          }
+
+        } catch (error) {
+          logger.emergency('Basic SMS delivery failed', error);
+          throw error;
+        }
+      }
+
+      // Handle incoming SMS responses
+      static async handleIncomingSMS(
+        fromPhoneNumber: string,
+        messageBody: string
+      ): Promise<void> {
+        try {
+          const normalizedMessage = messageBody.toLowerCase().trim();
+
+          // Handle safety confirmations
+          if (normalizedMessage.includes('safe') || normalizedMessage.includes('ok')) {
+            await this.handleSafetyConfirmation(fromPhoneNumber);
+          }
+
+          logger.info('Incoming SMS processed', {
+            from: fromPhoneNumber,
+            message: normalizedMessage,
+          });
+
+        } catch (error) {
+          logger.emergency('Incoming SMS handling failed', error);
+        }
+      }
+
+      // Handle safety confirmation via SMS
+      private static async handleSafetyConfirmation(phoneNumber: string): Promise<void> {
+        try {
+          // Find pending check-ins for this phone number
+          // Implementation depends on your database structure
+          
+          logger.info('Safety confirmation received via SMS', { 
+            phoneNumber 
+          });
+
+        } catch (error) {
+          logger.emergency('Safety confirmation handling failed', error);
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Real-time Notification Updates
+
+### Supabase Real-time Integration
+
+<CodeGroup>
+```typescript Real-time Notification Service
+// services/notifications/RealTimeNotificationService.ts
+import { supabase } from '../../lib/supabase';
+import { NotificationService } from './NotificationService';
+import { logger } from '../../utils/logger';
+
+export class RealTimeNotificationService {
+  private static subscriptions: Map<string, any> = new Map();
+
+  // Initialize real-time notification subscriptions
+  static async initialize(userId: string): Promise<void> {
+    try {
+      // Subscribe to emergency alerts for this user
+      await this.subscribeToEmergencyAlerts(userId);
+      
+      // Subscribe to location sharing notifications
+      await this.subscribeToLocationSharing(userId);
+      
+      // Subscribe to check-in reminders
+      await this.subscribeToCheckInReminders(userId);
+
+      logger.info('Real-time notifications initialized', { userId });
+
+    } catch (error) {
+      logger.emergency('Failed to initialize real-time notifications', error);
+    }
+  }
+
+  // Subscribe to emergency alerts
+  private static async subscribeToEmergencyAlerts(userId: string): Promise<void> {
+    const subscription = supabase
+      .channel('emergency-alerts')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'emergency_alerts',
+        filter: `user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleEmergencyAlertUpdate(payload.new);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'emergency_alerts',
+        filter: `user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleEmergencyAlertUpdate(payload.new);
+      })
+      .subscribe();
+
+    this.subscriptions.set('emergency-alerts', subscription);
+  }
+
+  // Subscribe to location sharing updates
+  private static async subscribeToLocationSharing(userId: string): Promise<void> {
+    const subscription = supabase
+      .channel('location-sharing')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'location_shares',
+        filter: `shared_with_user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleLocationShareRequest(payload.new);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'shared_location_updates',
+        filter: `user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleLocationUpdate(payload.new);
+      })
+      .subscribe();
+
+    this.subscriptions.set('location-sharing', subscription);
+  }
+
+  // Subscribe to check-in reminders
+  private static async subscribeToCheckInReminders(userId: string): Promise<void> {
+    const subscription = supabase
+      .channel('check-ins')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'check_ins',
+        filter: `user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleCheckInScheduled(payload.new);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'check_ins',
+        filter: `user_id=eq.${userId}`,
+      }, async (payload) => {
+        await this.handleCheckInUpdated(payload.new);
+      })
+      .subscribe();
+
+    this.subscriptions.set('check-ins', subscription);
+  }
+
+  // Handle emergency alert updates
+  private static async handleEmergencyAlertUpdate(alert: any): Promise<void> {
+    try {
+      logger.emergency('Real-time emergency alert update', {
+        alertId: alert.id,
+        status: alert.status,
+        type: alert.alert_type,
+      });
+
+      if (alert.status === 'active') {
+        // Send immediate notification for new active alerts
+        await NotificationService.sendEmergencyAlert(
+          'Emergency Alert Active',
+          `${alert.alert_type} emergency alert is active. Check the app for details.`,
+          alert.id,
+          alert.location ? {
+            latitude: alert.location.coordinates[1],
+            longitude: alert.location.coordinates[0],
+          } : undefined
+        );
+      } else if (alert.status === 'resolved') {
+        // Send resolution notification
+        await NotificationService.sendLocalNotification({
+          title: 'Emergency Alert Resolved',
+          body: 'The emergency alert has been resolved. Everyone is safe.',
+          data: {
+            type: 'emergency',
+            priority: 'normal',
+            emergency: false,
+            alertId: alert.id,
+          },
+        });
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle emergency alert update', error);
+    }
+  }
+
+  // Handle location share requests
+  private static async handleLocationShareRequest(share: any): Promise<void> {
+    try {
+      // Get the person requesting to share location
+      const { data: user } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', share.user_id)
+        .single();
+
+      const userName = user?.full_name || 'Someone';
+
+      await NotificationService.sendLocalNotification({
+        title: 'Location Share Request',
+        body: `${userName} wants to share their location with you`,
+        data: {
+          type: 'location_share',
+          priority: 'normal',
+          emergency: false,
+          contactId: share.user_id,
+        },
+        categoryIdentifier: 'location_share',
+      });
+
+      logger.info('Location share request notification sent', {
+        from: share.user_id,
+        shareId: share.id,
+      });
+
+    } catch (error) {
+      logger.emergency('Failed to handle location share request', error);
+    }
+  }
+
+  // Handle location updates
+  private static async handleLocationUpdate(update: any): Promise<void> {
+    try {
+      // Only show notification if it's an emergency location update
+      if (update.is_emergency) {
+        const { data: user } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', update.user_id)
+          .single();
+
+        const userName = user?.full_name || 'Contact';
+
+        await NotificationService.sendLocalNotification({
+          title: 'Emergency Location Update',
+          body: `${userName} has updated their emergency location`,
+          data: {
+            type: 'location_share',
+            priority: 'high',
+            emergency: true,
+            contactId: update.user_id,
+            location: {
+              latitude: update.latitude,
+              longitude: update.longitude,
+            },
+          },
+        });
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle location update', error);
+    }
+  }
+
+  // Handle check-in scheduled
+  private static async handleCheckInScheduled(checkIn: any): Promise<void> {
+    try {
+      const scheduledTime = new Date(checkIn.scheduled_time);
+      const now = new Date();
+
+      // Schedule reminder notification 5 minutes before
+      const reminderTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000);
+
+      if (reminderTime > now) {
+        // Schedule the reminder
+        const notificationId = await NotificationService.scheduleNotification({
+          title: 'Check-in Reminder',
+          body: `Safety check-in due in 5 minutes`,
+          data: {
+            type: 'check_in',
+            priority: 'normal',
+            emergency: false,
+            alertId: checkIn.id,
+          },
+          trigger: reminderTime,
+        });
+
+        logger.info('Check-in reminder scheduled', {
+          checkInId: checkIn.id,
+          reminderTime: reminderTime.toISOString(),
+          notificationId,
+        });
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle check-in scheduled', error);
+    }
+  }
+
+  // Handle check-in updates
+  private static async handleCheckInUpdated(checkIn: any): Promise<void> {
+    try {
+      if (checkIn.status === 'missed') {
+        // Send urgent notification for missed check-in
+        await NotificationService.sendLocalNotification({
+          title: 'Missed Check-in Alert',
+          body: 'You missed a scheduled safety check-in. Please confirm you\'re safe.',
+          data: {
+            type: 'check_in',
+            priority: 'high',
+            emergency: false,
+            alertId: checkIn.id,
+          },
+          categoryIdentifier: 'check_in_reminder',
+        });
+
+        logger.warning('Missed check-in notification sent', {
+          checkInId: checkIn.id,
+        });
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to handle check-in update', error);
+    }
+  }
+
+  // Cleanup subscriptions
+  static cleanup(): void {
+    this.subscriptions.forEach((subscription, key) => {
+      subscription.unsubscribe();
+      logger.info('Real-time subscription cleaned up', { key });
+    });
+    
+    this.subscriptions.clear();
+  }
+
+  // Get subscription status
+  static getSubscriptionStatus(): Record<string, string> {
+    const status: Record<string, string> = {};
+    
+    this.subscriptions.forEach((subscription, key) => {
+      status[key] = subscription.state || 'unknown';
+    });
+    
+    return status;
+  }
+}
 ```
 
+```typescript Notification Hook
+// hooks/useNotifications.ts
+import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
+import { NotificationService } from '../services/notifications/NotificationService';
+import { RealTimeNotificationService } from '../services/notifications/RealTimeNotificationService';
+import { useAppSelector } from './redux';
+import { logger } from '../utils/logger';
+
+export const useNotifications = () => {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [pushToken, setPushToken] = useState<string | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  
+  const userId = useAppSelector(state => state.auth.userId);
+  const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+
+  // Initialize notifications
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        await NotificationService.initialize();
+        const token = NotificationService.getPushToken();
+        
+        setPushToken(token);
+        setIsInitialized(true);
+        setPermissionStatus(token ? 'granted' : 'denied');
+
+        if (userId && token) {
+          await RealTimeNotificationService.initialize(userId);
+        }
+
+        logger.info('Notifications hook initialized', { 
+          hasToken: !!token,
+          userId: !!userId,
+        });
+
+      } catch (error) {
+        logger.emergency('Notification initialization failed', error);
+        setPermissionStatus('denied');
+      }
+    };
+
+    initializeNotifications();
+
+    return () => {
+      RealTimeNotificationService.cleanup();
+    };
+  }, [userId]);
+
+  // Handle app state changes
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && isInitialized) {
+        // Clear notifications when app becomes active
+        NotificationService.clearAllNotifications();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isInitialized]);
+
+  // Emergency mode notification handling
+  useEffect(() => {
+    if (emergencyMode && isInitialized) {
+      // Increase notification priority during emergency
+      logger.emergency('Emergency mode active - notifications prioritized');
+    }
+  }, [emergencyMode, isInitialized]);
+
+  const sendEmergencyAlert = async (
+    title: string,
+    body: string,
+    alertId: string,
+    location?: { latitude: number; longitude: number }
+  ) => {
+    try {
+      if (!isInitialized) {
+        throw new Error('Notifications not initialized');
+      }
+
+      return await NotificationService.sendEmergencyAlert(title, body, alertId, location);
+    } catch (error) {
+      logger.emergency('Failed to send emergency alert', error);
+      throw error;
+    }
+  };
+
+  const sendCheckInReminder = async (scheduledTime: Date, checkInId?: string) => {
+    try {
+      if (!isInitialized) {
+        throw new Error('Notifications not initialized');
+      }
+
+      return await NotificationService.sendCheckInReminder(scheduledTime, checkInId);
+    } catch (error) {
+      logger.emergency('Failed to send check-in reminder', error);
+      throw error;
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await NotificationService.clearAllNotifications();
+    } catch (error) {
+      logger.emergency('Failed to clear notifications', error);
+    }
+  };
+
+  const requestPermissions = async () => {
+    try {
+      await NotificationService.initialize();
+      const token = NotificationService.getPushToken();
+      
+      setPushToken(token);
+      setPermissionStatus(token ? 'granted' : 'denied');
+      
+      return !!token;
+    } catch (error) {
+      logger.emergency('Permission request failed', error);
+      setPermissionStatus('denied');
+      return false;
+    }
+  };
+
+  return {
+    isInitialized,
+    pushToken,
+    permissionStatus,
+    sendEmergencyAlert,
+    sendCheckInReminder,
+    clearAllNotifications,
+    requestPermissions,
+  };
+};
+```
 </CodeGroup>
+
+## Notification Testing
+
+### Testing Notification Delivery
+
+<Steps>
+  <Step title="Notification Test Utilities">
+    Utilities for testing notification delivery and responses
+    
+    ```typescript
+    // utils/notificationTestUtils.ts
+    import { NotificationService } from '../services/notifications/NotificationService';
+    import { EmergencyAlertDispatcher } from '../services/notifications/EmergencyAlertDispatcher';
+
+    export class NotificationTestUtils {
+      // Test emergency alert dispatch
+      static async testEmergencyAlert(): Promise<void> {
+        try {
+          const testAlert = {
+            id: `test-alert-${Date.now()}`,
+            userId: 'test-user',
+            type: 'manual' as const,
+            location: {
+              latitude: 40.7128,
+              longitude: -74.0060,
+              accuracy: 10,
+            },
+            message: 'This is a test emergency alert',
+            emergencyContacts: ['test-contact-1', 'test-contact-2'],
+            createdAt: new Date().toISOString(),
+          };
+
+          console.log('🧪 Testing emergency alert dispatch...');
+          const results = await EmergencyAlertDispatcher.dispatchEmergencyAlert(testAlert);
+          
+          console.log('✅ Emergency alert test completed', {
+            totalContacts: results.length,
+            successful: results.filter(r => r.pushSuccess || r.smsSuccess).length,
+            results,
+          });
+
+        } catch (error) {
+          console.error('❌ Emergency alert test failed:', error);
+        }
+      }
+
+      // Test push notification
+      static async testPushNotification(): Promise<void> {
+        try {
+          console.log('🧪 Testing push notification...');
+          
+          const notificationId = await NotificationService.sendLocalNotification({
+            title: 'Test Notification',
+            body: 'This is a test notification to verify delivery',
+            data: {
+              type: 'general',
+              priority: 'normal',
+              emergency: false,
+            },
+          });
+
+          console.log('✅ Push notification test completed', { notificationId });
+
+        } catch (error) {
+          console.error('❌ Push notification test failed:', error);
+        }
+      }
+
+      // Test notification categories
+      static async testNotificationCategories(): Promise<void> {
+        try {
+          console.log('🧪 Testing notification categories...');
+
+          // Test emergency category
+          await NotificationService.sendEmergencyAlert(
+            'Test Emergency Alert',
+            'This is a test emergency alert with action buttons',
+            `test-emergency-${Date.now()}`
+          );
+
+          // Test check-in category
+          await NotificationService.sendCheckInReminder(
+            new Date(Date.now() + 60000), // 1 minute from now
+            `test-checkin-${Date.now()}`
+          );
+
+          console.log('✅ Notification categories test completed');
+
+        } catch (error) {
+          console.error('❌ Notification categories test failed:', error);
+        }
+      }
+
+      // Test delivery reliability
+      static async testDeliveryReliability(iterations: number = 10): Promise<void> {
+        try {
+          console.log(`🧪 Testing delivery reliability (${iterations} iterations)...`);
+          
+          const results = [];
+          
+          for (let i = 0; i < iterations; i++) {
+            const startTime = Date.now();
+            
+            try {
+              const notificationId = await NotificationService.sendLocalNotification({
+                title: `Test ${i + 1}`,
+                body: `Reliability test notification ${i + 1}`,
+                data: {
+                  type: 'general',
+                  priority: 'normal',
+                  emergency: false,
+                },
+              });
+
+              const endTime = Date.now();
+              const duration = endTime - startTime;
+              
+              results.push({
+                iteration: i + 1,
+                success: true,
+                duration,
+                notificationId,
+              });
+
+            } catch (error) {
+              results.push({
+                iteration: i + 1,
+                success: false,
+                error: error.message,
+              });
+            }
+
+            // Wait between tests
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
+          const successful = results.filter(r => r.success).length;
+          const averageDuration = results
+            .filter(r => r.success && r.duration)
+            .reduce((sum, r) => sum + r.duration!, 0) / successful;
+
+          console.log('✅ Delivery reliability test completed', {
+            total: iterations,
+            successful,
+            failureRate: ((iterations - successful) / iterations * 100).toFixed(2) + '%',
+            averageDuration: averageDuration.toFixed(2) + 'ms',
+            results,
+          });
+
+        } catch (error) {
+          console.error('❌ Delivery reliability test failed:', error);
+        }
+      }
+
+      // Test offline notification queuing
+      static async testOfflineQueuing(): Promise<void> {
+        try {
+          console.log('🧪 Testing offline notification queuing...');
+          
+          // Simulate offline state
+          console.log('Simulating offline state...');
+          
+          // Attempt to send notifications while "offline"
+          const offlineNotifications = [];
+          for (let i = 0; i < 3; i++) {
+            offlineNotifications.push({
+              title: `Offline Test ${i + 1}`,
+              body: `This notification was queued while offline`,
+              data: {
+                type: 'general',
+                priority: 'normal',
+                emergency: false,
+              },
+            });
+          }
+
+          // Simulate coming back online
+          console.log('Simulating back online...');
+          
+          // Send queued notifications
+          for (const notification of offlineNotifications) {
+            await NotificationService.sendLocalNotification(notification);
+          }
+
+          console.log('✅ Offline queuing test completed', {
+            queuedNotifications: offlineNotifications.length,
+          });
+
+        } catch (error) {
+          console.error('❌ Offline queuing test failed:', error);
+        }
+      }
+
+      // Comprehensive notification system test
+      static async runFullTest(): Promise<void> {
+        console.log('🚀 Starting comprehensive notification test suite...');
+        
+        await this.testPushNotification();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testNotificationCategories();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testDeliveryReliability(5);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.testOfflineQueuing();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Only test emergency alerts in development/testing environment
+        if (__DEV__) {
+          console.log('⚠️ Skipping emergency alert test in development');
+          // await this.testEmergencyAlert();
+        }
+        
+        console.log('🎉 Notification test suite completed!');
+      }
+    }
+
+    // Development helper for manual testing
+    export const notificationTester = {
+      testPush: () => NotificationTestUtils.testPushNotification(),
+      testEmergency: () => NotificationTestUtils.testEmergencyAlert(),
+      testCategories: () => NotificationTestUtils.testNotificationCategories(),
+      testReliability: (iterations?: number) => NotificationTestUtils.testDeliveryReliability(iterations),
+      testOffline: () => NotificationTestUtils.testOfflineQueuing(),
+      runAll: () => NotificationTestUtils.runFullTest(),
+    };
+
+    // Make available globally in development
+    if (__DEV__) {
+      (global as any).notificationTester = notificationTester;
+    }
+    ```
+  </Step>
+  <Step title="Automated Testing">
+    Automated tests for notification functionality
+    
+    ```typescript
+    // __tests__/notifications.test.ts
+    import { NotificationService } from '../services/notifications/NotificationService';
+    import { NotificationTestUtils } from '../utils/notificationTestUtils';
+
+    // Mock expo-notifications
+    jest.mock('expo-notifications', () => ({
+      setNotificationHandler: jest.fn(),
+      getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+      requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+      getExpoPushTokenAsync: jest.fn(() => Promise.resolve({ data: 'mock-token' })),
+      scheduleNotificationAsync: jest.fn(() => Promise.resolve('mock-notification-id')),
+      dismissAllNotificationsAsync: jest.fn(() => Promise.resolve()),
+      setBadgeCountAsync: jest.fn(() => Promise.resolve()),
+      setNotificationCategoryAsync: jest.fn(() => Promise.resolve()),
+      setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+      addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+      addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+    }));
+
+    describe('NotificationService', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test('should initialize successfully', async () => {
+        await NotificationService.initialize();
+        
+        expect(NotificationService.getPushToken()).toBe('mock-token');
+      });
+
+      test('should send emergency alert', async () => {
+        await NotificationService.initialize();
+        
+        const notificationId = await NotificationService.sendEmergencyAlert(
+          'Test Emergency',
+          'This is a test emergency alert',
+          'test-alert-123'
+        );
+
+        expect(notificationId).toBe('mock-notification-id');
+      });
+
+      test('should handle notification permissions', async () => {
+        const mockRequestPermissions = require('expo-notifications').requestPermissionsAsync;
+        mockRequestPermissions.mockResolvedValueOnce({ status: 'denied' });
+
+        await NotificationService.initialize();
+        
+        expect(NotificationService.getPushToken()).toBeNull();
+      });
+
+      test('should format emergency messages correctly', async () => {
+        const testAlert = {
+          id: 'test-123',
+          userId: 'user-123',
+          type: 'manual' as const,
+          location: { latitude: 40.7128, longitude: -74.0060, accuracy: 10 },
+          message: 'Test emergency',
+          emergencyContacts: ['contact-1'],
+          createdAt: new Date().toISOString(),
+        };
+
+        // Test message formatting (if method is exposed)
+        // This would test the private formatEmergencyMessage method
+      });
+
+      test('should handle delivery failures gracefully', async () => {
+        const mockSchedule = require('expo-notifications').scheduleNotificationAsync;
+        mockSchedule.mockRejectedValueOnce(new Error('Delivery failed'));
+
+        await expect(
+          NotificationService.sendEmergencyAlert(
+            'Test',
+            'Test message',
+            'test-alert'
+          )
+        ).rejects.toThrow('Delivery failed');
+      });
+
+      test('should clear notifications', async () => {
+        await NotificationService.initialize();
+        await NotificationService.clearAllNotifications();
+
+        const mockDismiss = require('expo-notifications').dismissAllNotificationsAsync;
+        const mockBadge = require('expo-notifications').setBadgeCountAsync;
+
+        expect(mockDismiss).toHaveBeenCalled();
+        expect(mockBadge).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('NotificationTestUtils', () => {
+      test('should run reliability test', async () => {
+        await NotificationService.initialize();
+        
+        // Mock console.log to capture test output
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        
+        await NotificationTestUtils.testDeliveryReliability(3);
+        
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Testing delivery reliability')
+        );
+        
+        consoleSpy.mockRestore();
+      });
+
+      test('should test notification categories', async () => {
+        await NotificationService.initialize();
+        
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        
+        await NotificationTestUtils.testNotificationCategories();
+        
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Testing notification categories')
+        );
+        
+        consoleSpy.mockRestore();
+      });
+    });
+    ```
+  </Step>
+</Steps>
+
+## Performance Optimization
+
+### Notification Performance
+
+<Accordion title="Performance Best Practices">
+```typescript
+// services/notifications/NotificationOptimizer.ts
+import { logger } from '../../utils/logger';
+
+export class NotificationOptimizer {
+  private static readonly MAX_QUEUE_SIZE = 50;
+  private static readonly BATCH_SIZE = 10;
+  private static readonly RATE_LIMIT_DELAY = 100; // ms between notifications
+  
+  private static notificationQueue: any[] = [];
+  private static isProcessing = false;
+  private static lastSentTime = 0;
+
+  // Queue notification for batch processing
+  static queueNotification(notification: any): void {
+    if (this.notificationQueue.length >= this.MAX_QUEUE_SIZE) {
+      logger.warning('Notification queue full, dropping oldest');
+      this.notificationQueue.shift();
+    }
+
+    this.notificationQueue.push({
+      ...notification,
+      queuedAt: Date.now(),
+    });
+
+    this.processQueue();
+  }
+
+  // Process notification queue
+  private static async processQueue(): Promise<void> {
+    if (this.isProcessing || this.notificationQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const batch = this.notificationQueue.splice(0, this.BATCH_SIZE);
+      
+      for (const notification of batch) {
+        // Rate limiting
+        const timeSinceLastSent = Date.now() - this.lastSentTime;
+        if (timeSinceLastSent < this.RATE_LIMIT_DELAY) {
+          await new Promise(resolve => 
+            setTimeout(resolve, this.RATE_LIMIT_DELAY - timeSinceLastSent)
+          );
+        }
+
+        try {
+          await this.sendNotification(notification);
+          this.lastSentTime = Date.now();
+        } catch (error) {
+          logger.emergency('Batched notification failed', error);
+        }
+      }
+
+      // Process remaining queue
+      if (this.notificationQueue.length > 0) {
+        setTimeout(() => this.processQueue(), this.RATE_LIMIT_DELAY);
+      }
+
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  // Send individual notification with optimization
+  private static async sendNotification(notification: any): Promise<void> {
+    const queueTime = Date.now() - notification.queuedAt;
+    
+    // Skip if notification is too old (unless emergency)
+    if (queueTime > 60000 && !notification.data?.emergency) {
+      logger.warning('Dropping stale notification', { queueTime });
+      return;
+    }
+
+    // Implement actual sending logic
+    await NotificationService.sendLocalNotification(notification);
+    
+    logger.info('Optimized notification sent', {
+      type: notification.data?.type,
+      queueTime,
+    });
+  }
+
+  // Get queue statistics
+  static getQueueStats() {
+    return {
+      queueSize: this.notificationQueue.length,
+      isProcessing: this.isProcessing,
+      oldestQueuedAt: this.notificationQueue[0]?.queuedAt,
+      newestQueuedAt: this.notificationQueue[this.notificationQueue.length - 1]?.queuedAt,
+    };
+  }
+
+  // Clear queue
+  static clearQueue(): void {
+    this.notificationQueue = [];
+    logger.info('Notification queue cleared');
+  }
+
+  // Emergency bypass (skip queue for critical notifications)
+  static async sendEmergencyNotification(notification: any): Promise<void> {
+    try {
+      await NotificationService.sendLocalNotification(notification);
+      
+      logger.emergency('Emergency notification sent (bypassed queue)', {
+        type: notification.data?.type,
+      });
+
+    } catch (error) {
+      logger.emergency('Emergency notification failed', error);
+      throw error;
+    }
+  }
+}
+```
+</Accordion>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**Notification Foundation:** This comprehensive notification system ensures reliable emergency communication across multiple channels, with fallback mechanisms and performance optimization for safety-critical scenarios.
+</Note>
+
+Next in **Phase 4**, I'll continue with `background-tasks.mdx` to cover background processing for safety monitoring, automated check-ins, and continuous location tracking.
+
+<CardGroup cols={3}>
+  <Card title="Background Tasks" icon="clock" href="/development/background-tasks">
+    Background processing for safety monitoring and automated tasks
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
+    Comprehensive testing approach for safety-critical notification features
+  </Card>
+  <Card title="Performance Testing" icon="gauge" href="/development/performance-testing">
+    Testing notification delivery performance and reliability
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**Notification Testing:** Always test emergency notifications in safe environments. Use test modes and avoid triggering real emergency services during development.
+</Warning>

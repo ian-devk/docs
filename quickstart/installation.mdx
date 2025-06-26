@@ -1,531 +1,1056 @@
 ---
-title: "Installation Guide"
-description: "Complete installation guide for Shelther development environment. Set up React Native, Expo SDK 52+, and all required dependencies for safety app development."
+title: "Installation Set-up"
+description: "Complete installation guide for Shelther's production development environment. Setup React Native 0.79, Expo SDK 53, Express.js backend, and all required tools for enterprise-grade safety app development."
 ---
 
-# Installation Guide
+# Production Installation Guide
 
 <Info>
-**For Developers:** This guide covers setting up the complete Shelther development environment using React Native, Expo SDK 52+, and modern development tools.
+**Enterprise Development Environment:** This guide sets up the complete Shelther production development stack including React Native 0.79 with New Architecture, Express.js backend, Railway deployment, and Supabase integration.
 </Info>
 
-## Prerequisites
+## Architecture Overview
 
-Before installing Shelther's development environment, ensure you have the required tools and meet minimum system requirements.
-
-### System Requirements
+Shelther's development environment includes both client and server components:
 
 <CardGroup cols={2}>
-  <Card title="macOS Development" icon="apple">
-    **macOS 12.0 or higher** (for iOS development)
-    **16GB RAM** minimum, 32GB recommended
-    **Xcode 15.0 or higher** for iOS builds
-    **Command Line Tools** installed
+  <Card title="Client Stack" icon="mobile">
+    **React Native 0.79** with New Architecture (Bridgeless/Fabric)
+    **Expo SDK 53** with React 19 support
+    **TypeScript 5.3+** with strict configuration
   </Card>
-  <Card title="Windows/Linux Development" icon="windows">
-    **Windows 10/11** or **Ubuntu 20.04 or higher**
-    **16GB RAM** minimum, 32GB recommended
-    **Android Studio** for Android builds
-    **WSL2** recommended for Windows
+  <Card title="Backend Stack" icon="server">
+    **Express.js 4.18+** with TypeScript
+    **Railway** for deployment and hosting
+    **Supabase** for database and real-time features
   </Card>
 </CardGroup>
 
-### Required Software
+## System Requirements
+
+### Hardware Requirements
+
+<CardGroup cols={2}>
+  <Card title="Minimum Specifications" icon="computer">
+    **CPU:** 4-core processor (Intel i5/AMD Ryzen 5 or equivalent)
+    **RAM:** 16GB (8GB available for development)
+    **Storage:** 50GB free space on SSD
+    **Network:** Stable internet connection (50+ Mbps recommended)
+  </Card>
+  <Card title="Recommended Specifications" icon="rocket">
+    **CPU:** 8-core processor (Intel i7/AMD Ryzen 7 or Apple Silicon)
+    **RAM:** 32GB (16GB+ available for development)
+    **Storage:** 100GB+ free space on NVMe SSD
+    **Network:** High-speed internet (100+ Mbps)
+  </Card>
+</CardGroup>
+
+### Operating System Support
 
 <Steps>
-  <Step title="Node.js & Package Manager">
-    Install Node.js 18+ and a modern package manager
+  <Step title="macOS Development (Recommended)">
+    **macOS 13.0 Ventura or higher** for iOS development
+    **Xcode 15.0+** with Command Line Tools
+    **Homebrew** package manager
   </Step>
-  <Step title="Git & Version Control">
-    Set up Git with SSH keys for repository access
+  <Step title="Windows Development">
+    **Windows 11** or **Windows 10 version 1903+**
+    **WSL2 with Ubuntu 22.04 LTS** (recommended for backend development)
+    **PowerShell 7.0+** or **Windows Terminal**
   </Step>
-  <Step title="Mobile Development Tools">
-    Install Xcode (macOS) and/or Android Studio with required SDKs
-  </Step>
-  <Step title="Expo Development Tools">
-    Install Expo CLI and EAS CLI for modern development workflow
+  <Step title="Linux Development">
+    **Ubuntu 22.04 LTS** or **Debian 12+**
+    **Build essentials** and development libraries
+    **Docker** for containerized development
   </Step>
 </Steps>
 
-## Core Dependencies Installation
+## Core Development Tools
 
-### Node.js & Package Manager Setup
+### Node.js 20 LTS & Package Manager
+
+<Warning>
+**Node.js 18 EOL:** Node.js 18 reached End-of-Life on April 30, 2025. Expo SDK 53 requires Node.js 20 LTS or higher.
+</Warning>
 
 <CodeGroup>
-```bash macOS Installation
-# Install Node.js via Homebrew (recommended)
-brew install node@18
+```bash macOS Installation (Homebrew)
+# Install Node.js 20 LTS via Homebrew
+brew install node@20
 
 # Verify installation
-node --version  # Should be 18.x.x or higher
-npm --version   # Should be 9.x.x or higher
+node --version  # Should be 20.x.x
+npm --version   # Should be 10.x.x
 
-# Install modern package manager (choose one)
-npm install -g yarn        # Yarn (recommended)
-npm install -g pnpm        # PNPM (alternative)
+# Install modern package managers (choose one)
+npm install -g yarn@1.22.19     # Yarn v1 (stable)
+npm install -g pnpm@8.15.0      # PNPM (fastest)
 
 # Install global development tools
 npm install -g @expo/cli@latest
 npm install -g eas-cli@latest
+npm install -g typescript@5.3.3
+
+# Verify Expo tools
+expo --version    # Should be 0.18.0+  
+eas --version     # Should be 7.0.0+
 ```
 
-```bash Windows Installation
-# Install Node.js via Chocolatey or direct download
-choco install nodejs --version=18.17.0
+```bash Windows Installation (Chocolatey)
+# Install Chocolatey if not already installed
+# Run as Administrator in PowerShell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Or download directly from nodejs.org
-# https://nodejs.org/download/
+# Install Node.js 20 LTS
+choco install nodejs-lts --version=20.12.2
+
+# Refresh environment variables
+refreshenv
 
 # Verify installation
 node --version
 npm --version
 
-# Install package manager
-npm install -g yarn
-npm install -g @expo/cli@latest
-npm install -g eas-cli@latest
+# Install package manager and tools
+npm install -g yarn@1.22.19
+npm install -g @expo/cli@latest eas-cli@latest
+npm install -g typescript@5.3.3
 
-# Install Windows development tools
-npm install -g windows-build-tools
+# Install Windows-specific tools
+npm install -g windows-build-tools --vs2017
 ```
 
 ```bash Ubuntu/Linux Installation
-# Install Node.js via NodeSource repository
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# Update package index
+sudo apt update && sudo apt upgrade -y
+
+# Install Node.js 20 LTS via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# Install build dependencies
+sudo apt-get install -y build-essential git curl wget
 
 # Verify installation
 node --version
 npm --version
 
-# Install development dependencies
-sudo apt-get update
-sudo apt-get install -y build-essential git watchman
+# Install package manager and tools
+npm install -g yarn@1.22.19
+npm install -g @expo/cli@latest eas-cli@latest
+npm install -g typescript@5.3.3
 
-# Install Expo tools
-npm install -g yarn @expo/cli@latest eas-cli@latest
+# Install additional development tools
+sudo apt-get install -y watchman
 ```
 </CodeGroup>
 
-<Warning>
-**Node.js Version:** Shelther requires Node.js 18+ for optimal compatibility with Expo SDK 52 and modern React Native features. Avoid using Node.js 19+ until officially supported.
-</Warning>
-
-### Git Configuration
+### Git & Version Control Setup
 
 <CodeGroup>
-```bash Git Setup
-# Configure Git with your details
-git config --global user.name "Your Name"
+```bash Git Configuration
+# Install latest Git
+# macOS: brew install git
+# Ubuntu: sudo apt install git
+# Windows: Already included with Node.js installer
+
+# Configure Git identity
+git config --global user.name "Your Full Name"
 git config --global user.email "your.email@example.com"
 
-# Generate SSH key for GitHub
-ssh-keygen -t ed25519 -C "your.email@example.com"
+# Set up modern Git defaults
+git config --global init.defaultBranch main
+git config --global pull.rebase true
+git config --global push.default simple
+git config --global core.autocrlf input  # Linux/macOS
+# git config --global core.autocrlf true  # Windows
 
-# Add SSH key to ssh-agent
+# Generate SSH key for GitHub/GitLab
+ssh-keygen -t ed25519 -C "your.email@example.com" -f ~/.ssh/id_ed25519
+
+# Start SSH agent and add key
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 
-# Add public key to GitHub
+# Display public key for GitHub
 cat ~/.ssh/id_ed25519.pub
-# Copy this to GitHub Settings > SSH and GPG keys
+echo "Add this key to GitHub Settings > SSH and GPG keys"
 ```
 
-```bash Git Large File Support
-# Install Git LFS for handling large assets
-git lfs install
+```bash Git LFS & Development Tools
+# Install Git Large File Storage
+git lfs install --system
 
-# Configure LFS for common mobile assets
-echo "*.png filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
-echo "*.jpg filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
-echo "*.mp4 filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
-echo "*.zip filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
+# Configure LFS for mobile assets
+echo "*.png filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.jpg filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.jpeg filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.mp4 filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.mov filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.zip filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.ipa filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+echo "*.aab filter=lfs diff=lfs merge=lfs -text" >> ~/.gitattributes_global
+
+# Set global gitattributes
+git config --global core.attributesfile ~/.gitattributes_global
+
+# Install GitHub CLI (optional but recommended)
+# macOS: brew install gh
+# Ubuntu: curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+# Windows: choco install gh
 ```
 </CodeGroup>
 
 ## Mobile Development Environment
 
-### iOS Development Setup (macOS only)
+### iOS Development (macOS Only)
 
 <Steps>
-  <Step title="Install Xcode">
-    Download Xcode 15.0+ from the Mac App Store or Apple Developer Portal
+  <Step title="Xcode Installation">
+    Download and install **Xcode 15.0+** from the Mac App Store (7GB+ download)
   </Step>
-  <Step title="Install Command Line Tools">
-    Run `xcode-select --install` in Terminal
+  <Step title="Command Line Tools">
+    Install Xcode Command Line Tools and accept license agreements
   </Step>
-  <Step title="Accept Xcode License">
-    Run `sudo xcodebuild -license accept`
+  <Step title="iOS Simulators">
+    Download required iOS simulator versions for testing
   </Step>
-  <Step title="Install iOS Simulator">
-    Open Xcode → Preferences → Components → Download iOS simulators
+  <Step title="Verification">
+    Test iOS development environment with a sample project
   </Step>
 </Steps>
 
 <CodeGroup>
-```bash iOS Setup Verification
+```bash iOS Development Setup
+# Install Xcode Command Line Tools
+sudo xcode-select --install
+
+# Accept Xcode license
+sudo xcodebuild -license accept
+
 # Verify Xcode installation
 xcode-select -p
 # Should output: /Applications/Xcode.app/Contents/Developer
 
-# Check available simulators
-xcrun simctl list devices
+# List available simulators
+xcrun simctl list devices available
 
-# Install additional simulators if needed
-xcrun simctl download runtime iOS-17-0  # Example for iOS 17
+# Install iOS 17.0+ simulators (if not already installed)
+sudo xcrun simctl runtime create "iOS 17.0" --disk-image ~/Downloads/iOS_17_Simulator_Runtime.dmg
 
-# Verify Expo can access simulators
-npx expo run:ios --device
-```
-
-```bash iOS Dependencies
 # Install CocoaPods for native dependencies
 sudo gem install cocoapods
-
-# Update CocoaPods repository
 pod setup
 
-# Install Flipper for debugging (optional)
-npm install -g flipper-pkg
-
-# Install iOS Deployment Tools
+# Install iOS deployment tools
 npm install -g ios-deploy
+
+# Test iOS environment
+npx create-expo-app TestiOSApp --template blank-typescript
+cd TestiOSApp
+npx expo run:ios
+```
+
+```bash iOS Development Optimization
+# Install Flipper for debugging (optional)
+brew install --cask flipper
+
+# Install React Native debugger
+brew install --cask react-native-debugger
+
+# Install simulator management tools
+npm install -g xcrun
+
+# Set up iOS device development (requires Apple Developer account)
+# 1. Connect iPhone/iPad via USB
+# 2. Trust computer on device
+# 3. Add device to Apple Developer portal
+# 4. Enable developer mode in iOS Settings
+
+# Verify device connection
+xcrun devicectl list devices
 ```
 </CodeGroup>
 
-### Android Development Setup
+### Android Development
 
-<Accordion title="Android Studio Installation">
-**Download & Install:**
+<Accordion title="Android Studio Complete Setup">
+**Download & Installation:**
 1. Download [Android Studio](https://developer.android.com/studio) for your platform
-2. Run the installer and choose "Standard" installation
-3. Wait for the initial SDK downloads to complete
+2. Run installer with **Standard** installation type
+3. Allow Android Studio to download initial SDK components (~3GB)
 
-**SDK Configuration:**
-1. Open Android Studio → Settings/Preferences → Appearance & Behavior → System Settings → Android SDK
-2. Install required SDK platforms:
-   - Android 14 (API level 34) - Target for new apps
-   - Android 13 (API level 33) - Compatibility
-   - Android 10 (API level 29) - Minimum supported
+**SDK Manager Configuration:**
+1. Open Android Studio → Settings → Appearance & Behavior → System Settings → Android SDK
+2. **SDK Platforms Tab - Install:**
+   - Android 14 (API level 34) ✅ *Required for SDK 53*
+   - Android 13 (API level 33) ✅ *Compatibility*
+   - Android 12L (API level 32) ✅ *Extended support*
+   - Android 10 (API level 29) ✅ *Minimum supported*
 
-**Build Tools:**
-- Android SDK Build-Tools 34.0.0
-- Android Emulator
-- Android SDK Platform-Tools
-- Intel x86 Emulator Accelerator (HAXM installer)
+3. **SDK Tools Tab - Install:**
+   - Android SDK Build-Tools 34.0.0
+   - Android Emulator 33.1.0+
+   - Android SDK Platform-Tools
+   - Intel x86 Emulator Accelerator (HAXM) *Intel machines*
+   - Google Play services
+
+**Advanced Configuration:**
+- Enable Hardware Acceleration (Intel HAXM/AMD-V/Hyper-V)
+- Configure emulator with 4GB+ RAM allocation
+- Enable GPU acceleration for better performance
 </Accordion>
 
 <CodeGroup>
-```bash Android Environment Variables
-# Add to ~/.bashrc or ~/.zshrc
-export ANDROID_HOME=$HOME/Android/Sdk
+```bash Android Environment Setup
+# Set Android environment variables
+# Add to ~/.bashrc, ~/.zshrc, or ~/.profile
+
+export ANDROID_HOME=$HOME/Library/Android/sdk  # macOS
+# export ANDROID_HOME=$HOME/Android/Sdk        # Linux
+# export ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk  # Windows
+
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$ANDROID_HOME/tools
 export PATH=$PATH:$ANDROID_HOME/tools/bin
 
 # Reload shell configuration
-source ~/.bashrc  # or source ~/.zshrc
+source ~/.zshrc  # or ~/.bashrc
 
-# Verify Android setup
+# Verify Android tools
 adb version
 emulator -version
+sdkmanager --version
+
+# Accept Android SDK licenses
+yes | sdkmanager --licenses
+
+# Update all SDK tools
+sdkmanager --update
 ```
 
 ```bash Android Virtual Device Setup
-# List available AVD configurations
-emulator -list-avds
+# List available system images
+sdkmanager --list | grep system-images
 
-# Create a new AVD (if none exist)
-avdmanager create avd -n Pixel_7_API_34 -k "system-images;android-34;google_apis;x86_64"
+# Download recommended system images
+sdkmanager "system-images;android-34;google_apis_playstore;x86_64"
+sdkmanager "system-images;android-33;google_apis_playstore;x86_64"
 
-# Start emulator
-emulator -avd Pixel_7_API_34
+# Create high-performance AVDs
+avdmanager create avd \
+  -n "Pixel_7_API_34" \
+  -k "system-images;android-34;google_apis_playstore;x86_64" \
+  -d "pixel_7"
 
-# Alternative: Use Expo development build
-npx expo run:android --device
+avdmanager create avd \
+  -n "Pixel_Tablet_API_34" \
+  -k "system-images;android-34;google_apis_playstore;x86_64" \
+  -d "pixel_tablet"
+
+# List created AVDs
+avdmanager list avd
+
+# Start emulator with optimized settings
+emulator -avd Pixel_7_API_34 -gpu host -memory 4096 -cores 4
+
+# Test Android environment
+npx create-expo-app TestAndroidApp --template blank-typescript
+cd TestAndroidApp
+npx expo run:android
 ```
 </CodeGroup>
 
 <Note>
-**Hardware Acceleration:** For optimal Android emulator performance, ensure hardware acceleration is enabled (Intel HAXM on Intel machines, Hyper-V on Windows, or KVM on Linux).
+**Hardware Acceleration Critical:** Android emulator performance depends heavily on hardware acceleration. Ensure Intel HAXM (Intel), AMD-V (AMD), or Hyper-V (Windows) is enabled in BIOS/UEFI settings.
 </Note>
 
-## Expo Development Tools
+## Backend Development Environment
 
-### Expo CLI & EAS Setup
+### Database Setup (PostgreSQL)
 
 <CodeGroup>
-```bash Expo Tools Installation
-# Install latest Expo CLI
-npm install -g @expo/cli@latest
+```bash PostgreSQL Installation
+# macOS (Homebrew)
+brew install postgresql@15
+brew services start postgresql@15
 
-# Install EAS CLI for building and deployment
-npm install -g eas-cli@latest
+# Ubuntu/Linux
+sudo apt update
+sudo apt install postgresql-15 postgresql-contrib-15
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
 
-# Verify installations
-expo --version    # Should be 0.15.0+
-eas --version     # Should be 5.0.0+
+# Windows (Chocolatey - Run as Administrator)
+choco install postgresql15 --params '/Password:your_password'
 
-# Login to Expo account
-expo login
-eas login
+# Verify installation
+psql --version  # Should show PostgreSQL 15.x
 
-# Verify authentication
-expo whoami
+# Create development database
+sudo -u postgres createuser --interactive
+# Username: your_username
+# Superuser: y
+
+sudo -u postgres createdb shelther_dev
+sudo -u postgres createdb shelther_test
 ```
 
-```bash Development Tools
-# Install helpful development utilities
-npm install -g reactotron-cli    # React debugging
-npm install -g react-devtools    # React component inspector
-npm install -g flipper-pkg       # Mobile debugging platform
+```bash Database Configuration
+# Connect to PostgreSQL
+psql -U postgres -d shelther_dev
 
-# Install code quality tools
-npm install -g eslint
-npm install -g prettier
-npm install -g typescript
+# Create development user and database
+CREATE USER shelther_dev WITH PASSWORD 'dev_password';
+CREATE DATABASE shelther_development OWNER shelther_dev;
+GRANT ALL PRIVILEGES ON DATABASE shelther_development TO shelther_dev;
+
+# Enable required extensions
+\c shelther_development
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";  -- For location features
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+
+# Test connection
+\q
+psql -U shelther_dev -d shelther_development -c "SELECT version();"
 ```
 </CodeGroup>
 
-### Expo Configuration
-
-<Accordion title="EAS Build Configuration">
-**Create EAS Account:**
-1. Visit [expo.dev](https://expo.dev) and create an account
-2. Verify your email address
-3. Log in via CLI with `eas login`
-
-**Project Setup:**
-```json
-// eas.json configuration
-{
-  "cli": {
-    "version": ">= 5.4.0"
-  },
-  "build": {
-    "development": {
-      "distribution": "internal",
-      "android": {
-        "gradleCommand": ":app:assembleDebug"
-      },
-      "ios": {
-        "buildConfiguration": "Debug"
-      }
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {}
-  },
-  "submit": {
-    "production": {}
-  }
-}
-```
-</Accordion>
-
-## IDE & Editor Setup
-
-### Visual Studio Code Configuration
+### Supabase CLI
 
 <CodeGroup>
-```bash VS Code Extensions
-# Install VS Code extensions for React Native development
+```bash Supabase CLI Installation
+# Install via npm (cross-platform)
+npm install -g supabase@1.144.0
+
+# Alternative: Direct binary installation
+# macOS: brew install supabase/tap/supabase
+# Linux: Download from GitHub releases
+# Windows: Use npm method above
+
+# Verify installation
+supabase --version
+
+# Login to Supabase
+supabase login
+
+# Initialize Supabase project structure
+mkdir shelther-backend && cd shelther-backend
+supabase init
+
+# Start local Supabase stack (requires Docker)
+supabase start
+
+# This will start:
+# - PostgreSQL database
+# - PostgREST API server  
+# - Supabase Studio (dashboard)
+# - Auth server
+# - Edge Functions runtime
+# - Storage server
+```
+
+```bash Supabase Development Setup
+# Install Docker for local Supabase development
+# macOS: brew install --cask docker
+# Windows: Download Docker Desktop
+# Linux: sudo apt install docker.io docker-compose
+
+# Start Docker service
+sudo systemctl start docker  # Linux
+# Docker Desktop should auto-start on macOS/Windows
+
+# Verify Supabase local setup
+supabase status
+
+# Expected output:
+# API URL: http://localhost:54321
+# DB URL: postgresql://postgres:postgres@localhost:54322/postgres
+# Studio URL: http://localhost:54323
+# Auth URL: http://localhost:54324
+# Storage URL: http://localhost:54325
+```
+</CodeGroup>
+
+### Railway CLI
+
+<CodeGroup>
+```bash Railway CLI Installation
+# Install Railway CLI
+npm install -g @railway/cli@3.3.0
+
+# Alternative installation methods:
+# macOS: brew install railway/tap/railway
+# Linux: curl -fsSL https://railway.app/install.sh | sh
+# Windows: iwr https://railway.app/install.ps1 | iex
+
+# Verify installation
+railway --version
+
+# Login to Railway
+railway login
+
+# Link to existing project or create new
+railway link
+# or
+railway init
+
+# Test Railway connection
+railway status
+```
+
+```bash Express.js Development Setup
+# Create Express.js backend project
+mkdir shelther-api && cd shelther-api
+
+# Initialize Node.js project
+npm init -y
+
+# Install production dependencies
+npm install express@4.18.2 \
+            cors@2.8.5 \
+            helmet@7.1.0 \
+            express-rate-limit@7.1.5 \
+            compression@1.7.4 \
+            @supabase/supabase-js@2.38.0 \
+            dotenv@16.3.1 \
+            winston@3.11.0
+
+# Install development dependencies  
+npm install -D typescript@5.3.3 \
+               @types/node@20.10.0 \
+               @types/express@4.17.21 \
+               ts-node@10.9.1 \
+               nodemon@3.0.2 \
+               jest@29.7.0 \
+               supertest@6.3.3 \
+               @types/jest@29.5.5
+
+# Create TypeScript configuration
+npx tsc --init --target ES2020 --module CommonJS --strict
+
+# Test Express.js setup
+echo 'import express from "express";
+const app = express();
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.listen(3001, () => console.log("Server running on port 3001"));' > src/index.ts
+
+npm run dev  # Should start server on port 3001
+```
+</CodeGroup>
+
+## Modern Development Tools
+
+### IDE & Editor Configuration
+
+<CodeGroup>
+```bash Visual Studio Code Setup
+# Install VS Code extensions for full-stack development
 code --install-extension ms-vscode.vscode-typescript-next
 code --install-extension bradlc.vscode-tailwindcss
 code --install-extension esbenp.prettier-vscode
 code --install-extension ms-vscode.vscode-eslint
 code --install-extension formulahendry.auto-rename-tag
 code --install-extension christian-kohler.path-intellisense
-code --install-extension mintlify.mintlify-snippets
+code --install-extension ms-vscode.vscode-json
+code --install-extension redhat.vscode-yaml
+code --install-extension ms-vscode.vscode-docker
+code --install-extension ckolkman.vscode-postgres
+code --install-extension ms-vscode.vscode-thunder-client
+
+# React Native specific extensions
+code --install-extension msjsdiag.vscode-react-native
+code --install-extension vsmobile.vscode-react-native
+code --install-extension ms-vscode.vscode-expo
+
+# Install Expo Tools extension
+code --install-extension expo.vscode-expo-tools
 ```
 
-```json VS Code Settings
+```json VS Code Workspace Settings
 // .vscode/settings.json
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
   "emmet.includeLanguages": {
     "typescript": "html",
     "typescriptreact": "html"
   },
   "files.associations": {
     "*.mdx": "markdown"
-  }
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.expo": true,
+    "**/ios/build": true,
+    "**/android/build": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/dist/**": true,
+    "**/build/**": true
+  },
+  "expo.shouldClearConsoleBeforeRun": true
 }
 ```
 </CodeGroup>
 
-### Alternative IDEs
-
-<CardGroup cols={2}>
-  <Card title="WebStorm" icon="code">
-    JetBrains WebStorm with React Native plugin for advanced debugging and refactoring
-  </Card>
-  <Card title="Android Studio" icon="android">
-    Use Android Studio for Android-specific development and debugging
-  </Card>
-</CardGroup>
-
-## Verification & Testing
-
-### Environment Verification
+### Development Debugging Tools
 
 <CodeGroup>
-```bash Complete Environment Check
-# Create a test Expo project
-npx create-expo-app ShelterTestApp --template blank-typescript
-cd ShelterTestApp
+```bash Advanced Debugging Setup
+# Install React Native debugging tools
+npm install -g react-devtools@4.28.0
+npm install -g @react-native-community/cli@12.3.0
 
-# Install dependencies
-npm install
+# Install Flipper for advanced debugging
+# macOS: brew install --cask flipper
+# Windows: choco install flipper
+# Linux: Download AppImage from GitHub
 
-# Test iOS build (macOS only)
-npx expo run:ios
+# Install additional debugging utilities
+npm install -g react-native-debugger-open@0.3.25
+npm install -g reactotron-cli@2.4.7
 
-# Test Android build
-npx expo run:android
+# Database debugging tools
+npm install -g pgcli  # PostgreSQL CLI with autocomplete
+# Alternative: Install TablePlus, DBeaver, or DataGrip
 
-# Test web build
-npx expo start --web
+# API testing tools (alternative to Postman)
+npm install -g httpie  # Command-line HTTP client
+# Or install Insomnia/Thunder Client via package managers
 ```
 
-```bash Troubleshooting Commands
-# Clear package manager cache
-npm cache clean --force
-yarn cache clean
+```bash Performance Monitoring Tools
+# Install performance profiling tools
+npm install -g clinic@12.0.2
 
-# Clear Expo cache
-npx expo start --clear
+# Memory and CPU profiling
+npm install -g clinic-doctor clinic-bubbleprof clinic-flame
 
-# Reset Metro bundler cache
-npx expo start --reset-cache
+# Bundle analysis tools
+npm install -g @expo/bundle-analyzer@1.0.1
 
-# Check for common issues
-npx expo doctor
+# React Native performance monitoring
+npm install -g react-native-performance@2.5.1
 
-# Verify React Native environment
-npx react-native doctor
+# Lighthouse for web performance (if using expo-web)
+npm install -g lighthouse@10.4.0
 ```
 </CodeGroup>
 
-### Performance Verification
+## Testing Framework Setup
 
-<Steps>
-  <Step title="Build Performance">
-    Initial build should complete in 2-5 minutes depending on system specifications
-  </Step>
-  <Step title="Hot Reload">
-    Code changes should reflect in simulator/device within 1-3 seconds
-  </Step>
-  <Step title="Bundle Size">
-    Development bundle should be less than 50MB, production bundle less than 15MB for optimal performance
-  </Step>
-</Steps>
+### Complete Testing Environment
 
-## Common Installation Issues
+<CodeGroup>
+```bash Testing Tools Installation
+# Core testing frameworks
+npm install -g jest@29.7.0
+npm install -g @testing-library/react-native@12.4.0
+npm install -g @testing-library/jest-native@5.4.3
 
-<Accordion title="Node.js & NPM Issues">
-**Node Version Conflicts:**
-```bash
-# Use nvm to manage Node versions
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 18
-nvm use 18
-nvm alias default 18
+# End-to-end testing with Detox
+npm install -g detox-cli@20.13.0
+
+# API testing
+npm install -g supertest@6.3.3
+npm install -g nock@13.4.0  # HTTP mocking
+
+# Performance testing
+npm install -g artillery@2.0.5  # Load testing
+npm install -g k6@0.47.0       # Modern load testing
+
+# Security testing
+npm install -g audit-ci@6.6.1  # Security audit in CI
+npm install -g semgrep@1.45.0  # Static analysis
+
+# Test coverage reporting
+npm install -g nyc@15.1.0
+npm install -g codecov@3.8.3
 ```
 
-**Permission Errors:**
+```bash Test Environment Configuration
+# Create test database
+createdb shelther_test
+
+# Install test-specific dependencies in project
+cd your-project
+npm install -D jest-expo@~49.0.0 \
+               @testing-library/react-native@12.4.0 \
+               @testing-library/jest-native@5.4.3 \
+               detox@20.13.0 \
+               jest-environment-jsdom@29.7.0
+
+# Configure Jest for React Native testing
+echo '{
+  "preset": "jest-expo",
+  "setupFilesAfterEnv": ["<rootDir>/jest-setup.js"],
+  "testMatch": [
+    "**/__tests__/**/*.(ts|tsx|js)",
+    "**/*.(test|spec).(ts|tsx|js)"
+  ],
+  "collectCoverageFrom": [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 80,
+      "functions": 80,
+      "lines": 80,
+      "statements": 80
+    }
+  }
+}' > jest.config.json
+```
+</CodeGroup>
+
+## Environment Verification
+
+### Complete System Test
+
+<CodeGroup>
+```bash Full Environment Verification
+# Create comprehensive test project
+npx create-expo-app ShelterEnvironmentTest --template blank-typescript
+cd ShelterEnvironmentTest
+
+# Install all production dependencies
+npm install @supabase/supabase-js@2.38.0 \
+            @reduxjs/toolkit@2.0.1 \
+            react-redux@9.0.4 \
+            @tanstack/react-query@5.17.0
+
+# Test iOS (macOS only)
+echo "Testing iOS environment..."
+npx expo run:ios --device --configuration Debug
+
+# Test Android
+echo "Testing Android environment..."
+npx expo run:android --device --configuration Debug
+
+# Test web
+echo "Testing web environment..."
+npx expo start --web
+
+# Test backend connection
+echo "Testing backend setup..."
+curl -X GET http://localhost:3001/health
+```
+
+```bash Performance Verification
+# Test build performance
+time npx expo export --platform all
+
+# Test bundle size
+npx expo export --platform ios
+ls -la dist/
+
+# Test hot reload performance
+# 1. Start expo dev server
+# 2. Make a simple change to App.tsx  
+# 3. Measure time to see change in simulator
+
+# Test memory usage during development
+# Monitor Activity Monitor (macOS) or Task Manager (Windows)
+# Normal development should use <8GB RAM total
+```
+</CodeGroup>
+
+### Troubleshooting Common Issues
+
+<Accordion title="Node.js & Package Manager Issues">
+**Node Version Conflicts:**
+```bash
+# Install and use Node Version Manager
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+
+# Install and use Node.js 20 LTS
+nvm install 20.12.2
+nvm use 20.12.2
+nvm alias default 20.12.2
+
+# Clean install if having package conflicts
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+```
+
+**Package Permission Errors:**
 ```bash
 # Fix npm permissions (Linux/macOS)
 mkdir ~/.npm-global
 npm config set prefix '~/.npm-global'
 echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
+
+# Windows: Run terminal as Administrator for global installs
 ```
 </Accordion>
 
-<Accordion title="iOS Development Issues">
-**Simulator Not Starting:**
+<Accordion title="Expo SDK 53 & New Architecture Issues">
+**New Architecture Compatibility:**
 ```bash
-# Reset iOS Simulator
-xcrun simctl shutdown all
-xcrun simctl erase all
-xcrun simctl boot "iPhone 15 Pro"
+# Verify New Architecture is enabled
+grep -r "newArchEnabled" . 
+# Should show: "newArchEnabled": true
+
+# Check for incompatible packages
+npx expo doctor
+
+# Update packages for New Architecture compatibility
+npx expo install --fix
+
+# If you encounter issues, temporarily opt out:
+# Set "newArchEnabled": false in app.json
 ```
 
-**CocoaPods Issues:**
+**React Native 0.79 Issues:**
 ```bash
-# Reinstall CocoaPods dependencies
-cd ios
-rm -rf Pods
-rm Podfile.lock
-pod install --repo-update
+# Clear all caches
+npx expo start --clear
+rm -rf node_modules/.cache
+npm cache clean --force
+
+# Reinstall dependencies
+rm -rf node_modules
+npm install
+
+# Check for package.json exports issues
+npx expo doctor --check-deps
+```
+</Accordion>
+
+<Accordion title="Backend Development Issues">
+**PostgreSQL Connection Issues:**
+```bash
+# Check PostgreSQL status
+pg_ctl status
+
+# Restart PostgreSQL service
+# macOS: brew services restart postgresql@15
+# Linux: sudo systemctl restart postgresql
+# Windows: Restart PostgreSQL service in Services
+
+# Test database connection
+psql -U shelther_dev -d shelther_development -c "SELECT 1;"
+```
+
+**Supabase Local Issues:**
+```bash
+# Reset Supabase local environment
+supabase stop
+supabase db reset
+supabase start
+
+# Check Docker is running
+docker ps
+
+# Update Supabase CLI
+npm update -g supabase
 ```
 </Accordion>
 
-<Accordion title="Android Development Issues">
-**SDK License Issues:**
-```bash
-# Accept Android SDK licenses
-yes | sdkmanager --licenses
+## Production-Ready Development Workflow
 
-# Update SDK tools
-sdkmanager --update
+### Environment Management
+
+<CodeGroup>
+```bash Environment Configuration
+# Install environment management tools
+npm install -g dotenv-cli@7.3.0
+npm install -g cross-env@7.0.3
+
+# Create environment files structure
+mkdir -p config/environments
+
+# Development environment (.env.development)
+echo 'NODE_ENV=development
+EXPO_PUBLIC_API_URL=http://localhost:3001
+EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+DATABASE_URL=postgresql://shelther_dev:dev_password@localhost:5432/shelther_development' > .env.development
+
+# Production environment (.env.production)
+echo 'NODE_ENV=production
+EXPO_PUBLIC_API_URL=https://api.shelther.app
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-production-anon-key
+DATABASE_URL=postgresql://user:pass@host:5432/db' > .env.production
+
+# Add to .gitignore
+echo '.env*
+!.env.example' >> .gitignore
 ```
 
-**Emulator Performance:**
-```bash
-# Enable hardware acceleration
-sudo kvm-ok  # Linux
-# Enable Hyper-V on Windows
-# Enable Hardware Acceleration in BIOS
+```bash Code Quality Setup
+# Install code quality tools
+npm install -g eslint@8.57.0 \
+               prettier@3.0.0 \
+               @typescript-eslint/parser@7.7.0 \
+               @typescript-eslint/eslint-plugin@7.7.0
+
+# Install commit hooks
+npm install -g husky@8.0.3
+npm install -g lint-staged@15.2.0
+
+# Set up pre-commit hooks
+npx husky init
+echo 'npx lint-staged' > .husky/pre-commit
+
+# Configure lint-staged
+echo '{
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mdx}": [
+      "prettier --write"  
+    ]
+  }
+}' >> package.json
 ```
-</Accordion>
+</CodeGroup>
+
+## Final Verification Checklist
+
+<Steps>
+  <Step title="✅ Core Development Environment">
+    **Node.js 20 LTS** installed and verified
+    **Package manager** (npm/yarn/pnpm) working
+    **Git** configured with SSH keys
+    **Code editor** (VS Code) with extensions
+  </Step>
+  <Step title="✅ Mobile Development">
+    **iOS**: Xcode 15.0+, Command Line Tools, Simulators
+    **Android**: Android Studio, SDK 34, Emulators, Hardware acceleration
+    **Test project** runs on both iOS and Android
+  </Step>
+  <Step title="✅ Backend Development">
+    **PostgreSQL 15** installed and configured
+    **Supabase CLI** with local stack running
+    **Railway CLI** connected to account
+    **Express.js** test server responding
+  </Step>
+  <Step title="✅ Modern Tooling">
+    **Expo CLI/EAS CLI** latest versions
+    **React Native 0.79** with New Architecture enabled
+    **TypeScript 5.3+** configured
+    **Testing frameworks** installed and configured
+  </Step>
+  <Step title="✅ Production Features">
+    **Environment management** configured
+    **Code quality tools** (ESLint, Prettier) working
+    **Debugging tools** (React DevTools, Flipper) installed
+    **Performance monitoring** tools available
+  </Step>
+</Steps>
 
 ## Next Steps
 
 <Note>
-**Installation Complete!** Your development environment is now ready for Shelther development. The next step is configuring Expo specifically for safety app development.
+**Production Environment Ready!** Your complete development environment is now configured for enterprise-grade safety app development with the latest tools and best practices.
 </Note>
 
 <CardGroup cols={3}>
-  <Card title="Expo Setup" icon="rocket" href="/quickstart/expo-setup">
-    Configure Expo SDK 52+ with safety-specific features and permissions
+  <Card title="Express.js Backend Setup" icon="server" href="/quickstart/express-backend-setup">
+    Set up your production Express.js backend with Railway deployment
   </Card>
-  <Card title="Supabase Setup" icon="database" href="/quickstart/supabase-setup">
-    Set up Supabase backend with authentication and real-time features
+  <Card title="Expo Production Configuration" icon="rocket" href="/quickstart/expo-setup">
+    Configure Expo SDK 53 with safety-specific features and New Architecture
   </Card>
-  <Card title="First App" icon="mobile" href="/quickstart/first-app">
-    Create your first safety-enabled application with Shelther components
+  <Card title="Build Your First App" icon="mobile" href="/quickstart/first-app">
+    Create your first production-ready safety application
   </Card>
 </CardGroup>
 
-## Development Environment Checklist
-
-<Steps>
-  <Step title="✅ Core Tools">
-    Node.js 18+, Git, Package manager (npm/yarn/pnpm)
-  </Step>
-  <Step title="✅ Mobile Development">
-    Xcode (iOS), Android Studio, Simulators/Emulators working
-  </Step>
-  <Step title="✅ Expo Tools">
-    Expo CLI, EAS CLI, Expo account authenticated
-  </Step>
-  <Step title="✅ Code Editor">
-    VS Code with extensions or preferred IDE configured
-  </Step>
-  <Step title="✅ Test Project">
-    Successfully created and run a test Expo project
-  </Step>
-</Steps>
-
 <Warning>
-**Production Deployment:** This development environment setup is for local development only. Production deployment requires additional configuration covered in our [deployment guides](/deployment/overview).
+**Important:** This development environment is optimized for the latest tools (Expo SDK 53, React Native 0.79, Node.js 20 LTS). Ensure all team members use the same versions to avoid compatibility issues.
 </Warning>
+
+## Advanced Configuration
+
+<Accordion title="Monorepo Development Setup">
+For teams managing multiple related projects:
+
+```bash
+# Install monorepo management tools
+npm install -g lerna@8.0.2
+npm install -g nx@17.2.8
+
+# Set up pnpm workspace (recommended for monorepos)
+echo 'packages:
+  - "apps/*"
+  - "packages/*"
+  - "services/*"' > pnpm-workspace.yaml
+
+# Create project structure
+mkdir -p apps/mobile apps/web services/api packages/shared
+```
+</Accordion>
+
+<Accordion title="Container Development (Optional)">
+For consistent development environments across teams:
+
+```bash
+# Install Docker and Docker Compose
+# macOS: brew install --cask docker
+# Windows: Install Docker Desktop
+# Linux: sudo apt install docker.io docker-compose
+
+# Create development container
+echo 'FROM node:20-alpine
+RUN apk add --no-cache git python3 make g++
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+EXPOSE 3000 3001 8081
+CMD ["npm", "start"]' > Dockerfile.dev
+
+# Docker Compose for full stack
+echo 'version: "3.8"
+services:
+  mobile:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/app
+      - /app/node_modules
+  api:
+    build: ./services/api
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/shelther_dev
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: shelther_dev
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"' > docker-compose.dev.yml
+```
+</Accordion>
+
+Your development environment is now production-ready with all the latest tools and configurations needed for enterprise-grade safety application development! 🚀

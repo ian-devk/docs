@@ -1,59 +1,1095 @@
 ---
 title: "Emergency Alerts"
-description: "Emergency Alerts documentation for Core Features. Learn about implementation, configuration, and best practices."
+description: "Comprehensive emergency alert system for Shelther. Learn about instant alert triggers, multi-channel notifications, evidence collection, and automated escalation protocols."
 ---
 
 # Emergency Alerts
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Life-Critical Feature:** Emergency alerts are Shelther's most important safety feature, designed to instantly connect users with help when they need it most. Every component prioritizes speed, reliability, and redundancy.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's emergency alert system provides multiple ways to trigger help, ensuring that no matter the situation, users can quickly alert their safety network and emergency services. The system works offline, processes alerts in under 3 seconds, and uses multiple notification channels to guarantee help arrives.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Instant Activation" icon="zap">
+    Multiple trigger methods ensure alerts can be sent even in high-stress situations
+  </Card>
+  <Card title="Smart Escalation" icon="trending-up">
+    Automated escalation protocols ensure someone responds to every emergency
+  </Card>
+  <Card title="Evidence Collection" icon="camera">
+    Automatic gathering of location, audio, and visual evidence during emergencies
+  </Card>
+  <Card title="Offline Capable" icon="wifi-slash">
+    Core emergency features work without internet connectivity
+  </Card>
+</CardGroup>
+
+## Alert Trigger Methods
+
+### Physical Triggers
+
+<Steps>
+  <Step title="SOS Button">
+    Large, prominent emergency button in the app that triggers immediate alerts
+  </Step>
+  <Step title="Volume Button Sequence">
+    Press volume up + volume down + power button simultaneously for 3 seconds
+  </Step>
+  <Step title="Shake Pattern">
+    Distinctive shake pattern that won't trigger accidentally during normal movement
+  </Step>
+  <Step title="App Widget">
+    Home screen widget for instant emergency activation without opening the app
+  </Step>
+</Steps>
 
 <CodeGroup>
+```typescript SOS Button Implementation
+import { useState, useCallback } from 'react';
+import { Alert, Vibration } from 'react-native';
+import { useEmergencyAlert } from '../hooks/useEmergencyAlert';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
+export const SOSButton = () => {
+  const [isTriggering, setIsTriggering] = useState(false);
+  const { triggerEmergency, cancelEmergency } = useEmergencyAlert();
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+  const handleSOSPress = useCallback(async () => {
+    try {
+      setIsTriggering(true);
+      
+      // Immediate haptic feedback
+      Vibration.vibrate([0, 100, 100, 100]);
+      
+      // Show countdown with cancel option
+      Alert.alert(
+        'Emergency Alert',
+        'Emergency alert will be sent in 10 seconds. Tap Cancel to stop.',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => {
+              setIsTriggering(false);
+              cancelEmergency();
+            },
+            style: 'cancel'
+          },
+          {
+            text: 'Send Now',
+            onPress: async () => {
+              await triggerEmergency({
+                method: 'manual_button',
+                urgency: 'high',
+                location: await getCurrentLocation(),
+              });
+              setIsTriggering(false);
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+      
+      // Auto-trigger after countdown
+      setTimeout(async () => {
+        if (isTriggering) {
+          await triggerEmergency({
+            method: 'manual_button',
+            urgency: 'high',
+            location: await getCurrentLocation(),
+          });
+          setIsTriggering(false);
+        }
+      }, 10000);
+      
+    } catch (error) {
+      console.error('SOS trigger failed:', error);
+      setIsTriggering(false);
+    }
+  }, [isTriggering, triggerEmergency, cancelEmergency]);
+
+  return (
+    <TouchableOpacity
+      style={[styles.sosButton, isTriggering && styles.sosButtonActive]}
+      onPress={handleSOSPress}
+      disabled={isTriggering}
+      accessibilityLabel="Emergency SOS Button"
+      accessibilityHint="Press to send emergency alert to your safety contacts"
+    >
+      <Text style={styles.sosText}>
+        {isTriggering ? 'SENDING...' : 'SOS'}
+      </Text>
+    </TouchableOpacity>
+  );
 };
 ```
 
+```typescript Volume Button Emergency
+import { useEffect, useCallback } from 'react';
+import { DeviceEventEmitter, NativeEventEmitter, NativeModules } from 'react-native';
+
+const { EmergencyTriggerModule } = NativeModules;
+
+export const useVolumeButtonEmergency = () => {
+  const { triggerEmergency } = useEmergencyAlert();
+  
+  const handleVolumeButtonSequence = useCallback(async () => {
+    // Verify sequence was intentional with haptic pattern
+    Vibration.vibrate([0, 50, 50, 50, 50, 50]);
+    
+    // Grace period for accidental triggers
+    Alert.alert(
+      'Emergency Detected',
+      'Volume button emergency sequence detected. Send alert?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Send Alert', 
+          style: 'destructive',
+          onPress: () => triggerEmergency({
+            method: 'volume_buttons',
+            urgency: 'critical',
+            stealth: true, // No visual confirmation
+          })
+        }
+      ]
+    );
+  }, [triggerEmergency]);
+
+  useEffect(() => {
+    // Listen for volume button sequence from native module
+    const subscription = DeviceEventEmitter.addListener(
+      'VolumeButtonEmergencySequence',
+      handleVolumeButtonSequence
+    );
+
+    // Configure native emergency trigger
+    EmergencyTriggerModule.enableVolumeButtonSequence({
+      sequence: ['volume_up', 'volume_down', 'power'],
+      holdDuration: 3000, // 3 seconds
+      enabled: true
+    });
+
+    return () => {
+      subscription.remove();
+      EmergencyTriggerModule.disableVolumeButtonSequence();
+    };
+  }, [handleVolumeButtonSequence]);
+};
+```
 </CodeGroup>
+
+### Voice Activation
+
+<Accordion title="Voice Command Configuration">
+**Activation Phrases:**
+- "Hey Shelther, emergency"
+- "Shelther, I need help"
+- "Emergency alert"
+- Custom user-defined phrases
+
+**Privacy Features:**
+- Local voice processing using on-device ML
+- No voice data sent to external servers
+- Configurable sensitivity to prevent false triggers
+- Background listening with minimal battery impact
+
+**Implementation:**
+```typescript
+import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
+
+export const useVoiceEmergencyTrigger = () => {
+  const { startListening, stopListening, isListening } = useVoiceRecognition({
+    keywords: ['emergency', 'help', 'shelther'],
+    confidence: 0.8,
+    continuous: true,
+    onMatch: handleVoiceEmergency,
+  });
+
+  const handleVoiceEmergency = useCallback(async (phrase: string, confidence: number) => {
+    if (confidence > 0.9) {
+      // High confidence - immediate trigger
+      await triggerEmergency({
+        method: 'voice_command',
+        phrase,
+        confidence,
+        urgency: 'high',
+      });
+    } else {
+      // Medium confidence - confirmation required
+      confirmVoiceEmergency(phrase, confidence);
+    }
+  }, []);
+
+  // Enable/disable based on user preferences and battery level
+  useEffect(() => {
+    const shouldListen = userPreferences.voiceActivation && batteryLevel > 20;
+    
+    if (shouldListen && !isListening) {
+      startListening();
+    } else if (!shouldListen && isListening) {
+      stopListening();
+    }
+  }, [userPreferences.voiceActivation, batteryLevel, isListening]);
+};
+```
+</Accordion>
+
+### Automated Detection
+
+<CardGroup cols={3}>
+  <Card title="Fall Detection" icon="trending-down">
+    Accelerometer and gyroscope data detect sudden falls or impacts
+  </Card>
+  <Card title="Panic Movement" icon="activity">
+    Unusual movement patterns that may indicate distress or struggle
+  </Card>
+  <Card title="Audio Analysis" icon="mic">
+    Background audio monitoring for distress calls or threatening situations
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Fall Detection System
+import { Accelerometer, Gyroscope } from 'expo-sensors';
+
+export class FallDetectionService {
+  private accelerometerData: AccelerometerData[] = [];
+  private gyroscopeData: GyroscopeData[] = [];
+  private isMonitoring = false;
+
+  startMonitoring() {
+    this.isMonitoring = true;
+    
+    // High frequency sampling for fall detection
+    Accelerometer.setUpdateInterval(50); // 20Hz
+    Gyroscope.setUpdateInterval(50);
+
+    const accelerometerSubscription = Accelerometer.addListener(data => {
+      this.accelerometerData.push({
+        ...data,
+        timestamp: Date.now(),
+        magnitude: Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2)
+      });
+
+      // Keep only last 3 seconds of data
+      this.accelerometerData = this.accelerometerData.filter(
+        d => Date.now() - d.timestamp < 3000
+      );
+
+      this.analyzeFallPattern();
+    });
+
+    const gyroscopeSubscription = Gyroscope.addListener(data => {
+      this.gyroscopeData.push({ ...data, timestamp: Date.now() });
+      
+      // Keep only last 3 seconds of data
+      this.gyroscopeData = this.gyroscopeData.filter(
+        d => Date.now() - d.timestamp < 3000
+      );
+    });
+  }
+
+  private analyzeFallPattern() {
+    if (this.accelerometerData.length < 40) return; // Need 2 seconds of data
+
+    const recent = this.accelerometerData.slice(-40);
+    
+    // Look for fall signature: high impact followed by stillness
+    const highImpact = recent.some(d => d.magnitude > 3.0); // 3G impact
+    const suddenChange = this.detectSuddenAccelerationChange(recent);
+    const subsequentStillness = this.detectStillness(recent.slice(-20));
+
+    if (highImpact && suddenChange && subsequentStillness) {
+      this.triggerFallAlert();
+    }
+  }
+
+  private detectSuddenAccelerationChange(data: AccelerometerData[]): boolean {
+    for (let i = 5; i < data.length - 5; i++) {
+      const before = data.slice(i - 5, i).reduce((sum, d) => sum + d.magnitude, 0) / 5;
+      const after = data.slice(i, i + 5).reduce((sum, d) => sum + d.magnitude, 0) / 5;
+      
+      if (Math.abs(after - before) > 1.5) { // Significant change
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private async triggerFallAlert() {
+    await triggerEmergency({
+      method: 'fall_detection',
+      urgency: 'critical',
+      autoDetected: true,
+      confidence: 0.85,
+      gracePeriod: 30, // 30 seconds to cancel false alarm
+      sensorData: {
+        accelerometer: this.accelerometerData.slice(-60),
+        gyroscope: this.gyroscopeData.slice(-60),
+      }
+    });
+  }
+}
+```
+
+```typescript Audio Distress Detection
+import { Audio } from 'expo-av';
+import * as AudioProcessor from '../services/AudioProcessor';
+
+export class AudioDistressDetection {
+  private recording: Audio.Recording | null = null;
+  private isAnalyzing = false;
+
+  async startBackgroundListening() {
+    try {
+      // Request microphone permissions
+      const { granted } = await Audio.requestPermissionsAsync();
+      if (!granted) return;
+
+      // Configure audio recording for analysis
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+      });
+
+      this.recording = new Audio.Recording();
+      await this.recording.prepareToRecordAsync({
+        android: {
+          extension: '.wav',
+          outputFormat: Audio.RECORDING_FORMAT_PCM_16BIT,
+          audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_PCM_16BIT,
+          sampleRate: 16000,
+          numberOfChannels: 1,
+        },
+        ios: {
+          extension: '.wav',
+          audioQuality: Audio.RECORDING_QUALITY_MEDIUM,
+          sampleRate: 16000,
+          numberOfChannels: 1,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+      });
+
+      await this.recording.startAsync();
+      this.startAudioAnalysis();
+      
+    } catch (error) {
+      console.error('Failed to start audio monitoring:', error);
+    }
+  }
+
+  private async startAudioAnalysis() {
+    this.isAnalyzing = true;
+    
+    const analysisInterval = setInterval(async () => {
+      if (!this.isAnalyzing || !this.recording) {
+        clearInterval(analysisInterval);
+        return;
+      }
+
+      try {
+        // Get recent audio buffer for analysis
+        const audioBuffer = await this.getRecentAudioBuffer();
+        const analysis = await AudioProcessor.analyzeForDistress(audioBuffer);
+
+        if (analysis.distressIndicators.length > 0) {
+          await this.handleDistressDetected(analysis);
+        }
+      } catch (error) {
+        console.error('Audio analysis error:', error);
+      }
+    }, 5000); // Analyze every 5 seconds
+  }
+
+  private async handleDistressDetected(analysis: AudioAnalysis) {
+    const confidenceScore = analysis.overallConfidence;
+    
+    if (confidenceScore > 0.8) {
+      // High confidence - trigger emergency
+      await triggerEmergency({
+        method: 'audio_analysis',
+        urgency: 'high',
+        autoDetected: true,
+        confidence: confidenceScore,
+        evidenceIncluded: ['audio'],
+        gracePeriod: 15,
+        triggerData: {
+          distressIndicators: analysis.distressIndicators,
+          audioFeatures: analysis.features,
+        }
+      });
+    } else if (confidenceScore > 0.6) {
+      // Medium confidence - alert user for confirmation
+      this.showDistressConfirmation(analysis);
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Alert Processing Workflow
+
+### Immediate Response System
+
+<Steps>
+  <Step title="Trigger Detection (0-1 seconds)">
+    System detects emergency trigger and begins immediate processing
+  </Step>
+  <Step title="Location Capture (1-2 seconds)">
+    High-accuracy GPS location obtained with fallback to network/cached location
+  </Step>
+  <Step title="Contact Notification (2-3 seconds)">
+    Parallel notifications sent to all primary emergency contacts
+  </Step>
+  <Step title="Evidence Collection (0-30 seconds)">
+    Automated collection of audio, visual, and sensor evidence
+  </Step>
+</Steps>
+
+<Note>
+**Performance Target: &lt;3 seconds from trigger to first contact notification**
+
+The system processes emergency alerts in parallel rather than sequentially to minimize response time.
+</Note>
+
+<CodeGroup>
+```typescript Emergency Processing Pipeline
+export class EmergencyProcessor {
+  async processEmergencyAlert(trigger: EmergencyTrigger): Promise<EmergencyAlert> {
+    const startTime = Date.now();
+    
+    try {
+      // Step 1: Create alert record immediately
+      const alert = await this.createEmergencyRecord(trigger);
+      
+      // Step 2: Start parallel processing
+      const [
+        location,
+        contacts,
+        evidenceCollection
+      ] = await Promise.allSettled([
+        this.captureHighAccuracyLocation(),
+        this.getEmergencyContacts(trigger.userId),
+        this.startEvidenceCollection(alert.id, trigger)
+      ]);
+      
+      // Step 3: Send notifications (don't wait for evidence)
+      if (contacts.status === 'fulfilled') {
+        const notificationPromises = contacts.value.map(contact =>
+          this.sendEmergencyNotification(alert, contact, location.value)
+        );
+        
+        // Fire and forget - don't wait for all notifications
+        Promise.allSettled(notificationPromises).then(results => {
+          this.updateNotificationResults(alert.id, results);
+        });
+      }
+      
+      // Step 4: Update alert with location and start escalation
+      if (location.status === 'fulfilled') {
+        await this.updateAlertLocation(alert.id, location.value);
+      }
+      
+      // Step 5: Start escalation protocol
+      await this.startEscalationProtocol(alert);
+      
+      // Step 6: Log performance metrics
+      const processingTime = Date.now() - startTime;
+      await this.logPerformanceMetrics(alert.id, processingTime);
+      
+      return alert;
+      
+    } catch (error) {
+      console.error('Emergency processing failed:', error);
+      // Fallback to basic SMS emergency notification
+      await this.fallbackEmergencyNotification(trigger);
+      throw error;
+    }
+  }
+
+  private async captureHighAccuracyLocation(): Promise<LocationData> {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Location timeout')), 2000)
+    );
+
+    try {
+      // Race between GPS and timeout
+      return await Promise.race([
+        this.getGPSLocation({ accuracy: 10, timeout: 1500 }),
+        timeout
+      ]);
+    } catch {
+      // Fallback to network location or last known
+      return await this.getFallbackLocation();
+    }
+  }
+
+  private async sendEmergencyNotification(
+    alert: EmergencyAlert,
+    contact: EmergencyContact,
+    location?: LocationData
+  ): Promise<NotificationResult> {
+    const message = this.buildEmergencyMessage(alert, contact, location);
+    
+    // Try push notification first (fastest)
+    try {
+      const pushResult = await this.sendPushNotification(contact, message);
+      if (pushResult.success) return pushResult;
+    } catch (error) {
+      console.warn('Push notification failed:', error);
+    }
+    
+    // Fallback to SMS (more reliable)
+    try {
+      return await this.sendSMSNotification(contact, message);
+    } catch (error) {
+      console.error('SMS notification failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+}
+```
+
+```typescript Evidence Collection System
+export class EvidenceCollectionService {
+  async startEvidenceCollection(
+    alertId: string,
+    trigger: EmergencyTrigger
+  ): Promise<EvidenceCollection> {
+    const collection = await this.createEvidenceCollection(alertId);
+    
+    // Start all evidence collection in parallel
+    const collectors = [
+      this.collectAudioEvidence(collection.id, trigger.audioConfig),
+      this.collectPhotoEvidence(collection.id, trigger.photoConfig),
+      this.collectSensorData(collection.id),
+      this.collectDeviceState(collection.id),
+    ];
+    
+    // Don't wait for all collectors - let them complete independently
+    Promise.allSettled(collectors).then(results => {
+      this.processEvidenceResults(collection.id, results);
+    });
+    
+    return collection;
+  }
+
+  private async collectAudioEvidence(
+    collectionId: string,
+    config: AudioEvidenceConfig
+  ): Promise<AudioEvidence> {
+    try {
+      // Start recording immediately
+      const recording = await this.startAudioRecording({
+        duration: config.durationSeconds || 60,
+        quality: 'high',
+        backgroundMode: true,
+      });
+      
+      // Include pre-trigger buffer if available
+      const preTriggerAudio = await this.getPreTriggerAudioBuffer();
+      
+      return {
+        id: generateId(),
+        collectionId,
+        type: 'audio_recording',
+        recordingUrl: recording.uri,
+        preTriggerBuffer: preTriggerAudio,
+        duration: recording.durationMillis,
+        capturedAt: new Date().toISOString(),
+        processingStatus: 'processing'
+      };
+      
+    } catch (error) {
+      console.error('Audio evidence collection failed:', error);
+      throw error;
+    }
+  }
+
+  private async collectPhotoEvidence(
+    collectionId: string,
+    config: PhotoEvidenceConfig
+  ): Promise<PhotoEvidence[]> {
+    const photos: PhotoEvidence[] = [];
+    
+    try {
+      // Take photos from both cameras if available
+      const cameras = await this.getAvailableCameras();
+      
+      for (const camera of cameras) {
+        const photo = await this.capturePhoto({
+          camera: camera.id,
+          quality: 0.8,
+          includeExif: true,
+          flashMode: 'auto',
+        });
+        
+        photos.push({
+          id: generateId(),
+          collectionId,
+          type: 'photo_evidence',
+          photoUrl: photo.uri,
+          camera: camera.id,
+          capturedAt: new Date().toISOString(),
+          metadata: photo.exif,
+        });
+      }
+      
+      return photos;
+      
+    } catch (error) {
+      console.error('Photo evidence collection failed:', error);
+      return photos; // Return any photos that were successfully captured
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Escalation Protocols
+
+### Smart Escalation System
+
+<CardGroup cols={2}>
+  <Card title="Tiered Notifications" icon="layers">
+    Progressive contact notification based on response times and contact availability
+  </Card>
+  <Card title="Automatic Escalation" icon="clock">
+    Time-based escalation to emergency services if contacts don't respond
+  </Card>
+  <Card title="Context-Aware Timing" icon="brain">
+    Escalation timing adapts based on emergency severity and user preferences
+  </Card>
+  <Card title="Manual Override" icon="hand">
+    Users and contacts can manually escalate or de-escalate emergency responses
+  </Card>
+</CardGroup>
+
+<Accordion title="Escalation Level Configuration">
+**Level 1 - Immediate Contacts (0-5 minutes):**
+- Primary emergency contacts (up to 3 people)
+- Push notifications + SMS + phone calls
+- Requires acknowledgment within 5 minutes
+- Includes location and basic emergency details
+
+**Level 2 - Extended Network (5-15 minutes):**
+- Secondary contacts and family members
+- All notification methods + email
+- Automated voice calls with emergency message
+- Includes audio evidence if available
+
+**Level 3 - Emergency Services (15+ minutes):**
+- Local emergency services (911/local equivalent)
+- Professional emergency response coordination
+- Full evidence package including medical information
+- Continuous location updates until resolved
+
+**Custom Escalation Rules:**
+```typescript
+interface EscalationRule {
+  triggerCondition: TriggerCondition;
+  escalationLevels: EscalationLevel[];
+  overrides: EscalationOverride[];
+}
+
+interface TriggerCondition {
+  alertTypes: EmergencyAlertType[];
+  severityLevels: number[];
+  timeOfDay?: TimeRange;
+  location?: LocationCondition;
+  userState?: UserStateCondition;
+}
+
+interface EscalationOverride {
+  condition: OverrideCondition;
+  action: 'skip_level' | 'accelerate' | 'add_contacts' | 'call_services';
+  parameters: OverrideParameters;
+}
+
+// Example: High severity alerts skip level 1 and go directly to level 2
+const criticalAlertRule: EscalationRule = {
+  triggerCondition: {
+    alertTypes: ['fall_detection', 'panic_button'],
+    severityLevels: [4, 5],
+  },
+  escalationLevels: standardEscalationLevels,
+  overrides: [{
+    condition: { severityLevel: 5 },
+    action: 'accelerate',
+    parameters: { skipToLevel: 2, delayMinutes: 2 }
+  }]
+};
+```
+</Accordion>
+
+### Contact Response Management
+
+<Steps>
+  <Step title="Response Tracking">
+    Real-time monitoring of contact notification delivery, read status, and responses
+  </Step>
+  <Step title="Acknowledgment System">
+    Contacts confirm receipt and indicate their ability to help
+  </Step>
+  <Step title="Coordination Platform">
+    Contacts can communicate with each other during emergency response
+  </Step>
+  <Step title="Resolution Confirmation">
+    Multiple contacts can confirm emergency resolution or escalate further
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Contact Response System
+export class ContactResponseManager {
+  async trackContactResponse(
+    alertId: string,
+    contactId: string,
+    response: ContactResponse
+  ): Promise<void> {
+    // Update response in real-time
+    await this.updateContactResponse(alertId, contactId, response);
+    
+    // Notify other contacts of response
+    await this.broadcastResponseUpdate(alertId, contactId, response);
+    
+    // Check if escalation should be modified
+    await this.evaluateEscalationAdjustment(alertId);
+    
+    // Update user and other contacts
+    await this.notifyResponseReceived(alertId, contactId, response);
+  }
+
+  async handleContactAcknowledgment(
+    alertId: string,
+    contactId: string,
+    acknowledgment: ContactAcknowledgment
+  ): Promise<void> {
+    const alert = await this.getAlert(alertId);
+    
+    if (acknowledgment.type === 'responding') {
+      // Contact is responding - may slow escalation
+      await this.adjustEscalationTiming(alertId, 'extend', acknowledgment);
+      
+      // Provide contact with real-time updates
+      await this.enableContactTracking(alertId, contactId);
+      
+    } else if (acknowledgment.type === 'cannot_respond') {
+      // Contact cannot help - accelerate escalation
+      await this.adjustEscalationTiming(alertId, 'accelerate', acknowledgment);
+      
+      // Try next contact tier immediately
+      await this.escalateToNextLevel(alertId);
+      
+    } else if (acknowledgment.type === 'false_alarm') {
+      // Contact indicates false alarm - require confirmation
+      await this.handleFalseAlarmReport(alertId, contactId, acknowledgment);
+    }
+  }
+
+  private async evaluateEscalationAdjustment(alertId: string): Promise<void> {
+    const alert = await this.getAlert(alertId);
+    const responses = await this.getContactResponses(alertId);
+    
+    const respondingContacts = responses.filter(r => 
+      r.acknowledgment?.type === 'responding'
+    ).length;
+    
+    const totalContacted = responses.length;
+    const responseRate = respondingContacts / totalContacted;
+    
+    if (responseRate >= 0.5) {
+      // Good response rate - can extend escalation timing
+      await this.adjustEscalationTiming(alertId, 'extend', { 
+        reason: 'good_response_rate',
+        additionalMinutes: 5 
+      });
+    } else if (responseRate === 0 && totalContacted >= 3) {
+      // No responses from multiple contacts - accelerate
+      await this.adjustEscalationTiming(alertId, 'accelerate', { 
+        reason: 'no_responses',
+        skipLevels: 1 
+      });
+    }
+  }
+}
+
+interface ContactResponse {
+  responseId: string;
+  alertId: string;
+  contactId: string;
+  responseMethod: 'app' | 'sms' | 'call' | 'email';
+  responseTime: string;
+  acknowledgment?: ContactAcknowledgment;
+  message?: string;
+  location?: GeoLocation;
+  estimatedArrival?: string;
+}
+
+interface ContactAcknowledgment {
+  type: 'responding' | 'cannot_respond' | 'false_alarm' | 'resolved';
+  estimatedArrival?: string;
+  capabilities?: string[]; // 'transport', 'medical', 'legal', etc.
+  additionalContacts?: EmergencyContact[];
+  notes?: string;
+}
+```
+
+```typescript Emergency Resolution System
+export class EmergencyResolutionManager {
+  async handleEmergencyResolution(
+    alertId: string,
+    resolvedBy: EmergencyResolver,
+    resolution: EmergencyResolution
+  ): Promise<void> {
+    try {
+      // Update alert status
+      await this.updateAlertStatus(alertId, 'resolved', resolution);
+      
+      // Stop all ongoing escalation
+      await this.stopEscalationProtocol(alertId);
+      
+      // Notify all contacts of resolution
+      await this.notifyEmergencyResolved(alertId, resolution);
+      
+      // Stop evidence collection
+      await this.stopEvidenceCollection(alertId);
+      
+      // Start follow-up procedures
+      await this.startFollowUpProcedures(alertId, resolution);
+      
+      // Log resolution metrics
+      await this.logResolutionMetrics(alertId, resolvedBy, resolution);
+      
+    } catch (error) {
+      console.error('Resolution handling failed:', error);
+      // Don't prevent resolution - just log the error
+    }
+  }
+
+  async confirmResolutionWithMultipleContacts(
+    alertId: string,
+    resolutions: ContactResolution[]
+  ): Promise<boolean> {
+    // Require majority confirmation for legitimate resolution
+    const confirmations = resolutions.filter(r => r.confirmed).length;
+    const totalResponses = resolutions.length;
+    
+    if (confirmations / totalResponses >= 0.6) { // 60% majority
+      await this.handleEmergencyResolution(alertId, 'contacts', {
+        type: 'contact_confirmed_safe',
+        confirmingContacts: resolutions.filter(r => r.confirmed),
+        confidence: confirmations / totalResponses,
+      });
+      return true;
+    }
+    
+    return false;
+  }
+
+  private async startFollowUpProcedures(
+    alertId: string,
+    resolution: EmergencyResolution
+  ): Promise<void> {
+    // Schedule follow-up check-ins
+    if (resolution.type !== 'false_alarm') {
+      await this.scheduleFollowUpCheckIn(alertId, 60); // 1 hour later
+      await this.scheduleFollowUpCheckIn(alertId, 1440); // 24 hours later
+    }
+    
+    // Analyze for improvements
+    await this.queueResponseAnalysis(alertId);
+    
+    // Update user's safety profile based on incident
+    await this.updateSafetyProfile(alertId, resolution);
+    
+    // Generate incident report if requested
+    if (resolution.generateReport) {
+      await this.generateIncidentReport(alertId);
+    }
+  }
+}
+```
+</CodeGroup>
+
+## False Alarm Prevention
+
+### Grace Period System
+
+<Warning>
+**Balancing Safety and Usability:** Grace periods must be long enough to prevent false alarms but short enough to ensure genuine emergencies receive immediate attention.
+</Warning>
+
+<Steps>
+  <Step title="Smart Grace Periods">
+    Adaptive cancellation windows based on trigger method and user behavior patterns
+  </Step>
+  <Step title="Confirmation Dialogs">
+    User-friendly confirmation for potentially accidental triggers
+  </Step>
+  <Step title="Pattern Learning">
+    System learns from false alarms to improve trigger sensitivity
+  </Step>
+  <Step title="Escalation Bypass">
+    Emergency overrides for situations where users cannot cancel false alarms
+  </Step>
+</Steps>
+
+<CardGroup cols={3}>
+  <Card title="Manual Triggers" icon="hand">
+    10-second grace period with large cancel button and audio countdown
+  </Card>
+  <Card title="Auto-Detection" icon="cpu">
+    30-second grace period with confidence-based adjustment
+  </Card>
+  <Card title="Voice Commands" icon="mic">
+    5-second grace period with voice confirmation option
+  </Card>
+</CardGroup>
+
+## Offline Emergency Capabilities
+
+### Critical Offline Features
+
+<Info>
+**Offline-First Emergency Design:** Core emergency features must work without internet connectivity, with intelligent sync when connectivity returns.
+</Info>
+
+<Accordion title="Offline Emergency Capabilities">
+**Local Emergency Processing:**
+- Emergency alerts stored locally with encrypted backup
+- Contact notification queue for when connectivity returns
+- Location caching using device GPS without network assistance
+- Evidence collection continues offline with local storage
+
+**SMS Fallback System:**
+- Direct SMS sending bypassing data networks
+- Pre-configured emergency SMS templates
+- Location sharing via SMS coordinates
+- Contact notification through carrier SMS services
+
+**Offline Evidence Collection:**
+- Audio recording continues offline with local storage
+- Photo/video evidence stored on device
+- Sensor data collection and local analysis
+- Automatic sync when connectivity restored
+
+**Implementation Example:**
+```typescript
+export class OfflineEmergencyManager {
+  async handleOfflineEmergency(trigger: EmergencyTrigger): Promise<void> {
+    // Create local emergency record
+    const localAlert = await this.createLocalEmergencyRecord(trigger);
+    
+    // Queue for sync when online
+    await this.queueForSync('emergency_alerts', localAlert);
+    
+    // Send SMS notifications immediately
+    await this.sendOfflineSMSNotifications(localAlert);
+    
+    // Start local evidence collection
+    await this.startOfflineEvidenceCollection(localAlert.id);
+    
+    // Monitor for connectivity to sync
+    this.monitorConnectivityForSync(localAlert.id);
+  }
+
+  private async sendOfflineSMSNotifications(alert: LocalEmergencyAlert): Promise<void> {
+    const contacts = await this.getEmergencyContacts(alert.userId);
+    const location = await this.getCurrentLocation();
+    
+    for (const contact of contacts) {
+      if (contact.phoneNumber) {
+        const message = this.buildEmergencySMS(alert, location);
+        await this.sendDirectSMS(contact.phoneNumber, message);
+      }
+    }
+  }
+}
+```
+</Accordion>
+
+## Integration with Other Features
+
+### Connected Safety Features
+
+<CardGroup cols={2}>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Emergency alerts automatically include high-accuracy location data
+  </Card>
+  <Card title="Circle of Trust" icon="users" href="/features/circle-of-trust">
+    Emergency contacts defined in Circle of Trust receive instant notifications
+  </Card>
+  <Card title="Check-ins" icon="clock" href="/features/check-ins">
+    Missed check-ins can automatically trigger emergency protocols
+  </Card>
+  <Card title="Journey Monitoring" icon="route" href="/features/journey-monitoring">
+    Route deviations can trigger emergency alerts with context
+  </Card>
+</CardGroup>
+
+## Privacy and Security
+
+### Emergency Data Protection
+
+<Note>
+**Privacy During Emergencies:** While emergency situations may require sharing more data than usual, users maintain control over what information is shared with whom.
+</Note>
+
+<Steps>
+  <Step title="Consent-Based Sharing">
+    Users pre-configure what emergency data can be shared with different contact types
+  </Step>
+  <Step title="Evidence Encryption">
+    All collected evidence is encrypted locally and in transit
+  </Step>
+  <Step title="Selective Contact Access">
+    Different contacts can receive different levels of emergency information
+  </Step>
+  <Step title="Automatic Data Expiration">
+    Emergency data automatically expires based on user preferences and legal requirements
+  </Step>
+</Steps>
+
+---
+
+## Implementation Guide
+
+<Warning>
+**Critical Implementation Requirements:**
+- Emergency alerts must process in under 3 seconds from trigger to first notification
+- All emergency features must have offline fallback capabilities
+- Multiple redundant notification channels required for reliability
+- Evidence collection must respect user privacy while ensuring safety utility
+- False alarm prevention cannot compromise legitimate emergency response times
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Location Tracking Setup" icon="map-pin" href="/features/location-tracking">
+    Configure high-accuracy location services for emergency situations
+  </Card>
+  <Card title="Circle of Trust Management" icon="users" href="/features/circle-of-trust">
+    Set up and manage emergency contacts and notification preferences
+  </Card>
+  <Card title="Safety Triggers Configuration" icon="settings" href="/features/safety-triggers">
+    Configure trigger methods and sensitivity settings for your safety needs
+  </Card>
+</CardGroup>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Set Up Emergency Contacts" icon="users" href="/features/circle-of-trust">
+    Configure your Circle of Trust for emergency notifications
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Test Emergency Features" icon="test-tube" href="/development/testing-strategy">
+    Learn how to safely test emergency features without triggering real alerts
   </Card>
 </CardGroup>
-
----
-
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>

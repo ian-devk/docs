@@ -1,59 +1,1566 @@
 ---
 title: "Project Structure"
-description: "Project Structure documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to organizing your Shelther project structure. Learn about scalable architecture patterns, component organization, and best practices for safety-critical application development."
+sidebarTitle: "Project Structure"
 ---
 
 # Project Structure
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Scalable Safety Architecture:** Shelther follows a carefully designed project structure that scales from small features to enterprise-level safety applications while maintaining code quality and developer productivity.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+A well-organized project structure is crucial for safety-critical applications where code clarity, maintainability, and reliability are paramount. Shelther's structure balances developer experience with production requirements, ensuring that safety features remain robust as the codebase grows.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Feature-Based Organization" icon="folder-tree">
+    Logical grouping of related functionality for easier navigation and maintenance
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Safety-First Design" icon="shield">
+    Critical safety components are clearly identified and separated from general features
+  </Card>
+  <Card title="Scalable Architecture" icon="trending-up">
+    Structure that grows cleanly from prototype to production-ready application
+  </Card>
+  <Card title="Developer Experience" icon="code">
+    Optimized for fast development, easy testing, and clear code ownership
+  </Card>
+</CardGroup>
+
+## Root Directory Structure
+
+### Core Project Layout
+
+<Steps>
+  <Step title="Source Code Organization">
+    All application code lives in the `src/` directory with clear separation between features
+  </Step>
+  <Step title="Configuration Management">
+    Environment-specific configurations and build settings in dedicated directories
+  </Step>
+  <Step title="Asset Management">
+    Static assets organized by type and usage context for optimal performance
+  </Step>
+  <Step title="Development Tools">
+    Testing, documentation, and utility scripts properly organized for team collaboration
+  </Step>
+</Steps>
+
+<CodeGroup>
+```bash Complete Directory Structure
+shelther-app/
+├── 📁 .expo/                          # Expo development cache
+├── 📁 .vscode/                        # VS Code workspace configuration
+│   ├── launch.json                    # Debug configurations
+│   ├── settings.json                  # Workspace settings
+│   └── extensions.json                # Recommended extensions
+├── 📁 android/                        # Android native code (if ejected)
+├── 📁 ios/                           # iOS native code (if ejected)
+├── 📁 assets/                         # Static assets
+│   ├── 📁 images/
+│   │   ├── 📁 icons/                  # App icons and UI icons
+│   │   ├── 📁 illustrations/          # Safety illustrations
+│   │   ├── 📁 onboarding/             # Onboarding screens
+│   │   └── 📁 emergency/              # Emergency-related visuals
+│   ├── 📁 fonts/                      # Custom fonts
+│   ├── 📁 sounds/                     # Audio files
+│   │   ├── emergency-alert.mp3
+│   │   ├── check-in-success.mp3
+│   │   └── notification-tone.mp3
+│   └── 📁 animations/                 # Lottie animations
+├── 📁 src/                           # Application source code
+│   ├── 📁 components/                 # Reusable UI components
+│   ├── 📁 screens/                    # Screen components
+│   ├── 📁 navigation/                 # Navigation configuration
+│   ├── 📁 features/                   # Feature-based modules
+│   ├── 📁 services/                   # External services & APIs
+│   ├── 📁 hooks/                      # Custom React hooks
+│   ├── 📁 store/                      # State management
+│   ├── 📁 utils/                      # Utility functions
+│   ├── 📁 types/                      # TypeScript definitions
+│   ├── 📁 constants/                  # Application constants
+│   ├── 📁 styles/                     # Global styles & themes
+│   └── 📁 __tests__/                  # Source code tests
+├── 📁 supabase/                       # Supabase configuration
+│   ├── 📁 migrations/                 # Database migrations
+│   ├── 📁 functions/                  # Edge functions
+│   ├── 📁 seed.sql                    # Database seed data
+│   └── config.toml                   # Supabase config
+├── 📁 docs/                          # Project documentation
+├── 📁 scripts/                       # Build & utility scripts
+├── 📁 __tests__/                     # Global test configuration
+├── 📁 .github/                       # GitHub workflows & templates
+├── 📄 .env.example                   # Environment template
+├── 📄 .gitignore                     # Git ignore rules
+├── 📄 app.json                       # Expo configuration
+├── 📄 eas.json                       # EAS Build configuration
+├── 📄 package.json                   # Dependencies & scripts
+├── 📄 tsconfig.json                  # TypeScript configuration
+├── 📄 jest.config.js                 # Testing configuration
+├── 📄 metro.config.js                # Metro bundler config
+└── 📄 README.md                      # Project documentation
+```
+
+```typescript Directory Index Pattern
+// src/index.ts - Main app entry point
+export { default } from './App';
+
+// src/components/index.ts - Component exports
+export * from './ui';
+export * from './forms';
+export * from './safety';
+export * from './navigation';
+
+// src/screens/index.ts - Screen exports
+export * from './auth';
+export * from './emergency';
+export * from './settings';
+export * from './profile';
+
+// src/services/index.ts - Service exports
+export * from './api';
+export * from './auth';
+export * from './location';
+export * from './notifications';
+
+// This pattern allows clean imports:
+// import { Button, EmergencyButton } from '@/components';
+// import { LoginScreen, EmergencyScreen } from '@/screens';
+```
+</CodeGroup>
+
+## Source Code Architecture
+
+### Component Organization
+
+<Note>
+**Component Hierarchy:** Components are organized by complexity and reusability, from basic UI elements to complex safety-specific components.
+</Note>
+
+<Accordion title="Component Directory Structure">
+```bash
+src/components/
+├── 📁 ui/                             # Basic UI components
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.test.tsx
+│   │   ├── Button.stories.tsx
+│   │   └── index.ts
+│   ├── Input/
+│   ├── Card/
+│   ├── Modal/
+│   ├── Loading/
+│   └── index.ts
+├── 📁 forms/                          # Form-specific components
+│   ├── ContactForm/
+│   ├── EmergencyContactForm/
+│   ├── SettingsForm/
+│   └── index.ts
+├── 📁 safety/                         # Safety-specific components
+│   ├── EmergencyButton/
+│   │   ├── EmergencyButton.tsx
+│   │   ├── EmergencyButton.test.tsx
+│   │   ├── EmergencyCountdown.tsx
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── LocationSharing/
+│   ├── CheckInReminder/
+│   ├── SafetyStatus/
+│   └── index.ts
+├── 📁 navigation/                     # Navigation components
+│   ├── TabBar/
+│   ├── HeaderRight/
+│   ├── DrawerContent/
+│   └── index.ts
+├── 📁 widgets/                        # Home screen widgets
+│   ├── QuickActions/
+│   ├── SafetyStatusWidget/
+│   ├── ContactsWidget/
+│   └── index.ts
+└── index.ts                          # Main component exports
+```
+
+**Component Template Structure:**
+```typescript
+// src/components/ui/Button/Button.tsx
+import React from 'react';
+import { Pressable, Text, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { ButtonProps } from './types';
+import { styles } from './styles';
+
+export const Button: React.FC<ButtonProps> = ({
+  title,
+  onPress,
+  variant = 'primary',
+  size = 'medium',
+  disabled = false,
+  loading = false,
+  icon,
+  style,
+  textStyle,
+  testID,
+  ...props
+}) => {
+  const theme = useTheme();
+  
+  const buttonStyles: ViewStyle[] = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    disabled && styles.disabled,
+    loading && styles.loading,
+    style,
+  ];
+  
+  const textStyles: TextStyle[] = [
+    styles.text,
+    styles[`${variant}Text`],
+    styles[`${size}Text`],
+    disabled && styles.disabledText,
+    textStyle,
+  ];
+  
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        ...buttonStyles,
+        pressed && styles.pressed,
+      ]}
+      onPress={onPress}
+      disabled={disabled || loading}
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading }}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator color={theme.colors.primary} />
+      ) : (
+        <>
+          {icon && <View style={styles.icon}>{icon}</View>}
+          <Text style={textStyles}>{title}</Text>
+        </>
+      )}
+    </Pressable>
+  );
+};
+
+// src/components/ui/Button/types.ts
+import { PressableProps, ViewStyle, TextStyle } from 'react-native';
+
+export interface ButtonProps extends Omit<PressableProps, 'style'> {
+  title: string;
+  onPress: () => void;
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+  testID?: string;
+}
+
+// src/components/ui/Button/index.ts
+export { Button } from './Button';
+export type { ButtonProps } from './types';
+```
+</Accordion>
+
+### Feature-Based Architecture
+
+<Warning>
+**Safety Feature Isolation:** Critical safety features are isolated in their own modules to prevent accidental modifications and ensure clear boundaries.
+</Warning>
+
+<CodeGroup>
+```bash Feature Module Structure
+src/features/
+├── 📁 emergency/                      # Emergency management
+│   ├── components/
+│   │   ├── EmergencyButton/
+│   │   ├── EmergencyCountdown/
+│   │   ├── EmergencyHistory/
+│   │   └── index.ts
+│   ├── hooks/
+│   │   ├── useEmergencyAlert.ts
+│   │   ├── useEmergencyContacts.ts
+│   │   └── index.ts
+│   ├── services/
+│   │   ├── emergencyAPI.ts
+│   │   ├── emergencyNotifications.ts
+│   │   └── index.ts
+│   ├── store/
+│   │   ├── emergencySlice.ts
+│   │   ├── selectors.ts
+│   │   └── index.ts
+│   ├── types/
+│   │   ├── emergency.ts
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── emergencyValidation.ts
+│   │   ├── emergencyFormatters.ts
+│   │   └── index.ts
+│   └── index.ts
+├── 📁 location/                       # Location services
+├── 📁 contacts/                       # Contact management
+├── 📁 notifications/                  # Notification system
+├── 📁 checkins/                      # Check-in functionality
+├── 📁 safety-insights/               # AI insights
+├── 📁 venue-safety/                  # Venue ratings
+├── 📁 community/                     # Community features
+└── index.ts
+```
+
+```typescript Feature Module Pattern
+// src/features/emergency/index.ts
+// Public API for emergency feature
+export * from './components';
+export * from './hooks';
+export { emergencySlice } from './store';
+export type * from './types';
+
+// Internal API (not exported)
+// - services/
+// - utils/
+// - store/selectors.ts (internal selectors)
+
+// src/features/emergency/hooks/useEmergencyAlert.ts
+import { useCallback, useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { emergencySlice } from '../store';
+import { emergencyAPI } from '../services';
+import type { EmergencyAlert, TriggerEmergencyOptions } from '../types';
+
+export const useEmergencyAlert = () => {
+  const dispatch = useAppDispatch();
+  const { activeAlert, isLoading } = useAppSelector(state => state.emergency);
+  
+  const triggerEmergency = useCallback(async (options: TriggerEmergencyOptions): Promise<EmergencyAlert> => {
+    dispatch(emergencySlice.actions.setLoading(true));
+    
+    try {
+      // Get current location
+      const location = await getCurrentLocation();
+      
+      // Create emergency alert
+      const alert = await emergencyAPI.createEmergencyAlert({
+        ...options,
+        location,
+        timestamp: new Date().toISOString(),
+      });
+      
+      dispatch(emergencySlice.actions.setActiveAlert(alert));
+      
+      // Trigger notifications
+      await emergencyAPI.notifyEmergencyContacts(alert);
+      
+      return alert;
+    } catch (error) {
+      dispatch(emergencySlice.actions.setError(error.message));
+      throw error;
+    } finally {
+      dispatch(emergencySlice.actions.setLoading(false));
+    }
+  }, [dispatch]);
+  
+  const cancelEmergency = useCallback(async (alertId: string): Promise<void> => {
+    await emergencyAPI.cancelEmergencyAlert(alertId);
+    dispatch(emergencySlice.actions.clearActiveAlert());
+  }, [dispatch]);
+  
+  return {
+    activeAlert,
+    isLoading,
+    triggerEmergency,
+    cancelEmergency,
+  };
+};
+
+// src/features/emergency/types/emergency.ts
+export interface EmergencyAlert {
+  id: string;
+  user_id: string;
+  type: 'manual' | 'automatic' | 'duress';
+  status: 'active' | 'resolved' | 'cancelled';
+  location?: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    timestamp: string;
+  };
+  message?: string;
+  emergency_contacts_notified: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TriggerEmergencyOptions {
+  type: EmergencyAlert['type'];
+  message?: string;
+  auto_cancel_minutes?: number;
+}
+```
+</CodeGroup>
+
+### Screen Organization
+
+<Steps>
+  <Step title="Screen Grouping">
+    Screens organized by user flow and feature area for logical navigation
+  </Step>
+  <Step title="Shared Components">
+    Common screen components and layouts shared across different flows
+  </Step>
+  <Step title="Screen State Management">
+    Local screen state separate from global application state
+  </Step>
+  <Step title="Navigation Integration">
+    Clear integration with navigation system and deep linking
+  </Step>
+</Steps>
+
+<Accordion title="Screen Directory Structure">
+```bash
+src/screens/
+├── 📁 auth/                           # Authentication flows
+│   ├── LoginScreen/
+│   │   ├── LoginScreen.tsx
+│   │   ├── LoginScreen.test.tsx
+│   │   ├── components/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── SocialLogin.tsx
+│   │   ├── hooks/
+│   │   │   └── useLogin.ts
+│   │   └── index.ts
+│   ├── RegisterScreen/
+│   ├── ForgotPasswordScreen/
+│   ├── OnboardingScreen/
+│   └── index.ts
+├── 📁 emergency/                      # Emergency-related screens
+│   ├── EmergencyScreen/
+│   │   ├── EmergencyScreen.tsx
+│   │   ├── components/
+│   │   │   ├── EmergencyActions.tsx
+│   │   │   ├── EmergencyStatus.tsx
+│   │   │   └── ContactNotifications.tsx
+│   │   └── index.ts
+│   ├── EmergencyHistoryScreen/
+│   ├── EmergencyContactsScreen/
+│   └── index.ts
+├── 📁 main/                          # Main app screens
+│   ├── HomeScreen/
+│   ├── SafetyDashboardScreen/
+│   ├── CheckInScreen/
+│   ├── LocationSharingScreen/
+│   └── index.ts
+├── 📁 settings/                       # Settings and configuration
+│   ├── SettingsScreen/
+│   ├── PrivacySettingsScreen/
+│   ├── NotificationSettingsScreen/
+│   ├── AccessibilitySettingsScreen/
+│   └── index.ts
+├── 📁 profile/                        # User profile management
+│   ├── ProfileScreen/
+│   ├── EditProfileScreen/
+│   ├── SafetyPreferencesScreen/
+│   └── index.ts
+├── 📁 community/                      # Community features
+│   ├── CommunityScreen/
+│   ├── VenueReviewsScreen/
+│   ├── SafetyReportsScreen/
+│   └── index.ts
+├── 📁 shared/                        # Shared screen components
+│   ├── LoadingScreen/
+│   ├── ErrorScreen/
+│   ├── MaintenanceScreen/
+│   └── index.ts
+└── index.ts
+```
+
+**Screen Component Pattern:**
+```typescript
+// src/screens/emergency/EmergencyScreen/EmergencyScreen.tsx
+import React, { useEffect } from 'react';
+import { View, ScrollView, Alert } from 'react-native';
+import { StackScreenProps } from '@react-navigation/stack';
+import { useEmergencyAlert } from '@/features/emergency';
+import { useLocation } from '@/hooks';
+import { EmergencyActions, EmergencyStatus, ContactNotifications } from './components';
+import { styles } from './styles';
+import type { MainStackParamList } from '@/navigation/types';
+
+type Props = StackScreenProps<MainStackParamList, 'Emergency'>;
+
+export const EmergencyScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { activeAlert, triggerEmergency, cancelEmergency } = useEmergencyAlert();
+  const { currentLocation } = useLocation();
+  
+  useEffect(() => {
+    // Set up emergency screen specific behavior
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (activeAlert?.status === 'active') {
+        e.preventDefault();
+        
+        Alert.alert(
+          'Active Emergency',
+          'You have an active emergency alert. Are you sure you want to leave?',
+          [
+            { text: "Don't leave", style: 'cancel' },
+            {
+              text: 'Leave',
+              style: 'destructive',
+              onPress: () => navigation.dispatch(e.data.action),
+            },
+          ]
+        );
+      }
+    });
+    
+    return unsubscribe;
+  }, [navigation, activeAlert]);
+  
+  const handleEmergencyTrigger = async () => {
+    try {
+      await triggerEmergency({
+        type: 'manual',
+        message: 'Emergency triggered from app',
+      });
+    } catch (error) {
+      Alert.alert('Emergency Error', 'Failed to trigger emergency alert. Please try again.');
+    }
+  };
+  
+  return (
+    <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
+      <View style={styles.content}>
+        <EmergencyStatus 
+          activeAlert={activeAlert}
+          currentLocation={currentLocation}
+        />
+        
+        <EmergencyActions
+          onTriggerEmergency={handleEmergencyTrigger}
+          onCancelEmergency={() => cancelEmergency(activeAlert?.id)}
+          hasActiveAlert={!!activeAlert}
+        />
+        
+        {activeAlert && (
+          <ContactNotifications
+            alertId={activeAlert.id}
+            contactsNotified={activeAlert.emergency_contacts_notified}
+          />
+        )}
+      </View>
+    </ScrollView>
+  );
+};
+```
+</Accordion>
+
+## Services & API Layer
+
+### Service Architecture
+
+<CardGroup cols={2}>
+  <Card title="API Abstraction" icon="layers">
+    Clean separation between business logic and external service implementation
+  </Card>
+  <Card title="Error Handling" icon="alert-triangle">
+    Consistent error handling and retry logic across all services
+  </Card>
+  <Card title="Type Safety" icon="shield">
+    Full TypeScript coverage for API requests and responses
+  </Card>
+  <Card title="Testing Support" icon="test-tube">
+    Mock-friendly architecture for comprehensive testing
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```bash Services Structure
+src/services/
+├── 📁 api/                           # API client configuration
+│   ├── client.ts                     # Base API client
+│   ├── types.ts                      # Common API types
+│   ├── interceptors.ts               # Request/response interceptors
+│   └── index.ts
+├── 📁 auth/                          # Authentication services
+│   ├── authService.ts
+│   ├── tokenManager.ts
+│   ├── biometricAuth.ts
+│   └── index.ts
+├── 📁 location/                      # Location services
+│   ├── locationService.ts
+│   ├── geocoding.ts
+│   ├── geofencing.ts
+│   └── index.ts
+├── 📁 notifications/                 # Notification services
+│   ├── pushNotifications.ts
+│   ├── smsService.ts
+│   ├── emailService.ts
+│   └── index.ts
+├── 📁 emergency/                     # Emergency services
+│   ├── emergencyService.ts
+│   ├── contactNotification.ts
+│   ├── escalationService.ts
+│   └── index.ts
+├── 📁 storage/                       # Storage services
+│   ├── secureStorage.ts
+│   ├── localStorage.ts
+│   ├── cloudStorage.ts
+│   └── index.ts
+├── 📁 analytics/                     # Analytics services
+│   ├── analyticsService.ts
+│   ├── crashlytics.ts
+│   ├── performanceMonitoring.ts
+│   └── index.ts
+└── index.ts
+```
+
+```typescript Service Implementation Pattern
+// src/services/api/client.ts
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/supabase';
+import { tokenManager } from '../auth/tokenManager';
+
+class APIClient {
+  private supabase;
+  
+  constructor() {
+    this.supabase = createClient<Database>(
+      process.env.EXPO_PUBLIC_SUPABASE_URL!,
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: false,
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'shelther-mobile',
+          },
+        },
+      }
+    );
+    
+    this.setupInterceptors();
+  }
+  
+  private setupInterceptors() {
+    // Add request interceptors
+    this.supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        tokenManager.setSession(session);
+      } else if (event === 'SIGNED_OUT') {
+        tokenManager.clearSession();
+      }
+    });
+  }
+  
+  async request<T>(
+    table: string,
+    operation: 'select' | 'insert' | 'update' | 'delete',
+    options?: any
+  ): Promise<T> {
+    try {
+      const query = this.supabase.from(table);
+      
+      switch (operation) {
+        case 'select':
+          const { data, error } = await query.select(options?.select || '*');
+          if (error) throw error;
+          return data as T;
+          
+        case 'insert':
+          const { data: insertData, error: insertError } = await query
+            .insert(options.data)
+            .select();
+          if (insertError) throw insertError;
+          return insertData as T;
+          
+        case 'update':
+          const { data: updateData, error: updateError } = await query
+            .update(options.data)
+            .eq('id', options.id)
+            .select();
+          if (updateError) throw updateError;
+          return updateData as T;
+          
+        case 'delete':
+          const { error: deleteError } = await query.delete().eq('id', options.id);
+          if (deleteError) throw deleteError;
+          return null as T;
+          
+        default:
+          throw new Error(`Unsupported operation: ${operation}`);
+      }
+    } catch (error) {
+      console.error(`API request failed:`, error);
+      throw this.handleError(error);
+    }
+  }
+  
+  private handleError(error: any): Error {
+    if (error.code === 'PGRST116') {
+      return new Error('Resource not found');
+    } else if (error.code === '23505') {
+      return new Error('Duplicate entry');
+    } else if (error.message?.includes('JWT')) {
+      return new Error('Authentication required');
+    }
+    
+    return new Error(error.message || 'An unexpected error occurred');
+  }
+  
+  get auth() {
+    return this.supabase.auth;
+  }
+  
+  get storage() {
+    return this.supabase.storage;
+  }
+  
+  get realtime() {
+    return this.supabase.channel.bind(this.supabase);
+  }
+}
+
+export const apiClient = new APIClient();
+
+// src/services/emergency/emergencyService.ts
+import { apiClient } from '../api/client';
+import { locationService } from '../location';
+import { notificationService } from '../notifications';
+import type { EmergencyAlert, CreateEmergencyAlertRequest } from '@/types';
+
+class EmergencyService {
+  async createEmergencyAlert(request: CreateEmergencyAlertRequest): Promise<EmergencyAlert> {
+    // Get current location if not provided
+    const location = request.location || await locationService.getCurrentLocation();
+    
+    // Create alert in database
+    const alertData = {
+      type: request.type,
+      message: request.message,
+      location: location,
+      status: 'active' as const,
+      user_id: request.user_id,
+    };
+    
+    const alert = await apiClient.request<EmergencyAlert[]>(
+      'emergency_alerts',
+      'insert',
+      { data: alertData }
+    );
+    
+    // Notify emergency contacts
+    await this.notifyEmergencyContacts(alert[0]);
+    
+    return alert[0];
+  }
+  
+  async cancelEmergencyAlert(alertId: string): Promise<void> {
+    await apiClient.request(
+      'emergency_alerts',
+      'update',
+      {
+        id: alertId,
+        data: { 
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString()
+        }
+      }
+    );
+    
+    // Notify contacts of cancellation
+    await notificationService.sendCancellationNotifications(alertId);
+  }
+  
+  async getEmergencyHistory(userId: string): Promise<EmergencyAlert[]> {
+    return apiClient.request<EmergencyAlert[]>(
+      'emergency_alerts',
+      'select',
+      {
+        select: '*',
+        filter: { user_id: userId },
+        order: { created_at: 'desc' }
+      }
+    );
+  }
+  
+  private async notifyEmergencyContacts(alert: EmergencyAlert): Promise<void> {
+    try {
+      // Get user's emergency contacts
+      const contacts = await this.getEmergencyContacts(alert.user_id);
+      
+      // Send notifications via multiple channels
+      await Promise.allSettled([
+        notificationService.sendPushNotifications(alert, contacts),
+        notificationService.sendSMSNotifications(alert, contacts),
+        notificationService.sendEmailNotifications(alert, contacts),
+      ]);
+    } catch (error) {
+      console.error('Failed to notify emergency contacts:', error);
+      // Don't throw - emergency alert was created successfully
+    }
+  }
+  
+  private async getEmergencyContacts(userId: string) {
+    return apiClient.request(
+      'emergency_contacts',
+      'select',
+      {
+        select: '*',
+        filter: { user_id: userId, is_active: true },
+        order: { priority: 'asc' }
+      }
+    );
+  }
+}
+
+export const emergencyService = new EmergencyService();
+```
+</CodeGroup>
+
+## State Management
+
+### Redux Toolkit Architecture
+
+<Note>
+**Predictable State:** Redux Toolkit provides predictable state management with excellent DevTools integration for debugging safety-critical state changes.
+</Note>
+
+<Accordion title="Store Structure">
+```bash
+src/store/
+├── 📁 slices/                        # Feature-based state slices
+│   ├── authSlice.ts
+│   ├── emergencySlice.ts
+│   ├── locationSlice.ts
+│   ├── contactsSlice.ts
+│   ├── notificationsSlice.ts
+│   ├── settingsSlice.ts
+│   └── index.ts
+├── 📁 middleware/                     # Custom middleware
+│   ├── authMiddleware.ts
+│   ├── persistenceMiddleware.ts
+│   ├── analyticsMiddleware.ts
+│   └── index.ts
+├── 📁 selectors/                      # Reusable selectors
+│   ├── authSelectors.ts
+│   ├── emergencySelectors.ts
+│   ├── locationSelectors.ts
+│   └── index.ts
+├── store.ts                          # Store configuration
+├── rootReducer.ts                    # Root reducer
+├── types.ts                          # Store types
+└── index.ts
+```
+
+**Store Configuration:**
+```typescript
+// src/store/store.ts
+import { configureStore } from '@reduxjs/toolkit';
+import { 
+  persistStore, 
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { rootReducer } from './rootReducer';
+import { authMiddleware, analyticsMiddleware } from './middleware';
+
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['auth', 'settings'], // Only persist certain slices
+  blacklist: ['emergency'], // Don't persist sensitive emergency state
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    })
+    .concat(authMiddleware)
+    .concat(analyticsMiddleware),
+  devTools: __DEV__,
+});
+
+export const persistor = persistStore(store);
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+// src/store/slices/emergencySlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { emergencyService } from '@/services';
+import type { EmergencyAlert, CreateEmergencyAlertRequest } from '@/types';
+
+interface EmergencyState {
+  activeAlert: EmergencyAlert | null;
+  alertHistory: EmergencyAlert[];
+  isLoading: boolean;
+  error: string | null;
+  lastTriggeredAt: string | null;
+}
+
+const initialState: EmergencyState = {
+  activeAlert: null,
+  alertHistory: [],
+  isLoading: false,
+  error: null,
+  lastTriggeredAt: null,
+};
+
+// Async thunks
+export const triggerEmergencyAlert = createAsyncThunk(
+  'emergency/triggerAlert',
+  async (request: CreateEmergencyAlertRequest, { rejectWithValue }) => {
+    try {
+      const alert = await emergencyService.createEmergencyAlert(request);
+      return alert;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const cancelEmergencyAlert = createAsyncThunk(
+  'emergency/cancelAlert',
+  async (alertId: string, { rejectWithValue }) => {
+    try {
+      await emergencyService.cancelEmergencyAlert(alertId);
+      return alertId;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const loadEmergencyHistory = createAsyncThunk(
+  'emergency/loadHistory',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const history = await emergencyService.getEmergencyHistory(userId);
+      return history;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const emergencySlice = createSlice({
+  name: 'emergency',
+  initialState,
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
+    clearActiveAlert: (state) => {
+      state.activeAlert = null;
+    },
+    updateAlertStatus: (state, action: PayloadAction<{ id: string; status: string }>) => {
+      if (state.activeAlert?.id === action.payload.id) {
+        state.activeAlert.status = action.payload.status;
+      }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Trigger emergency alert
+      .addCase(triggerEmergencyAlert.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(triggerEmergencyAlert.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.activeAlert = action.payload;
+        state.lastTriggeredAt = new Date().toISOString();
+        state.alertHistory.unshift(action.payload);
+      })
+      .addCase(triggerEmergencyAlert.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Cancel emergency alert
+      .addCase(cancelEmergencyAlert.fulfilled, (state) => {
+        if (state.activeAlert) {
+          state.activeAlert.status = 'cancelled';
+        }
+      })
+      // Load emergency history
+      .addCase(loadEmergencyHistory.fulfilled, (state, action) => {
+        state.alertHistory = action.payload;
+      });
+  },
+});
+
+export const { clearError, clearActiveAlert, updateAlertStatus } = emergencySlice.actions;
+export default emergencySlice.reducer;
+```
+</Accordion>
+
+## Configuration Management
+
+### Environment Configuration
+
+<Warning>
+**Security First:** Never commit sensitive configuration to version control. Use environment variables and secure storage for production credentials.
+</Warning>
+
+<Steps>
+  <Step title="Environment Variables">
+    Separate configuration for development, staging, and production environments
+  </Step>
+  <Step title="Feature Flags">
+    Runtime feature toggles for gradual rollouts and A/B testing
+  </Step>
+  <Step title="Build Configuration">
+    Platform-specific build settings and optimization flags
+  </Step>
+  <Step title="Runtime Configuration">
+    Dynamic configuration that can be updated without app releases
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Environment Configuration
+// src/constants/config.ts
+interface AppConfig {
+  app: {
+    name: string;
+    version: string;
+    buildNumber: string;
+    environment: 'development' | 'staging' | 'production';
+  };
+  api: {
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+    timeout: number;
+    retryAttempts: number;
+  };
+  features: {
+    crashReporting: boolean;
+    analytics: boolean;
+    debugMode: boolean;
+    mockServices: boolean;
+    offlineMode: boolean;
+  };
+  safety: {
+    emergencyTimeoutSeconds: number;
+    locationAccuracyMeters: number;
+    maxEmergencyContacts: number;
+    autoEscalationMinutes: number;
+  };
+  notifications: {
+    enablePush: boolean;
+    enableSMS: boolean;
+    enableEmail: boolean;
+    quietHoursDefault: boolean;
+  };
+}
+
+const createConfig = (): AppConfig => {
+  const isDevelopment = __DEV__;
+  const environment = process.env.EXPO_PUBLIC_APP_ENV as AppConfig['app']['environment'] || 'development';
+  
+  return {
+    app: {
+      name: 'Shelther',
+      version: process.env.EXPO_PUBLIC_APP_VERSION || '1.0.0',
+      buildNumber: process.env.EXPO_PUBLIC_BUILD_NUMBER || '1',
+      environment,
+    },
+    api: {
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+      timeout: isDevelopment ? 10000 : 5000,
+      retryAttempts: isDevelopment ? 1 : 3,
+    },
+    features: {
+      crashReporting: !isDevelopment,
+      analytics: !isDevelopment,
+      debugMode: isDevelopment,
+      mockServices: isDevelopment && process.env.EXPO_PUBLIC_MOCK_SERVICES === 'true',
+      offlineMode: true,
+    },
+    safety: {
+      emergencyTimeoutSeconds: 10,
+      locationAccuracyMeters: 10,
+      maxEmergencyContacts: 5,
+      autoEscalationMinutes: 30,
+    },
+    notifications: {
+      enablePush: true,
+      enableSMS: true,
+      enableEmail: true,
+      quietHoursDefault: true,
+    },
+  };
+};
+
+export const config = createConfig();
+
+// Validate required environment variables
+const requiredEnvVars = [
+  'EXPO_PUBLIC_SUPABASE_URL',
+  'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+}
+
+// src/constants/featureFlags.ts
+interface FeatureFlags {
+  // Safety features
+  aiInsights: boolean;
+  wearableIntegration: boolean;
+  voiceEmergencyTrigger: boolean;
+  biometricAuth: boolean;
+  
+  // UI features
+  darkMode: boolean;
+  animations: boolean;
+  hapticFeedback: boolean;
+  
+  // Experimental features
+  predictiveAlerts: boolean;
+  communityReporting: boolean;
+  venueIntegration: boolean;
+}
+
+export const featureFlags: FeatureFlags = {
+  // Safety features - generally enabled
+  aiInsights: true,
+  wearableIntegration: true,
+  voiceEmergencyTrigger: true,
+  biometricAuth: true,
+  
+  // UI features
+  darkMode: true,
+  animations: !config.features.mockServices, // Disable in mock mode for testing
+  hapticFeedback: true,
+  
+  // Experimental features - controlled rollout
+  predictiveAlerts: config.app.environment === 'development',
+  communityReporting: config.app.environment !== 'production',
+  venueIntegration: false, // Future feature
+};
+
+// Runtime feature flag service
+class FeatureFlagService {
+  private flags: FeatureFlags = featureFlags;
+  
+  isEnabled(flag: keyof FeatureFlags): boolean {
+    return this.flags[flag];
+  }
+  
+  enable(flag: keyof FeatureFlags): void {
+    this.flags[flag] = true;
+  }
+  
+  disable(flag: keyof FeatureFlags): void {
+    this.flags[flag] = false;
+  }
+  
+  // For A/B testing and gradual rollouts
+  enableForUser(flag: keyof FeatureFlags, userId: string): boolean {
+    // Simple hash-based percentage rollout
+    const hash = this.hashUserId(userId);
+    const percentage = hash % 100;
+    
+    // Example: Enable for 50% of users
+    if (flag === 'predictiveAlerts') {
+      return percentage < 50;
+    }
+    
+    return this.flags[flag];
+  }
+  
+  private hashUserId(userId: string): number {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      const char = userId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }
+}
+
+export const featureFlagService = new FeatureFlagService();
+```
+
+```json Build Configuration
+// eas.json
+{
+  "cli": {
+    "version": ">= 5.4.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "APP_ENV": "staging"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "APP_ENV": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
+
+// app.json - Expo configuration
+{
+  "expo": {
+    "name": "Shelther",
+    "slug": "shelther-safety",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF5A5A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shelther.app",
+      "buildNumber": "1.0.0",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Shelther needs location access to provide safety monitoring and emergency alerts.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Shelther uses background location to track your safety during activities.",
+        "NSCameraUsageDescription": "Shelther may use camera for profile photos and emergency documentation.",
+        "NSMicrophoneUsageDescription": "Shelther may record audio during emergency situations for your safety.",
+        "NSFaceIDUsageDescription": "Use Face ID to securely access your safety features."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF5A5A"
+      },
+      "package": "com.shelther.app",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-location",
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-task-manager",
+      "expo-background-fetch",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.0",
+            "newArchEnabled": true
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "newArchEnabled": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Testing Structure
+
+### Testing Organization
+
+<Note>
+**Comprehensive Testing:** Tests are organized to cover unit tests, integration tests, and end-to-end scenarios with special focus on safety-critical paths.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Unit Tests" icon="check-circle">
+    Individual component and function testing with comprehensive coverage
+  </Card>
+  <Card title="Integration Tests" icon="link">
+    Feature-level testing ensuring components work together correctly
+  </Card>
+  <Card title="E2E Tests" icon="monitor">
+    Full user journey testing including emergency scenarios
+  </Card>
+  <Card title="Safety Testing" icon="shield">
+    Specialized testing for safety-critical features and error conditions
+  </Card>
+</CardGroup>
+
+<Accordion title="Testing Directory Structure">
+```bash
+__tests__/
+├── 📁 unit/                          # Unit tests
+│   ├── 📁 components/
+│   │   ├── Button.test.tsx
+│   │   ├── EmergencyButton.test.tsx
+│   │   └── __snapshots__/
+│   ├── 📁 hooks/
+│   │   ├── useEmergencyAlert.test.ts
+│   │   ├── useLocation.test.ts
+│   │   └── useAuth.test.ts
+│   ├── 📁 services/
+│   │   ├── emergencyService.test.ts
+│   │   ├── locationService.test.ts
+│   │   └── __mocks__/
+│   └── 📁 utils/
+│       ├── formatters.test.ts
+│       └── validators.test.ts
+├── 📁 integration/                   # Integration tests
+│   ├── 📁 features/
+│   │   ├── emergency-flow.test.tsx
+│   │   ├── auth-flow.test.tsx
+│   │   └── location-sharing.test.tsx
+│   ├── 📁 api/
+│   │   ├── emergency-api.test.ts
+│   │   └── user-api.test.ts
+│   └── 📁 store/
+│       ├── emergency-store.test.ts
+│       └── auth-store.test.ts
+├── 📁 e2e/                          # End-to-end tests
+│   ├── 📁 emergency/
+│   │   ├── trigger-emergency.e2e.ts
+│   │   ├── cancel-emergency.e2e.ts
+│   │   └── emergency-contacts.e2e.ts
+│   ├── 📁 onboarding/
+│   │   ├── registration.e2e.ts
+│   │   └── setup-contacts.e2e.ts
+│   └── 📁 settings/
+│       └── safety-preferences.e2e.ts
+├── 📁 safety/                       # Safety-specific tests
+│   ├── offline-emergency.test.ts
+│   ├── battery-optimization.test.ts
+│   ├── location-accuracy.test.ts
+│   └── notification-delivery.test.ts
+├── 📁 __mocks__/                    # Global mocks
+│   ├── @react-native-async-storage/
+│   ├── expo-location/
+│   ├── expo-notifications/
+│   └── @supabase/
+├── 📁 fixtures/                     # Test data
+│   ├── users.ts
+│   ├── emergencyAlerts.ts
+│   └── locations.ts
+├── 📁 helpers/                      # Test utilities
+│   ├── renderWithProviders.tsx
+│   ├── mockServices.ts
+│   └── testUtils.ts
+├── setup.ts                        # Test setup
+└── jest.config.js                  # Jest configuration
+```
+
+**Test Setup Example:**
+```typescript
+// __tests__/helpers/renderWithProviders.tsx
+import React, { ReactElement } from 'react';
+import { render, RenderOptions } from '@testing-library/react-native';
+import { Provider } from 'react-redux';
+import { NavigationContainer } from '@react-navigation/native';
+import { configureStore } from '@reduxjs/toolkit';
+import { rootReducer } from '@/store';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+
+interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  preloadedState?: any;
+  store?: any;
+}
+
+export function renderWithProviders(
+  ui: ReactElement,
+  {
+    preloadedState = {},
+    store = configureStore({
+      reducer: rootReducer,
+      preloadedState,
+    }),
+    ...renderOptions
+  }: ExtendedRenderOptions = {}
+) {
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <Provider store={store}>
+        <NavigationContainer>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </NavigationContainer>
+      </Provider>
+    );
+  }
+
+  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
+}
+
+// __tests__/safety/offline-emergency.test.ts
+import { emergencyService } from '@/services';
+import { mockLocation, mockEmergencyContacts } from '../fixtures';
+
+describe('Offline Emergency Functionality', () => {
+  beforeEach(() => {
+    // Mock offline environment
+    jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('should trigger emergency alert offline', async () => {
+    const mockSMSService = jest.fn().mockResolvedValue({ success: true });
+    jest.mock('@/services/notifications', () => ({
+      smsService: { sendEmergencySMS: mockSMSService }
+    }));
+
+    const alert = await emergencyService.createEmergencyAlert({
+      type: 'manual',
+      message: 'Test emergency',
+      user_id: 'test-user',
+    });
+
+    expect(alert).toBeDefined();
+    expect(mockSMSService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Test emergency'),
+        contacts: expect.any(Array),
+      })
+    );
+  });
+
+  test('should store emergency locally when offline', async () => {
+    const mockAsyncStorage = jest.requireMock('@react-native-async-storage/async-storage');
+    
+    await emergencyService.createEmergencyAlert({
+      type: 'manual',
+      user_id: 'test-user',
+    });
+
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
+      expect.stringMatching(/emergency_/),
+      expect.any(String)
+    );
+  });
+});
+```
+</Accordion>
+
+## Best Practices
+
+### Code Organization Principles
+
+<Steps>
+  <Step title="Feature Isolation">
+    Keep related functionality together in feature modules for easier maintenance
+  </Step>
+  <Step title="Clear Dependencies">
+    Use explicit imports and avoid circular dependencies between modules
+  </Step>
+  <Step title="Type Safety">
+    Comprehensive TypeScript coverage with strict configuration
+  </Step>
+  <Step title="Documentation">
+    Clear documentation for complex business logic and safety-critical code
+  </Step>
+</Steps>
+
+### Safety-Critical Code Guidelines
+
+<Warning>
+**Critical Code Standards:** Safety-critical components require additional documentation, testing, and review processes to ensure reliability.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Clear Separation" icon="layers">
+    Safety-critical code clearly separated from general application features
+  </Card>
+  <Card title="Comprehensive Testing" icon="shield">
+    100% test coverage for emergency and safety-related functionality
+  </Card>
+  <Card title="Error Handling" icon="alert-triangle">
+    Robust error handling with graceful degradation for non-critical failures
+  </Card>
+  <Card title="Performance Monitoring" icon="activity">
+    Performance monitoring for safety features to ensure rapid response times
   </Card>
 </CardGroup>
 
 ---
 
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Expo Configuration" icon="settings" href="/development/expo-configuration">
+    Deep dive into Expo SDK 52+ configuration and advanced features
+  </Card>
+  <Card title="Supabase Setup" icon="database" href="/development/supabase-setup">
+    Complete guide to configuring Supabase for safety applications
+  </Card>
+  <Card title="Component Development" icon="components" href="/development/component-development">
+    Learn how to build reusable, accessible components for safety apps
+  </Card>
+</CardGroup>
+
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Scalable Foundation:** This project structure provides a solid foundation that can scale from prototype to production while maintaining code quality and developer productivity.
 </Note>

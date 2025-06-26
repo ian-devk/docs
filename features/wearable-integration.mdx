@@ -1,59 +1,810 @@
 ---
 title: "Wearable Integration"
-description: "Wearable Integration documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Seamlessly connect smartwatches and fitness trackers with Shelther for enhanced safety monitoring. Support for Apple Watch, Wear OS, and fitness trackers with emergency triggers and health monitoring."
+sidebarTitle: "Wearable Integration"
 ---
 
 # Wearable Integration
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Extended Safety Ecosystem:** Shelther extends beyond your phone to create a comprehensive safety network through smartwatch and fitness tracker integration, providing discreet emergency triggers and continuous health monitoring.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Wearable integration transforms your smartwatch or fitness tracker into a powerful safety companion that works seamlessly with your Shelther mobile app. Access emergency features, monitor vital signs, and trigger alerts directly from your wrist with complete privacy and reliability.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Emergency Triggers" icon="shield-alert">
+    Multiple ways to trigger help directly from your wearable device
+  </Card>
+  <Card title="Health Monitoring" icon="heart-pulse">
+    Continuous vital sign monitoring with anomaly detection for safety
+  </Card>
+  <Card title="Silent Communication" icon="eye-slash">
+    Discreet emergency signaling without alerting potential threats
+  </Card>
+  <Card title="Offline Capability" icon="wifi-slash">
+    Core safety features work even when disconnected from your phone
+  </Card>
+</CardGroup>
+
+## Supported Devices
+
+### Apple Watch Integration
+
+<Steps>
+  <Step title="Apple Watch Series 4+">
+    Full feature support including Emergency SOS, fall detection integration, and heart rate monitoring
+  </Step>
+  <Step title="watchOS 8.0+">
+    Native Shelther app with complications, background monitoring, and independent connectivity
+  </Step>
+  <Step title="Cellular Models">
+    Independent emergency functionality even when away from iPhone
+  </Step>
+  <Step title="Health Integration">
+    Deep integration with Apple Health for comprehensive safety monitoring
+  </Step>
+</Steps>
+
+### Wear OS Devices
+
+<CardGroup cols={2}>
+  <Card title="Wear OS 3.0+" icon="android">
+    Samsung Galaxy Watch, Pixel Watch, and other Wear OS 3.0+ devices
+  </Card>
+  <Card title="Standalone Features" icon="smartphone">
+    Independent Wi-Fi and cellular connectivity for emergency situations
+  </Card>
+  <Card title="Google Health" icon="activity">
+    Integration with Google Fit and Health Connect for comprehensive monitoring
+  </Card>
+  <Card title="Custom Complications" icon="grid-3x3">
+    Quick access to safety features through watch face complications
+  </Card>
+</CardGroup>
+
+### Fitness Tracker Support
+
+<Note>
+**Broad Compatibility:** Shelther supports popular fitness trackers with varying feature levels based on device capabilities and available APIs.
+</Note>
+
+| Device | Emergency Triggers | Health Monitoring | Offline Mode | Rating |
+|--------|-------------------|-------------------|--------------|--------|
+| **Apple Watch Series 6+** | ✅ Full Support | ✅ Advanced | ✅ Cellular | ⭐⭐⭐⭐⭐ |
+| **Samsung Galaxy Watch** | ✅ Full Support | ✅ Advanced | ✅ LTE Models | ⭐⭐⭐⭐⭐ |
+| **Google Pixel Watch** | ✅ Full Support | ✅ Standard | ✅ LTE Models | ⭐⭐⭐⭐ |
+| **Fitbit Sense/Versa** | ⚠️ Limited | ✅ Advanced | ❌ No | ⭐⭐⭐ |
+| **Garmin Forerunner** | ⚠️ Limited | ✅ Standard | ⚠️ GPS Only | ⭐⭐⭐ |
+| **Amazfit GTR/GTS** | ⚠️ Basic | ⚠️ Basic | ❌ No | ⭐⭐ |
+
+## Core Features
+
+### Emergency Trigger Methods
+
+<Accordion title="Physical Button Combinations">
+**Apple Watch:**
+- Double-press side button for immediate SOS
+- Hold Digital Crown + side button for 3 seconds
+- Fall detection integration with Shelther alerts
+- Custom gesture support through accessibility features
+
+**Wear OS:**
+- Long-press power button (3+ seconds)
+- Double-tap bezel (Samsung Galaxy Watch)
+- Custom gesture combinations
+- Voice command triggers ("Hey Google, emergency")
+
+**Implementation:**
+```typescript
+interface WearableEmergencyTrigger {
+  device_type: 'apple_watch' | 'wear_os' | 'fitness_tracker';
+  trigger_method: 'button_combo' | 'gesture' | 'voice' | 'fall_detection';
+  confirmation_required: boolean;
+  countdown_seconds: number;
+  fallback_actions: string[];
+}
+
+export const handleWearableEmergency = async (
+  trigger: WearableEmergencyTrigger
+): Promise<EmergencyResponse> => {
+  // Start countdown with haptic feedback
+  await startEmergencyCountdown(trigger.countdown_seconds);
+  
+  // Get current location from watch or phone
+  const location = await getLocationFromWearable();
+  
+  // Create emergency alert
+  const emergencyAlert = await createEmergencyAlert({
+    trigger_source: 'wearable',
+    device_type: trigger.device_type,
+    location: location,
+    trigger_method: trigger.trigger_method,
+    user_id: getCurrentUserId()
+  });
+  
+  // Send to phone app for full processing
+  await syncEmergencyWithPhone(emergencyAlert);
+  
+  return emergencyAlert;
+};
+```
+</Accordion>
+
+<Accordion title="Health-Based Triggers">
+**Vital Sign Monitoring:**
+- Heart rate anomaly detection (sudden spikes or drops)
+- Blood oxygen level monitoring (Apple Watch Series 6+)
+- Fall detection with impact analysis
+- Irregular heartbeat detection
+
+**Stress & Activity Monitoring:**
+- Elevated stress levels during unusual activities
+- Sudden inactivity in unsafe locations
+- Sleep pattern disruptions indicating distress
+- Activity level drops in emergency situations
+
+**Smart Thresholds:**
+```typescript
+interface HealthTriggerConfig {
+  heart_rate: {
+    high_threshold: number;    // BPM - personalized
+    low_threshold: number;     // BPM - personalized  
+    sustained_duration: number; // seconds
+    context_aware: boolean;     // Consider activity level
+  };
+  fall_detection: {
+    enabled: boolean;
+    sensitivity: 'low' | 'medium' | 'high';
+    auto_trigger_delay: number; // seconds before auto-trigger
+    require_confirmation: boolean;
+  };
+  stress_monitoring: {
+    stress_threshold: number;   // 0-100 scale
+    duration_trigger: number;   // minutes of sustained stress
+    location_context: boolean;  // Consider safe vs unsafe locations
+  };
+}
+
+export const monitorHealthMetrics = (config: HealthTriggerConfig) => {
+  // Continuous monitoring with ML-based anomaly detection
+  const healthMonitor = new HealthAnomalyDetector({
+    personalized_baselines: true,
+    context_awareness: true,
+    false_positive_reduction: true
+  });
+  
+  return healthMonitor.startMonitoring(config);
+};
+```
+</Accordion>
+
+### Discreet Communication Features
+
+<Warning>
+**Silent Operation:** All wearable emergency features are designed to operate silently to avoid alerting potential threats while ensuring your safety network is notified.
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Haptic Patterns" icon="vibrate">
+    Custom vibration patterns for different alert types and confirmations
+  </Card>
+  <Card title="Visual Indicators" icon="eye">
+    Subtle screen indicators that communicate status without drawing attention
+  </Card>
+  <Card title="Audio Alerts" icon="volume-x">
+    Optional silent or very quiet audio cues for emergency confirmation
+  </Card>
+</CardGroup>
+
+### Health Monitoring Integration
+
+<Steps>
+  <Step title="Baseline Learning">
+    Establish personal health baselines over 2-4 weeks of normal activity
+  </Step>
+  <Step title="Context-Aware Analysis">
+    Consider activity, location, and time of day when analyzing health data
+  </Step>
+  <Step title="Anomaly Detection">
+    Identify deviations that might indicate stress, illness, or emergency situations
+  </Step>
+  <Step title="Intelligent Alerting">
+    Send appropriate alerts based on severity and context of health anomalies
+  </Step>
+</Steps>
+
+## Platform-Specific Implementation
+
+### Apple Watch Development
 
 <CodeGroup>
+```swift WatchKit Integration
+import WatchKit
+import HealthKit
+import CoreLocation
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+class ShelterWatchApp: WKInterfaceController {
+    @IBOutlet weak var emergencyButton: WKInterfaceButton!
+    @IBOutlet weak var statusLabel: WKInterfaceLabel!
+    
+    private let healthStore = HKHealthStore()
+    private let locationManager = CLLocationManager()
+    
+    override func awake(withContext context: Any?) {
+        super.awake(withContext: context)
+        
+        setupHealthMonitoring()
+        setupLocationServices()
+        setupEmergencyGestures()
+    }
+    
+    private func setupHealthMonitoring() {
+        let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate)!
+        let fallType = HKObjectType.categoryType(forIdentifier: .fallDetectionAuthorization)!
+        
+        healthStore.requestAuthorization(toShare: nil, read: [heartRateType, fallType]) { success, error in
+            if success {
+                self.startHealthMonitoring()
+            }
+        }
+    }
+    
+    @IBAction func emergencyButtonPressed() {
+        triggerEmergencySequence(source: .manual_button)
+    }
+    
+    private func triggerEmergencySequence(source: EmergencySource) {
+        // Start haptic feedback
+        WKInterfaceDevice.current().play(.start)
+        
+        // Begin countdown
+        startEmergencyCountdown { [weak self] cancelled in
+            if !cancelled {
+                self?.executeEmergencyAlert()
+            }
+        }
+    }
+    
+    private func executeEmergencyAlert() {
+        // Get current location
+        getCurrentLocation { location in
+            // Create emergency data
+            let emergencyData = EmergencyAlert(
+                location: location,
+                heartRate: self.getCurrentHeartRate(),
+                timestamp: Date(),
+                source: .wearable
+            )
+            
+            // Send to phone via Watch Connectivity
+            self.sendToPhone(emergencyData)
+            
+            // Show confirmation
+            self.showEmergencyConfirmation()
+        }
+    }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript React Native Watch Connectivity
+import { WatchConnectivity } from '@react-native-async-storage/async-storage';
+
+export class WatchConnectivityManager {
+  private static instance: WatchConnectivityManager;
+  private watchSession: any;
+
+  static getInstance(): WatchConnectivityManager {
+    if (!WatchConnectivityManager.instance) {
+      WatchConnectivityManager.instance = new WatchConnectivityManager();
+    }
+    return WatchConnectivityManager.instance;
+  }
+
+  async setupWatchConnectivity() {
+    if (Platform.OS === 'ios') {
+      this.watchSession = await WatchConnectivity.getSession();
+      
+      this.watchSession.addListener('message', this.handleWatchMessage);
+      this.watchSession.addListener('reachability', this.handleReachabilityChange);
+      
+      await this.watchSession.activateSession();
+    }
+  }
+
+  private handleWatchMessage = async (message: WatchMessage) => {
+    switch (message.type) {
+      case 'emergency_trigger':
+        await this.handleWatchEmergency(message.data);
+        break;
+      case 'health_alert':
+        await this.handleHealthAlert(message.data);
+        break;
+      case 'status_request':
+        await this.sendStatusToWatch();
+        break;
+    }
+  };
+
+  async sendEmergencyConfirmation(success: boolean) {
+    if (this.watchSession?.isReachable) {
+      await this.watchSession.sendMessage({
+        type: 'emergency_confirmation',
+        success: success,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  async syncSafetyStatus() {
+    const safetyStatus = await getSafetyStatus();
+    
+    if (this.watchSession?.isReachable) {
+      await this.watchSession.sendMessage({
+        type: 'safety_status_update',
+        data: {
+          current_risk_level: safetyStatus.risk_level,
+          location_sharing_active: safetyStatus.location_sharing,
+          emergency_contacts_count: safetyStatus.emergency_contacts.length,
+          last_check_in: safetyStatus.last_check_in
+        }
+      });
+    }
+  }
+}
+```
+</CodeGroup>
+
+### Wear OS Development
+
+<CodeGroup>
+```kotlin Wear OS Integration
+import androidx.wear.complications.ComplicationData
+import androidx.wear.complications.ComplicationManager
+import androidx.wear.watchface.complications.data.*
+
+class ShelterComplicationService : ComplicationDataSourceService() {
+    
+    override fun onComplicationRequest(
+        request: ComplicationRequest,
+        listener: ComplicationRequestListener
+    ) {
+        val complicationData = when (request.complicationType) {
+            ComplicationType.SHORT_TEXT -> createShortTextComplication()
+            ComplicationType.ICON -> createIconComplication()
+            ComplicationType.SMALL_IMAGE -> createImageComplication()
+            else -> null
+        }
+        
+        listener.onComplicationData(complicationData)
+    }
+    
+    private fun createShortTextComplication(): ComplicationData {
+        return ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("SAFE").build(),
+            contentDescription = PlainComplicationText.Builder("Shelther Safety Status").build()
+        )
+        .setTapAction(createEmergencyPendingIntent())
+        .build()
+    }
+    
+    private fun createEmergencyPendingIntent(): PendingIntent {
+        return PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, EmergencyActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+}
+
+class EmergencyActivity : ComponentActivity() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        setContent {
+            ShelterWearTheme {
+                EmergencyScreen(
+                    onEmergencyConfirm = { 
+                        triggerEmergency()
+                    },
+                    onCancel = {
+                        finish()
+                    }
+                )
+            }
+        }
+    }
+    
+    private fun triggerEmergency() {
+        lifecycleScope.launch {
+            val location = getCurrentLocation()
+            val healthData = getLatestHealthData()
+            
+            val emergency = EmergencyAlert(
+                location = location,
+                healthData = healthData,
+                timestamp = System.currentTimeMillis(),
+                source = EmergencySource.WEARABLE
+            )
+            
+            // Send to phone app
+            sendEmergencyToPhone(emergency)
+            
+            // Show confirmation
+            showEmergencyConfirmation()
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Advanced Features
+
+### Predictive Health Monitoring
+
+<Note>
+**Proactive Safety:** Advanced health monitoring can predict potential health emergencies 15-30 minutes before they occur, allowing for preventive action and early intervention.
+</Note>
+
+<Accordion title="Machine Learning Health Analysis">
+**Predictive Algorithms:**
+- Heart rate variability analysis for stress and health prediction
+- Activity pattern analysis for fall risk assessment  
+- Sleep quality correlation with safety behavior
+- Multi-metric analysis for comprehensive health scoring
+
+**Early Warning System:**
+- Gradual health metric changes indicating potential issues
+- Context-aware thresholds based on activity and location
+- Integration with personal medical history (user-provided)
+- Coordination with emergency contacts for health concerns
+
+**Implementation:**
+```typescript
+interface PredictiveHealthConfig {
+  models: {
+    stress_prediction: {
+      lookback_hours: number;
+      confidence_threshold: number;
+      feature_weights: {
+        heart_rate_variability: number;
+        activity_level: number;
+        sleep_quality: number;
+        location_context: number;
+      };
+    };
+    fall_risk_assessment: {
+      movement_analysis: boolean;
+      gait_pattern_analysis: boolean;
+      balance_metrics: boolean;
+      environmental_factors: boolean;
+    };
+  };
+  alert_thresholds: {
+    low_concern: number;    // 0-100 scale
+    medium_concern: number;
+    high_concern: number;
+    emergency_level: number;
+  };
+}
+```
+</Accordion>
+
+### Multi-Device Coordination
+
+<Steps>
+  <Step title="Device Synchronization">
+    Real-time sync between phone, watch, and other connected devices
+  </Step>
+  <Step title="Redundant Safety Systems">
+    Multiple devices can trigger and process emergency alerts independently
+  </Step>
+  <Step title="Battery Management">
+    Intelligent power distribution across devices to ensure continuous monitoring
+  </Step>
+  <Step title="Connectivity Fallbacks">
+    Automatic switching between Wi-Fi, cellular, and Bluetooth connectivity
+  </Step>
+</Steps>
+
+### Gesture Recognition
+
+<CardGroup cols={2}>
+  <Card title="Custom Gestures" icon="hand">
+    User-defined emergency gestures using accelerometer and gyroscope data
+  </Card>
+  <Card title="Duress Patterns" icon="eye-slash">
+    Specific patterns that indicate distress without obvious emergency signals
+  </Card>
+  <Card title="False Positive Prevention" icon="shield-check">
+    Advanced filtering to prevent accidental emergency triggers during normal activity
+  </Card>
+  <Card title="Accessibility Support" icon="accessibility">
+    Alternative gesture methods for users with different mobility needs
+  </Card>
+</CardGroup>
+
+## Battery Optimization
+
+### Power Management Strategy
+
+<Warning>
+**Battery Life Balance:** Wearable integration is optimized to provide maximum safety monitoring while preserving battery life for all-day protection.
+</Warning>
+
+| Battery Level | Monitoring Level | Features Active | Update Frequency |
+|---------------|-----------------|-----------------|------------------|
+| **&gt;70%** | Full monitoring | All features active | Real-time |
+| **30-70%** | Optimized monitoring | Core safety features | Every 30 seconds |
+| **10-30%** | Essential only | Emergency triggers only | Every 2 minutes |
+| **&lt;10%** | Emergency mode | Manual triggers only | On-demand |
+
+<CodeGroup>
+```typescript Battery Optimization
+interface WearablePowerManager {
+  current_battery_level: number;
+  power_saving_mode: boolean;
+  monitoring_intensity: 'full' | 'optimized' | 'essential' | 'emergency';
+  features_active: string[];
+}
+
+export const optimizeWearablePower = (
+  batteryLevel: number,
+  userPreferences: PowerPreferences
+): WearablePowerManager => {
+  let intensity: 'full' | 'optimized' | 'essential' | 'emergency';
+  let features: string[] = [];
+  
+  if (batteryLevel > 70) {
+    intensity = 'full';
+    features = ['health_monitoring', 'location_tracking', 'emergency_triggers', 'gesture_recognition'];
+  } else if (batteryLevel > 30) {
+    intensity = 'optimized';
+    features = ['health_monitoring', 'emergency_triggers'];
+  } else if (batteryLevel > 10) {
+    intensity = 'essential';
+    features = ['emergency_triggers'];
+  } else {
+    intensity = 'emergency';
+    features = ['manual_emergency_only'];
+  }
+  
+  return {
+    current_battery_level: batteryLevel,
+    power_saving_mode: batteryLevel < 30,
+    monitoring_intensity: intensity,
+    features_active: features
+  };
 };
 ```
-
 </CodeGroup>
+
+## Privacy & Security
+
+### Wearable Data Protection
+
+<Info>
+**Enhanced Privacy:** Wearable devices handle sensitive health and location data with the same privacy-first approach as the main Shelther app.
+</Info>
+
+<Steps>
+  <Step title="Local Processing">
+    Health analysis and emergency detection happen locally on the wearable device
+  </Step>
+  <Step title="Encrypted Communication">
+    All data transmission between wearable and phone uses end-to-end encryption
+  </Step>
+  <Step title="Minimal Data Collection">
+    Only safety-relevant health metrics are collected and analyzed
+  </Step>
+  <Step title="User Consent">
+    Explicit consent required for each type of health monitoring and data usage
+  </Step>
+</Steps>
+
+### Security Features
+
+<Accordion title="Device Authentication">
+**Multi-Factor Security:**
+- Biometric authentication for emergency feature access
+- PIN/passcode backup for emergency situations
+- Device pairing verification with main phone app
+- Automatic logout after extended inactivity
+
+**Tamper Detection:**
+- Detection of unauthorized device access attempts
+- Automatic security lockdown for suspicious activity
+- Remote device wipe capability for lost/stolen devices
+- Secure boot process for certified safety operation
+
+**Emergency Bypass:**
+- Streamlined access during verified emergencies
+- Biometric bypass for unconscious users (configurable)
+- Emergency contact verification for device access
+- Medical ID integration for first responders
+</Accordion>
+
+## Setup & Configuration
+
+### Initial Setup Process
+
+<Steps>
+  <Step title="Device Pairing">
+    Connect your wearable device to Shelther app via Bluetooth or Wi-Fi
+  </Step>
+  <Step title="Health Permissions">
+    Grant necessary health monitoring permissions on both devices
+  </Step>
+  <Step title="Emergency Configuration">
+    Set up emergency triggers, gestures, and notification preferences
+  </Step>
+  <Step title="Testing & Calibration">
+    Test emergency features and calibrate health monitoring baselines
+  </Step>
+</Steps>
+
+### Customization Options
+
+<CardGroup cols={2}>
+  <Card title="Emergency Triggers" icon="hand-raised">
+    Customize button combinations, gestures, and voice commands for your needs
+  </Card>
+  <Card title="Health Thresholds" icon="heart-pulse">
+    Set personalized health monitoring thresholds based on your baseline metrics
+  </Card>
+  <Card title="Notification Style" icon="bell">
+    Configure haptic patterns, visual indicators, and audio alerts
+  </Card>
+  <Card title="Privacy Controls" icon="lock">
+    Fine-tune what health data is monitored and how it's used for safety
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Wearable Configuration
+interface WearableConfig {
+  device_info: {
+    device_type: 'apple_watch' | 'wear_os' | 'fitness_tracker';
+    model: string;
+    os_version: string;
+    capabilities: string[];
+  };
+  emergency_settings: {
+    button_combinations: EmergencyTrigger[];
+    gesture_patterns: GesturePattern[];
+    voice_commands: string[];
+    countdown_duration: number;
+    require_confirmation: boolean;
+  };
+  health_monitoring: {
+    heart_rate: {
+      enabled: boolean;
+      high_threshold: number;
+      low_threshold: number;
+      monitoring_frequency: number;
+    };
+    fall_detection: {
+      enabled: boolean;
+      sensitivity: 'low' | 'medium' | 'high';
+      auto_trigger_delay: number;
+    };
+    stress_monitoring: {
+      enabled: boolean;
+      threshold: number;
+      context_aware: boolean;
+    };
+  };
+  privacy_settings: {
+    data_retention_hours: number;
+    share_with_emergency_contacts: boolean;
+    anonymous_health_analytics: boolean;
+    location_precision: 'exact' | 'approximate';
+  };
+}
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Common Issues
+
+<Accordion title="Connection Problems">
+**Bluetooth Connectivity:**
+- Ensure both devices have Bluetooth enabled
+- Check device compatibility and supported versions
+- Reset Bluetooth connection if sync issues persist
+- Verify devices are within 30 feet of each other
+
+**Wi-Fi/Cellular Issues:**
+- Confirm wearable device has active Wi-Fi or cellular connection
+- Check network compatibility and signal strength
+- Verify data plan includes wearable device usage
+- Test emergency features with different connection types
+
+**Sync Problems:**
+- Force close and restart both applications
+- Check that both devices have latest app versions
+- Verify time and date synchronization
+- Clear app cache if sync delays persist
+</Accordion>
+
+<Accordion title="Health Monitoring Issues">
+**Inaccurate Readings:**
+- Ensure proper watch fit (snug but comfortable)
+- Clean sensors regularly with soft, damp cloth
+- Check for interference from other devices
+- Calibrate baselines during calm, resting periods
+
+**Missing Health Data:**
+- Verify all required health permissions are granted
+- Check that Health app/Google Fit is properly configured
+- Ensure background app refresh is enabled
+- Test with different activities to confirm sensor function
+
+**False Alarms:**
+- Adjust sensitivity settings based on your activity level
+- Review and update personalized health thresholds
+- Consider environmental factors that might affect readings
+- Enable context-aware monitoring for better accuracy
+</Accordion>
+
+## Best Practices
+
+### Optimal Usage Guidelines
+
+<CardGroup cols={2}>
+  <Card title="Daily Wear" icon="clock">
+    Wear device consistently to improve AI learning and baseline accuracy
+  </Card>
+  <Card title="Regular Testing" icon="test-tube">
+    Test emergency features monthly to ensure proper functionality
+  </Card>
+  <Card title="Battery Management" icon="battery">
+    Charge regularly and monitor power-saving mode activation
+  </Card>
+  <Card title="Health Calibration" icon="settings">
+    Update health thresholds as your fitness level and health status change
+  </Card>
+</CardGroup>
+
+### Safety Recommendations
+
+<Warning>
+**Device Limitations:** While wearable integration significantly enhances safety capabilities, always maintain awareness of device limitations and have backup safety plans.
+</Warning>
+
+<Steps>
+  <Step title="Backup Plans">
+    Always have alternative emergency communication methods available
+  </Step>
+  <Step title="Regular Updates">
+    Keep both wearable and phone apps updated for latest safety features
+  </Step>
+  <Step title="Emergency Testing">
+    Practice emergency procedures regularly, but avoid triggering actual alerts
+  </Step>
+  <Step title="Contact Communication">
+    Ensure emergency contacts understand how wearable alerts work
+  </Step>
+</Steps>
+
+---
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="App Widget Features" icon="grid" href="/features/app-widget">
+    Learn how wearable data enhances the home screen widget experience
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Health Integration Setup" icon="heart" href="/development/health-integration">
+    Technical guide for implementing health monitoring features
   </Card>
 </CardGroup>
 
----
-
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Future Wearable Features:** Upcoming enhancements include advanced biometric analysis, smart home integration triggers, and expanded device compatibility. Stay updated for the latest wearable safety innovations.
 </Note>

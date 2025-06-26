@@ -1,59 +1,1087 @@
 ---
-title: "Circle Of Trust"
-description: "Circle Of Trust documentation for Core Features. Learn about implementation, configuration, and best practices."
+title: "Circle of Trust"
+description: "Build and manage your safety network with Shelther's Circle of Trust feature. Learn about contact verification, permission management, and creating reliable emergency response networks."
 ---
 
-# Circle Of Trust
+# Circle of Trust
+
+<Info>
+**Your Safety Network:** The Circle of Trust is your carefully curated network of people who will receive emergency alerts and help coordinate your safety. Quality matters more than quantity - choose people who are reliable, responsive, and genuinely care about your wellbeing.
+</Info>
 
 ## Overview
 
-This page is automatically generated from the Mintlify docs.json structure.
+Shelther's Circle of Trust feature enables you to build a reliable network of emergency contacts who can respond quickly when you need help. The system emphasizes verified, two-way relationships with granular permission controls and performance tracking to ensure your safety network is always ready.
 
-<Info>
-Add your content here following Mintlify's MDX guidelines.
-</Info>
+<CardGroup cols={2}>
+  <Card title="Verified Relationships" icon="check-circle">
+    Two-way verification ensures your contacts are genuine and responsive
+  </Card>
+  <Card title="Smart Permissions" icon="settings">
+    Granular controls over what each contact can see and do during emergencies
+  </Card>
+  <Card title="Response Tracking" icon="activity">
+    Performance analytics help you understand which contacts are most reliable
+  </Card>
+  <Card title="Network Coordination" icon="users">
+    Contacts can communicate with each other during emergency situations
+  </Card>
+</CardGroup>
 
-## Key Points
+## Contact Types and Tiers
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+### Contact Hierarchy
 
-## Examples
+<Steps>
+  <Step title="Primary Contacts (1-3 people)">
+    Your most trusted and responsive contacts who receive immediate emergency notifications
+  </Step>
+  <Step title="Secondary Contacts (3-5 people)">
+    Additional trusted people who are notified if primary contacts don't respond
+  </Step>
+  <Step title="Emergency Backup (1-2 people)">
+    Reliable contacts who are only notified in severe emergencies or escalations
+  </Step>
+  <Step title="Professional Contacts">
+    Healthcare providers, legal contacts, or professional safety services
+  </Step>
+</Steps>
+
+<CardGroup cols={3}>
+  <Card title="Family Members" icon="heart">
+    Parents, siblings, partners, and close family with emergency permissions
+  </Card>
+  <Card title="Close Friends" icon="user-friends">
+    Trusted friends who know your routines and can respond quickly
+  </Card>
+  <Card title="Professional Support" icon="briefcase">
+    Healthcare providers, counselors, legal contacts, or security services
+  </Card>
+</CardGroup>
+
+### Relationship Configuration
 
 <CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
+```typescript Contact Relationship Types
+interface CircleOfTrustContact {
   id: string;
+  userId: string;
+  contactUserId?: string; // If they're also a Shelther user
+  
+  // Contact Information
   name: string;
+  phoneNumber: string;
+  email?: string;
+  relationship: RelationshipType;
+  
+  // Hierarchy and Priority
+  tier: ContactTier;
+  priority: number; // 1-10 within tier
+  isEmergencyContact: boolean;
+  
+  // Verification Status
+  verified: boolean;
+  verificationMethod: VerificationMethod;
+  verifiedAt?: string;
+  verificationToken?: string;
+  
+  // Contact Preferences
+  preferredContactMethods: ContactMethod[];
+  availabilitySchedule: AvailabilitySchedule;
+  timezone: string;
+  
+  // Permissions
+  permissions: ContactPermissions;
+  emergencyOverride: boolean; // Can bypass normal privacy settings
+  
+  // Performance Tracking
+  responseMetrics: ResponseMetrics;
+  reliability: ReliabilityScore;
+  lastResponseAt?: string;
+  
+  // Status
+  isActive: boolean;
+  blockedAt?: string;
+  notes?: string;
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+type RelationshipType = 
+  | 'parent' | 'sibling' | 'partner' | 'child' | 'family_extended'
+  | 'friend_close' | 'friend' | 'colleague' | 'neighbor'
+  | 'healthcare_provider' | 'legal_contact' | 'professional_service'
+  | 'emergency_service' | 'security_service' | 'other';
+
+type ContactTier = 'primary' | 'secondary' | 'emergency_backup' | 'professional';
+
+type VerificationMethod = 
+  | 'phone_verification' | 'email_verification' | 'in_person' 
+  | 'mutual_contact' | 'social_verification' | 'professional_verification';
+
+interface ContactPermissions {
+  // Emergency Information Access
+  receiveEmergencyAlerts: boolean;
+  viewEmergencyLocation: boolean;
+  viewMedicalInformation: boolean;
+  accessEmergencyEvidence: boolean;
+  
+  // Routine Safety Access
+  viewRegularLocation: boolean;
+  receiveCheckInAlerts: boolean;
+  viewSafetyStatus: boolean;
+  receiveTravelUpdates: boolean;
+  
+  // Response Capabilities
+  canEscalateEmergency: boolean;
+  canCancelEmergency: boolean;
+  canCoordinateResponse: boolean;
+  canContactEmergencyServices: boolean;
+  
+  // Data Sharing Permissions
+  shareWithOtherContacts: boolean;
+  shareWithProfessionals: boolean;
+  includeInReports: boolean;
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript Contact Verification System
+export class ContactVerificationService {
+  async inviteContactToCircle(
+    userId: string,
+    contactInfo: ContactInvitation
+  ): Promise<CircleOfTrustContact> {
+    // Create pending contact record
+    const contact = await this.createPendingContact(userId, contactInfo);
+    
+    // Send verification invitation
+    await this.sendVerificationInvitation(contact);
+    
+    // Schedule follow-up reminders
+    await this.scheduleVerificationReminders(contact.id);
+    
+    return contact;
+  }
+
+  async sendVerificationInvitation(contact: CircleOfTrustContact): Promise<void> {
+    const verificationToken = this.generateVerificationToken();
+    const invitationLink = this.buildInvitationLink(contact.id, verificationToken);
+    
+    // Send via multiple channels for reliability
+    const methods = contact.preferredContactMethods;
+    
+    if (methods.includes('sms')) {
+      await this.sendSMSInvitation(contact.phoneNumber, invitationLink);
+    }
+    
+    if (methods.includes('email') && contact.email) {
+      await this.sendEmailInvitation(contact.email, invitationLink);
+    }
+    
+    // Update contact with verification token
+    await this.updateContact(contact.id, { verificationToken });
+  }
+
+  async verifyContact(
+    contactId: string,
+    verificationToken: string,
+    verifierInfo: ContactVerification
+  ): Promise<boolean> {
+    const contact = await this.getContact(contactId);
+    
+    if (contact.verificationToken !== verificationToken) {
+      throw new Error('Invalid verification token');
+    }
+    
+    // Mark as verified
+    await this.updateContact(contactId, {
+      verified: true,
+      verifiedAt: new Date().toISOString(),
+      verificationMethod: verifierInfo.method,
+      verificationToken: null, // Remove token after verification
+    });
+    
+    // Send confirmation to user
+    await this.notifyUserOfVerification(contact.userId, contact);
+    
+    // Send welcome information to contact
+    await this.sendContactWelcomeMessage(contact, verifierInfo);
+    
+    // Start periodic verification tests
+    await this.schedulePeriodicVerificationTests(contactId);
+    
+    return true;
+  }
+
+  async performPeriodicVerificationTest(contactId: string): Promise<void> {
+    const contact = await this.getContact(contactId);
+    
+    // Send test notification
+    const testNotification = {
+      type: 'verification_test',
+      message: 'This is a test of Shelther emergency notifications. Please respond to confirm you received this.',
+      responseRequired: true,
+      timeout: 30 * 60 * 1000, // 30 minutes
+    };
+    
+    const response = await this.sendTestNotification(contact, testNotification);
+    
+    // Update reliability metrics
+    await this.updateContactReliability(contactId, response);
+  }
+}
+```
+</CodeGroup>
+
+## Contact Management Interface
+
+### Adding and Managing Contacts
+
+<Accordion title="Contact Addition Workflow">
+**Step 1: Contact Information**
+- Name and relationship type
+- Phone number (required for SMS emergency notifications)
+- Email address (optional, for additional communication)
+- Timezone and general availability
+
+**Step 2: Permission Configuration**
+- Emergency notification preferences
+- Location sharing permissions
+- Medical information access
+- Evidence sharing consent
+
+**Step 3: Verification Process**
+- Send invitation via SMS/email
+- Contact confirms relationship and permissions
+- Two-way verification ensures legitimacy
+- Welcome package with emergency contact information
+
+**Step 4: Testing and Validation**
+- Test notification to confirm delivery
+- Response time measurement
+- Contact education about emergency procedures
+- Ongoing periodic verification tests
+</Accordion>
+
+<CodeGroup>
+```typescript Contact Management Interface
+export const ContactManagementScreen = () => {
+  const [contacts, setContacts] = useState<CircleOfTrustContact[]>([]);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const { addContact, updateContact, removeContact } = useCircleOfTrust();
+
+  const handleAddContact = async (contactData: ContactFormData) => {
+    try {
+      const newContact = await addContact({
+        name: contactData.name,
+        phoneNumber: contactData.phoneNumber,
+        email: contactData.email,
+        relationship: contactData.relationship,
+        tier: contactData.tier,
+        permissions: contactData.permissions,
+        preferredContactMethods: contactData.contactMethods,
+      });
+      
+      setContacts(prev => [...prev, newContact]);
+      setIsAddingContact(false);
+      
+      // Show success and next steps
+      Alert.alert(
+        'Contact Added',
+        `${contactData.name} has been added to your Circle of Trust. They will receive a verification invitation.`,
+        [{ text: 'OK' }]
+      );
+      
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add contact. Please try again.');
+    }
+  };
+
+  const handleTestContact = async (contactId: string) => {
+    try {
+      await testContactNotification(contactId);
+      Alert.alert(
+        'Test Sent',
+        'A test notification has been sent to your contact. You will be notified when they respond.'
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send test notification.');
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Circle of Trust</Text>
+        <Text style={styles.subtitle}>
+          {contacts.filter(c => c.verified).length} verified contacts
+        </Text>
+      </View>
+
+      <ContactTierSection
+        title="Primary Contacts"
+        subtitle="Immediate emergency notification (1-3 people)"
+        contacts={contacts.filter(c => c.tier === 'primary')}
+        maxContacts={3}
+        onAddContact={() => setIsAddingContact(true)}
+        onEditContact={handleEditContact}
+        onTestContact={handleTestContact}
+      />
+
+      <ContactTierSection
+        title="Secondary Contacts"
+        subtitle="Backup emergency contacts (3-5 people)"
+        contacts={contacts.filter(c => c.tier === 'secondary')}
+        maxContacts={5}
+        onAddContact={() => setIsAddingContact(true)}
+        onEditContact={handleEditContact}
+        onTestContact={handleTestContact}
+      />
+
+      <ContactTierSection
+        title="Professional Contacts"
+        subtitle="Healthcare providers and professional services"
+        contacts={contacts.filter(c => c.tier === 'professional')}
+        onAddContact={() => setIsAddingContact(true)}
+        onEditContact={handleEditContact}
+        onTestContact={handleTestContact}
+      />
+
+      {isAddingContact && (
+        <AddContactModal
+          visible={isAddingContact}
+          onSubmit={handleAddContact}
+          onCancel={() => setIsAddingContact(false)}
+        />
+      )}
+    </ScrollView>
+  );
 };
+
+const ContactTierSection = ({ 
+  title, 
+  subtitle, 
+  contacts, 
+  maxContacts,
+  onAddContact,
+  onEditContact,
+  onTestContact 
+}) => (
+  <View style={styles.tierSection}>
+    <View style={styles.tierHeader}>
+      <Text style={styles.tierTitle}>{title}</Text>
+      <Text style={styles.tierSubtitle}>{subtitle}</Text>
+    </View>
+    
+    {contacts.map(contact => (
+      <ContactCard
+        key={contact.id}
+        contact={contact}
+        onEdit={() => onEditContact(contact)}
+        onTest={() => onTestContact(contact.id)}
+      />
+    ))}
+    
+    {(!maxContacts || contacts.length < maxContacts) && (
+      <TouchableOpacity
+        style={styles.addContactButton}
+        onPress={onAddContact}
+      >
+        <Icon name="plus" size={20} color="#666" />
+        <Text style={styles.addContactText}>Add Contact</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+);
 ```
 
+```typescript Contact Card Component
+const ContactCard = ({ contact, onEdit, onTest }) => {
+  const getVerificationStatus = () => {
+    if (!contact.verified) return { color: '#FF9800', text: 'Pending Verification' };
+    if (contact.reliability >= 0.8) return { color: '#4CAF50', text: 'Highly Reliable' };
+    if (contact.reliability >= 0.6) return { color: '#2196F3', text: 'Reliable' };
+    return { color: '#FF5722', text: 'Needs Attention' };
+  };
+
+  const status = getVerificationStatus();
+
+  return (
+    <View style={styles.contactCard}>
+      <View style={styles.contactHeader}>
+        <View style={styles.contactInfo}>
+          <Text style={styles.contactName}>{contact.name}</Text>
+          <Text style={styles.contactRelationship}>
+            {formatRelationship(contact.relationship)}
+          </Text>
+          <Text style={styles.contactPhone}>{contact.phoneNumber}</Text>
+        </View>
+        
+        <View style={styles.contactStatus}>
+          <View style={[styles.statusIndicator, { backgroundColor: status.color }]} />
+          <Text style={[styles.statusText, { color: status.color }]}>
+            {status.text}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.contactMetrics}>
+        <MetricItem
+          label="Response Rate"
+          value={`${Math.round(contact.responseMetrics.responseRate * 100)}%`}
+        />
+        <MetricItem
+          label="Avg Response Time"
+          value={formatResponseTime(contact.responseMetrics.averageResponseTime)}
+        />
+        <MetricItem
+          label="Last Response"
+          value={formatTimeAgo(contact.lastResponseAt)}
+        />
+      </View>
+
+      <View style={styles.contactActions}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.testButton]}
+          onPress={onTest}
+        >
+          <Icon name="bell" size={16} color="#2196F3" />
+          <Text style={styles.testButtonText}>Test</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editButton]}
+          onPress={onEdit}
+        >
+          <Icon name="edit" size={16} color="#666" />
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.permissionsSummary}>
+        <PermissionBadge 
+          enabled={contact.permissions.receiveEmergencyAlerts}
+          label="Emergency Alerts"
+        />
+        <PermissionBadge 
+          enabled={contact.permissions.viewEmergencyLocation}
+          label="Location Access"
+        />
+        <PermissionBadge 
+          enabled={contact.permissions.canEscalateEmergency}
+          label="Can Escalate"
+        />
+      </View>
+    </View>
+  );
+};
+
+const MetricItem = ({ label, value }) => (
+  <View style={styles.metricItem}>
+    <Text style={styles.metricLabel}>{label}</Text>
+    <Text style={styles.metricValue}>{value}</Text>
+  </View>
+);
+
+const PermissionBadge = ({ enabled, label }) => (
+  <View style={[
+    styles.permissionBadge,
+    enabled ? styles.permissionEnabled : styles.permissionDisabled
+  ]}>
+    <Text style={[
+      styles.permissionText,
+      enabled ? styles.permissionTextEnabled : styles.permissionTextDisabled
+    ]}>
+      {label}
+    </Text>
+  </View>
+);
+```
 </CodeGroup>
+
+## Contact Response Analytics
+
+### Performance Tracking
+
+<CardGroup cols={2}>
+  <Card title="Response Metrics" icon="chart-line">
+    Track response times, delivery rates, and acknowledgment patterns for each contact
+  </Card>
+  <Card title="Reliability Scoring" icon="star">
+    AI-powered scoring system that evaluates contact responsiveness and effectiveness
+  </Card>
+  <Card title="Availability Patterns" icon="clock">
+    Learn when contacts are most likely to respond based on historical data
+  </Card>
+  <Card title="Network Optimization" icon="network">
+    Suggestions for improving your Circle of Trust effectiveness
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Response Time Analysis">
+    Measure how quickly contacts respond to different types of alerts
+  </Step>
+  <Step title="Delivery Success Tracking">
+    Monitor notification delivery success across different communication channels
+  </Step>
+  <Step title="Engagement Quality Assessment">
+    Evaluate the quality and helpfulness of contact responses
+  </Step>
+  <Step title="Predictive Availability">
+    Machine learning models predict contact availability based on patterns
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Contact Performance Analytics
+-- Contact response analytics view
+CREATE VIEW contact_performance_analytics AS
+SELECT 
+  cr.contact_user_id,
+  cr.user_id,
+  
+  -- Response metrics
+  COUNT(en.id) as total_notifications,
+  COUNT(CASE WHEN en.delivery_status = 'delivered' THEN 1 END) as delivered_count,
+  COUNT(CASE WHEN en.acknowledged = true THEN 1 END) as acknowledged_count,
+  COUNT(CASE WHEN en.responded_at IS NOT NULL THEN 1 END) as responded_count,
+  
+  -- Response rates
+  ROUND(
+    COUNT(CASE WHEN en.delivery_status = 'delivered' THEN 1 END)::DECIMAL / 
+    NULLIF(COUNT(en.id), 0), 3
+  ) as delivery_rate,
+  
+  ROUND(
+    COUNT(CASE WHEN en.acknowledged = true THEN 1 END)::DECIMAL / 
+    NULLIF(COUNT(CASE WHEN en.delivery_status = 'delivered' THEN 1 END), 0), 3
+  ) as acknowledgment_rate,
+  
+  ROUND(
+    COUNT(CASE WHEN en.responded_at IS NOT NULL THEN 1 END)::DECIMAL / 
+    NULLIF(COUNT(en.id), 0), 3
+  ) as response_rate,
+  
+  -- Timing metrics
+  AVG(
+    CASE WHEN en.responded_at IS NOT NULL 
+    THEN EXTRACT(EPOCH FROM (en.responded_at - en.sent_at)) 
+    END
+  )::INTEGER as avg_response_time_seconds,
+  
+  MIN(
+    CASE WHEN en.responded_at IS NOT NULL 
+    THEN EXTRACT(EPOCH FROM (en.responded_at - en.sent_at)) 
+    END
+  )::INTEGER as fastest_response_time_seconds,
+  
+  -- Recent performance (last 30 days)
+  ROUND(
+    COUNT(CASE WHEN en.sent_at >= NOW() - INTERVAL '30 days' 
+               AND en.responded_at IS NOT NULL THEN 1 END)::DECIMAL /
+    NULLIF(COUNT(CASE WHEN en.sent_at >= NOW() - INTERVAL '30 days' THEN 1 END), 0), 3
+  ) as recent_response_rate,
+  
+  -- Reliability score calculation
+  ROUND(
+    (COALESCE(
+      COUNT(CASE WHEN en.delivery_status = 'delivered' THEN 1 END)::DECIMAL / 
+      NULLIF(COUNT(en.id), 0), 0
+    ) * 0.3 + 
+    COALESCE(
+      COUNT(CASE WHEN en.responded_at IS NOT NULL THEN 1 END)::DECIMAL / 
+      NULLIF(COUNT(en.id), 0), 0
+    ) * 0.5 +
+    COALESCE(
+      CASE WHEN AVG(EXTRACT(EPOCH FROM (en.responded_at - en.sent_at))) < 300 THEN 0.2
+           WHEN AVG(EXTRACT(EPOCH FROM (en.responded_at - en.sent_at))) < 900 THEN 0.15
+           WHEN AVG(EXTRACT(EPOCH FROM (en.responded_at - en.sent_at))) < 1800 THEN 0.1
+           ELSE 0.05 END, 0
+    )) * 100, 2
+  ) as reliability_score
+
+FROM contact_relationships cr
+LEFT JOIN emergency_notifications en ON en.recipient_user_id = cr.contact_user_id
+WHERE cr.status = 'active'
+GROUP BY cr.contact_user_id, cr.user_id;
+```
+
+```typescript Contact Analytics Service
+export class ContactAnalyticsService {
+  async generateContactPerformanceReport(
+    userId: string,
+    contactId?: string
+  ): Promise<ContactPerformanceReport> {
+    const analytics = await this.getContactAnalytics(userId, contactId);
+    
+    return {
+      summary: this.generateSummary(analytics),
+      recommendations: await this.generateRecommendations(analytics),
+      trends: await this.analyzeTrends(analytics),
+      comparisons: await this.generateComparisons(analytics),
+    };
+  }
+
+  private generateSummary(analytics: ContactAnalytics[]): PerformanceSummary {
+    const totalContacts = analytics.length;
+    const averageReliability = analytics.reduce((sum, a) => sum + a.reliabilityScore, 0) / totalContacts;
+    const highPerformers = analytics.filter(a => a.reliabilityScore >= 80).length;
+    const needsAttention = analytics.filter(a => a.reliabilityScore < 60).length;
+
+    return {
+      totalContacts,
+      averageReliability: Math.round(averageReliability),
+      highPerformers,
+      needsAttention,
+      overallNetworkStrength: this.calculateNetworkStrength(analytics),
+    };
+  }
+
+  private async generateRecommendations(
+    analytics: ContactAnalytics[]
+  ): Promise<ContactRecommendation[]> {
+    const recommendations: ContactRecommendation[] = [];
+
+    // Analyze response time patterns
+    const slowResponders = analytics.filter(a => 
+      a.averageResponseTimeSeconds > 1800 // > 30 minutes
+    );
+    
+    if (slowResponders.length > 0) {
+      recommendations.push({
+        type: 'improve_response_time',
+        priority: 'medium',
+        affectedContacts: slowResponders.map(a => a.contactId),
+        suggestion: 'Consider reaching out to these contacts about enabling push notifications or adjusting their notification preferences.',
+        expectedImpact: 'Could improve average response time by 40%'
+      });
+    }
+
+    // Analyze delivery failures
+    const deliveryIssues = analytics.filter(a => a.deliveryRate < 0.9);
+    
+    if (deliveryIssues.length > 0) {
+      recommendations.push({
+        type: 'fix_delivery_issues',
+        priority: 'high',
+        affectedContacts: deliveryIssues.map(a => a.contactId),
+        suggestion: 'These contacts may have outdated phone numbers or notification settings. Consider verifying their contact information.',
+        expectedImpact: 'Could improve overall network reliability by 25%'
+      });
+    }
+
+    // Analyze contact diversity
+    const contactsByRelationship = this.groupContactsByRelationship(analytics);
+    if (contactsByRelationship.family < 1) {
+      recommendations.push({
+        type: 'add_family_contact',
+        priority: 'medium',
+        suggestion: 'Consider adding a family member to your Circle of Trust for additional emergency support.',
+        expectedImpact: 'Diversifies your support network'
+      });
+    }
+
+    return recommendations;
+  }
+
+  async predictContactAvailability(
+    contactId: string,
+    timeWindow: TimeWindow
+  ): Promise<AvailabilityPrediction> {
+    const historicalData = await this.getContactResponseHistory(contactId);
+    const patterns = this.analyzeResponsePatterns(historicalData);
+    
+    const prediction = this.calculateAvailabilityProbability(patterns, timeWindow);
+    
+    return {
+      contactId,
+      timeWindow,
+      availabilityProbability: prediction.probability,
+      confidence: prediction.confidence,
+      factors: prediction.influencingFactors,
+      alternativeContacts: await this.suggestAlternativeContacts(contactId, timeWindow),
+    };
+  }
+
+  private analyzeResponsePatterns(history: ContactResponseHistory[]): ResponsePattern {
+    // Group responses by time of day, day of week, etc.
+    const byHour = this.groupBy(history, h => new Date(h.responseTime).getHours());
+    const byDayOfWeek = this.groupBy(history, h => new Date(h.responseTime).getDay());
+    const byMonth = this.groupBy(history, h => new Date(h.responseTime).getMonth());
+
+    return {
+      hourlyPattern: Object.keys(byHour).reduce((acc, hour) => {
+        acc[hour] = byHour[hour].length / history.length;
+        return acc;
+      }, {}),
+      weeklyPattern: Object.keys(byDayOfWeek).reduce((acc, day) => {
+        acc[day] = byDayOfWeek[day].length / history.length;
+        return acc;
+      }, {}),
+      seasonalPattern: Object.keys(byMonth).reduce((acc, month) => {
+        acc[month] = byMonth[month].length / history.length;
+        return acc;
+      }, {}),
+    };
+  }
+}
+```
+</CodeGroup>
+
+## Contact Coordination Features
+
+### Emergency Response Coordination
+
+<Note>
+**Coordinated Response:** During emergencies, contacts can communicate with each other to coordinate help and avoid duplication of effort.
+</Note>
+
+<Accordion title="Contact Coordination Capabilities">
+**Real-time Communication:**
+- Emergency-specific chat room for coordinating response
+- Location sharing between contacts during emergencies
+- Status updates from responders to keep everyone informed
+- Coordination of transportation, medical, or other assistance
+
+**Response Planning:**
+- Contacts can indicate their intended response (coming to help, calling emergency services, etc.)
+- Estimated arrival times and response capabilities
+- Division of responsibilities among multiple responders
+- Updates on response progress and any complications
+
+**Information Sharing:**
+- Relevant emergency context shared with appropriate contacts
+- Medical information access for healthcare-qualified contacts
+- Legal or professional contact activation when needed
+- Evidence sharing with authorized contacts
+
+**Implementation Example:**
+```typescript
+interface EmergencyCoordination {
+  emergencyAlertId: string;
+  coordinatingContacts: CoordinatingContact[];
+  communicationChannel: CommunicationChannel;
+  responseplan: ResponsePlan;
+  realTimeUpdates: CoordinationUpdate[];
+}
+
+interface CoordinatingContact {
+  contactId: string;
+  role: 'primary_responder' | 'backup' | 'coordinator' | 'specialist';
+  intendedResponse: IntendedResponse;
+  estimatedArrival?: string;
+  capabilities: ContactCapability[];
+  status: 'notified' | 'acknowledged' | 'responding' | 'arrived' | 'unavailable';
+}
+
+interface IntendedResponse {
+  type: 'physical_response' | 'call_emergency_services' | 'coordinate_remotely' | 'provide_information';
+  details: string;
+  estimatedTimeframe: string;
+  resources: string[];
+}
+```
+</Accordion>
+
+### Network Health Monitoring
+
+<CardGroup cols={3}>
+  <Card title="Contact Reliability" icon="shield-check">
+    Ongoing monitoring of contact responsiveness and effectiveness
+  </Card>
+  <Card title="Network Coverage" icon="map">
+    Analysis of geographic and temporal coverage gaps in your safety network
+  </Card>
+  <Card title="Redundancy Planning" icon="copy">
+    Identification of single points of failure and suggestions for backup contacts
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Regular Health Checks">
+    Automated testing of contact reachability and response capabilities
+  </Step>
+  <Step title="Coverage Analysis">
+    Assessment of temporal and geographic coverage by your safety network
+  </Step>
+  <Step title="Redundancy Validation">
+    Verification that critical contact roles have adequate backup coverage
+  </Step>
+  <Step title="Optimization Suggestions">
+    AI-powered recommendations for improving network effectiveness
+  </Step>
+</Steps>
+
+## Privacy and Permission Management
+
+### Granular Privacy Controls
+
+<Warning>
+**Privacy Balance:** While emergency situations may require sharing sensitive information, users maintain granular control over what each contact can access during different scenarios.
+</Warning>
+
+<Accordion title="Privacy Permission Categories">
+**Emergency Information Access:**
+- Emergency alert notifications (always required for emergency contacts)
+- Real-time location during emergencies
+- Medical information and emergency instructions
+- Audio/visual evidence from emergency situations
+- Communication with other emergency contacts
+
+**Routine Safety Information:**
+- Regular location sharing for non-emergency situations
+- Check-in status and travel updates
+- Safety zone entries and exits
+- Activity and journey monitoring updates
+
+**Response and Escalation Permissions:**
+- Ability to escalate emergency to higher response levels
+- Permission to contact emergency services on user's behalf
+- Authority to make medical decisions if user is incapacitated
+- Access to legal or financial information during emergencies
+
+**Coordination and Communication:**
+- Ability to communicate with other emergency contacts
+- Permission to share user information with emergency services
+- Authority to coordinate with professional emergency responders
+- Access to user's emergency action plans and preferences
+</Accordion>
+
+<CodeGroup>
+```typescript Privacy Management Interface
+export const ContactPrivacySettings = ({ contact, onUpdate }) => {
+  const [permissions, setPermissions] = useState(contact.permissions);
+  const [emergencyOverride, setEmergencyOverride] = useState(contact.emergencyOverride);
+
+  const handlePermissionChange = (category: string, permission: string, value: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [permission]: value
+      }
+    }));
+  };
+
+  const savePermissions = async () => {
+    try {
+      await onUpdate(contact.id, {
+        permissions,
+        emergencyOverride,
+      });
+      
+      Alert.alert(
+        'Permissions Updated',
+        'Contact permissions have been saved successfully.'
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update permissions. Please try again.');
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Emergency Information Access</Text>
+        <Text style={styles.sectionDescription}>
+          What {contact.name} can access during emergency situations
+        </Text>
+        
+        <PermissionSwitch
+          label="Receive Emergency Alerts"
+          description="Get notified immediately when you trigger an emergency alert"
+          value={permissions.receiveEmergencyAlerts}
+          onChange={(value) => handlePermissionChange('emergency', 'receiveEmergencyAlerts', value)}
+          required={true} // Cannot be disabled for emergency contacts
+        />
+        
+        <PermissionSwitch
+          label="View Emergency Location"
+          description="See your exact location during emergencies"
+          value={permissions.viewEmergencyLocation}
+          onChange={(value) => handlePermissionChange('emergency', 'viewEmergencyLocation', value)}
+        />
+        
+        <PermissionSwitch
+          label="Access Medical Information"
+          description="View your medical information and emergency instructions"
+          value={permissions.viewMedicalInformation}
+          onChange={(value) => handlePermissionChange('emergency', 'viewMedicalInformation', value)}
+        />
+        
+        <PermissionSwitch
+          label="Access Emergency Evidence"
+          description="View audio, photos, and videos collected during emergencies"
+          value={permissions.accessEmergencyEvidence}
+          onChange={(value) => handlePermissionChange('emergency', 'accessEmergencyEvidence', value)}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Response Capabilities</Text>
+        <Text style={styles.sectionDescription}>
+          What {contact.name} can do during emergency situations
+        </Text>
+        
+        <PermissionSwitch
+          label="Escalate Emergency"
+          description="Can escalate emergency to emergency services or other contacts"
+          value={permissions.canEscalateEmergency}
+          onChange={(value) => handlePermissionChange('response', 'canEscalateEmergency', value)}
+        />
+        
+        <PermissionSwitch
+          label="Cancel False Alarms"
+          description="Can cancel emergency alerts on your behalf if they confirm you're safe"
+          value={permissions.canCancelEmergency}
+          onChange={(value) => handlePermissionChange('response', 'canCancelEmergency', value)}
+        />
+        
+        <PermissionSwitch
+          label="Coordinate Response"
+          description="Can communicate with other emergency contacts to coordinate help"
+          value={permissions.canCoordinateResponse}
+          onChange={(value) => handlePermissionChange('response', 'canCoordinateResponse', value)}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Emergency Override</Text>
+        <Text style={styles.sectionDescription}>
+          Emergency override allows this contact to bypass normal privacy settings during critical situations
+        </Text>
+        
+        <PermissionSwitch
+          label="Enable Emergency Override"
+          description="Can access additional information during life-threatening emergencies"
+          value={emergencyOverride}
+          onChange={setEmergencyOverride}
+        />
+      </View>
+
+      <TouchableOpacity style={styles.saveButton} onPress={savePermissions}>
+        <Text style={styles.saveButtonText}>Save Permissions</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+};
+
+const PermissionSwitch = ({ label, description, value, onChange, required = false }) => (
+  <View style={styles.permissionItem}>
+    <View style={styles.permissionContent}>
+      <Text style={styles.permissionLabel}>{label}</Text>
+      <Text style={styles.permissionDescription}>{description}</Text>
+      {required && (
+        <Text style={styles.requiredText}>Required for emergency contacts</Text>
+      )}
+    </View>
+    <Switch
+      value={value}
+      onValueChange={onChange}
+      disabled={required}
+      trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
+      thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
+    />
+  </View>
+);
+```
+</CodeGroup>
+
+## Best Practices for Circle of Trust
+
+### Building an Effective Safety Network
+
+<CardGroup cols={2}>
+  <Card title="Quality Over Quantity" icon="star">
+    3-5 highly reliable contacts are better than 10 inconsistent ones
+  </Card>
+  <Card title="Diverse Relationships" icon="users">
+    Include family, friends, and professional contacts for comprehensive coverage
+  </Card>
+  <Card title="Geographic Distribution" icon="map">
+    Have contacts in different locations who can respond in various situations
+  </Card>
+  <Card title="Regular Communication" icon="message-circle">
+    Maintain relationships and keep contacts informed about your safety needs
+  </Card>
+</CardGroup>
+
+<Note>
+**Recommended Circle of Trust Structure:**
+- **1-2 Primary Contacts:** Your most trusted and responsive people (partner, parent, close friend)
+- **2-3 Secondary Contacts:** Additional trusted contacts who can provide backup support
+- **1 Professional Contact:** Healthcare provider, counselor, or professional safety service
+- **1 Emergency Backup:** Reliable contact for severe escalations only
+</Note>
+
+### Contact Onboarding Best Practices
+
+<Steps>
+  <Step title="Explain Shelther's Purpose">
+    Help contacts understand why you're using safety technology and how they can help
+  </Step>
+  <Step title="Set Clear Expectations">
+    Discuss response expectations, time commitments, and their role in your safety
+  </Step>
+  <Step title="Provide Training">
+    Share information about how emergency alerts work and what they should do when notified
+  </Step>
+  <Step title="Test the System">
+    Run practice emergency alerts to ensure everything works and contacts know how to respond
+  </Step>
+</Steps>
+
+---
+
+## Integration with Other Features
+
+<CardGroup cols={4}>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Your Circle of Trust receives instant notifications during emergency situations
+  </Card>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Share real-time location with trusted contacts during activities or emergencies
+  </Card>
+  <Card title="Check-ins" icon="clock" href="/features/check-ins">
+    Contacts receive alerts if you miss scheduled safety check-ins
+  </Card>
+  <Card title="Journey Monitoring" icon="route" href="/features/journey-monitoring">
+    Share travel plans and progress with your safety network
+  </Card>
+</CardGroup>
+
+## Implementation Guidelines
+
+<Warning>
+**Critical Circle of Trust Requirements:**
+- All emergency contacts must have verified, working contact information
+- Contact permissions must be clearly communicated and consented to
+- Regular testing and validation of contact reachability is essential
+- Privacy controls must be granular and user-controlled
+- Contact response performance must be monitored and optimized
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Set Up Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Configure how your Circle of Trust receives emergency notifications
+  </Card>
+  <Card title="Configure Location Sharing" icon="map" href="/features/location-tracking">
+    Set up location sharing preferences for different contacts and situations
+  </Card>
+  <Card title="Test Your Network" icon="test-tube" href="/development/testing-strategy">
+    Learn how to safely test your Circle of Trust without triggering real emergencies
+  </Card>
+</CardGroup>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Add Your First Contacts" icon="user-plus" href="/quickstart/setup">
+    Start building your Circle of Trust with our step-by-step setup guide
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Understand Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Learn how emergency alerts work with your Circle of Trust
   </Card>
 </CardGroup>
-
----
-
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>

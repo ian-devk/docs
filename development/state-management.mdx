@@ -1,59 +1,1480 @@
 ---
 title: "State Management"
-description: "State Management documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to state management in Shelther safety applications using Redux Toolkit, local state patterns, and offline synchronization strategies for emergency scenarios."
 ---
 
 # State Management
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-Critical State:** State management in Shelther prioritizes data reliability, offline capabilities, and emergency response speed. Every state change considers the impact on user safety and emergency scenarios.
 </Info>
 
-## Key Points
+## Architecture Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther uses a multi-layered state management approach optimized for safety applications:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Redux Toolkit" icon="layers">
+    Global state for emergency alerts, user data, and safety settings with time-travel debugging
+  </Card>
+  <Card title="React Query" icon="refresh">
+    Server state synchronization with optimistic updates and offline queueing
+  </Card>
+  <Card title="Local State" icon="mobile">
+    Component-level state for UI interactions and temporary safety data
+  </Card>
+  <Card title="Persistent Storage" icon="database">
+    Offline storage for critical safety information with automatic synchronization
+  </Card>
+</CardGroup>
+
+## Redux Store Configuration
+
+### Store Setup with Safety Middleware
 
 <CodeGroup>
+```typescript Store Configuration
+// store/index.ts
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { encryptTransform } from 'redux-persist-transform-encrypt';
+import { logger } from '../utils/logger';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
+// Reducers
+import authSlice from './slices/authSlice';
+import emergencySlice from './slices/emergencySlice';
+import locationSlice from './slices/locationSlice';
+import contactsSlice from './slices/contactsSlice';
+import settingsSlice from './slices/settingsSlice';
+import offlineSlice from './slices/offlineSlice';
+
+// Safety middleware for emergency actions
+const emergencyMiddleware = (store: any) => (next: any) => (action: any) => {
+  // Log all emergency-related actions
+  if (action.type.includes('emergency')) {
+    logger.emergency('Emergency action dispatched', {
+      type: action.type,
+      payload: action.payload,
+      timestamp: new Date().toISOString(),
+    });
+  }
+  
+  // Track critical state changes
+  if (['emergency/alertTriggered', 'location/emergencyUpdate'].includes(action.type)) {
+    logger.emergency('Critical safety action', action);
+  }
+  
+  return next(action);
+};
+
+// Encryption transform for sensitive data
+const encryptTransform = encryptTransform({
+  secretKey: 'your-secret-key', // In production, use secure key management
+  onError: (error) => {
+    logger.emergency('State encryption error', error);
+  },
+});
+
+// Persist configuration
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  transforms: [encryptTransform],
+  whitelist: ['auth', 'settings', 'contacts'], // Only persist non-sensitive data
+  blacklist: ['emergency', 'location'], // Never persist emergency state
+};
+
+// Root reducer
+const rootReducer = combineReducers({
+  auth: authSlice.reducer,
+  emergency: emergencySlice.reducer,
+  location: locationSlice.reducer,
+  contacts: contactsSlice.reducer,
+  settings: settingsSlice.reducer,
+  offline: offlineSlice.reducer,
+});
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+// Configure store with safety middleware
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }).concat(emergencyMiddleware),
+  devTools: __DEV__ && {
+    name: 'Shelther Safety App',
+    trace: true,
+    traceLimit: 25,
+  },
+});
+
+export const persistor = persistStore(store);
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript Typed Hooks
+// hooks/redux.ts
+import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+import type { RootState, AppDispatch } from '../store';
+
+// Typed hooks for better developer experience
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+// Safety-specific hooks
+export const useEmergencyState = () => {
+  return useAppSelector(state => state.emergency);
+};
+
+export const useLocationState = () => {
+  return useAppSelector(state => state.location);
+};
+
+export const useIsEmergencyActive = () => {
+  return useAppSelector(state => 
+    state.emergency.alerts.some(alert => alert.status === 'active')
+  );
+};
+
+export const useOfflineActions = () => {
+  return useAppSelector(state => state.offline.queuedActions);
+};
+```
+</CodeGroup>
+
+## Emergency State Management
+
+### Emergency Slice
+
+<Steps>
+  <Step title="Emergency Alerts State">
+    Redux slice for managing emergency alerts and responses
+    
+    ```typescript
+    // store/slices/emergencySlice.ts
+    import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+    import { EmergencyService } from '../../services/emergency';
+    import { logger } from '../../utils/logger';
+
+    interface EmergencyAlert {
+      id: string;
+      type: 'manual' | 'automated' | 'duress' | 'check_in_missed';
+      status: 'active' | 'acknowledged' | 'resolved' | 'cancelled';
+      location?: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number;
+      };
+      createdAt: string;
+      acknowledgedAt?: string;
+      resolvedAt?: string;
+      message?: string;
+      contactsNotified: string[];
+      evidence?: string[];
+    }
+
+    interface EmergencyState {
+      alerts: EmergencyAlert[];
+      isTriggering: boolean;
+      lastTriggerAttempt?: string;
+      triggerError?: string;
+      escalationLevel: number;
+      emergencyMode: boolean;
+      countdownActive: boolean;
+      countdownTimeLeft: number;
+    }
+
+    const initialState: EmergencyState = {
+      alerts: [],
+      isTriggering: false,
+      escalationLevel: 0,
+      emergencyMode: false,
+      countdownActive: false,
+      countdownTimeLeft: 0,
+    };
+
+    // Async thunks for emergency actions
+    export const triggerEmergencyAlert = createAsyncThunk(
+      'emergency/triggerAlert',
+      async (payload: {
+        type: EmergencyAlert['type'];
+        location?: any;
+        message?: string;
+      }, { rejectWithValue }) => {
+        try {
+          logger.emergency('Triggering emergency alert', payload);
+          
+          const alert = await EmergencyService.triggerAlert({
+            type: payload.type,
+            location: payload.location,
+            message: payload.message,
+          });
+          
+          logger.emergency('Emergency alert created', { alertId: alert.id });
+          return alert;
+        } catch (error) {
+          logger.emergency('Emergency alert failed', error);
+          return rejectWithValue(error.message);
+        }
+      }
+    );
+
+    export const acknowledgeAlert = createAsyncThunk(
+      'emergency/acknowledgeAlert',
+      async (alertId: string, { rejectWithValue }) => {
+        try {
+          const result = await EmergencyService.acknowledgeAlert(alertId);
+          logger.emergency('Emergency alert acknowledged', { alertId });
+          return { alertId, acknowledgedAt: new Date().toISOString() };
+        } catch (error) {
+          logger.emergency('Alert acknowledgment failed', error);
+          return rejectWithValue(error.message);
+        }
+      }
+    );
+
+    export const resolveAlert = createAsyncThunk(
+      'emergency/resolveAlert',
+      async (alertId: string, { rejectWithValue }) => {
+        try {
+          const result = await EmergencyService.resolveAlert(alertId);
+          logger.emergency('Emergency alert resolved', { alertId });
+          return { alertId, resolvedAt: new Date().toISOString() };
+        } catch (error) {
+          logger.emergency('Alert resolution failed', error);
+          return rejectWithValue(error.message);
+        }
+      }
+    );
+
+    const emergencySlice = createSlice({
+      name: 'emergency',
+      initialState,
+      reducers: {
+        startCountdown: (state, action: PayloadAction<number>) => {
+          state.countdownActive = true;
+          state.countdownTimeLeft = action.payload;
+        },
+        
+        decrementCountdown: (state) => {
+          if (state.countdownTimeLeft > 0) {
+            state.countdownTimeLeft -= 1;
+          } else {
+            state.countdownActive = false;
+          }
+        },
+        
+        cancelCountdown: (state) => {
+          state.countdownActive = false;
+          state.countdownTimeLeft = 0;
+        },
+        
+        enterEmergencyMode: (state) => {
+          state.emergencyMode = true;
+          logger.emergency('Emergency mode activated');
+        },
+        
+        exitEmergencyMode: (state) => {
+          state.emergencyMode = false;
+          logger.emergency('Emergency mode deactivated');
+        },
+        
+        updateEscalationLevel: (state, action: PayloadAction<number>) => {
+          state.escalationLevel = action.payload;
+          logger.emergency('Escalation level changed', { level: action.payload });
+        },
+        
+        addEvidenceToAlert: (state, action: PayloadAction<{ alertId: string; evidence: string }>) => {
+          const alert = state.alerts.find(a => a.id === action.payload.alertId);
+          if (alert) {
+            alert.evidence = alert.evidence || [];
+            alert.evidence.push(action.payload.evidence);
+          }
+        },
+        
+        clearTriggerError: (state) => {
+          state.triggerError = undefined;
+        },
+      },
+      
+      extraReducers: (builder) => {
+        builder
+          // Trigger emergency alert
+          .addCase(triggerEmergencyAlert.pending, (state) => {
+            state.isTriggering = true;
+            state.triggerError = undefined;
+            state.lastTriggerAttempt = new Date().toISOString();
+          })
+          .addCase(triggerEmergencyAlert.fulfilled, (state, action) => {
+            state.isTriggering = false;
+            state.alerts.unshift(action.payload);
+            state.emergencyMode = true;
+            state.escalationLevel = 1;
+          })
+          .addCase(triggerEmergencyAlert.rejected, (state, action) => {
+            state.isTriggering = false;
+            state.triggerError = action.payload as string;
+          })
+          
+          // Acknowledge alert
+          .addCase(acknowledgeAlert.fulfilled, (state, action) => {
+            const alert = state.alerts.find(a => a.id === action.payload.alertId);
+            if (alert) {
+              alert.status = 'acknowledged';
+              alert.acknowledgedAt = action.payload.acknowledgedAt;
+            }
+          })
+          
+          // Resolve alert
+          .addCase(resolveAlert.fulfilled, (state, action) => {
+            const alert = state.alerts.find(a => a.id === action.payload.alertId);
+            if (alert) {
+              alert.status = 'resolved';
+              alert.resolvedAt = action.payload.resolvedAt;
+            }
+            
+            // Exit emergency mode if no active alerts
+            const hasActiveAlerts = state.alerts.some(a => a.status === 'active');
+            if (!hasActiveAlerts) {
+              state.emergencyMode = false;
+              state.escalationLevel = 0;
+            }
+          });
+      },
+    });
+
+    export const {
+      startCountdown,
+      decrementCountdown,
+      cancelCountdown,
+      enterEmergencyMode,
+      exitEmergencyMode,
+      updateEscalationLevel,
+      addEvidenceToAlert,
+      clearTriggerError,
+    } = emergencySlice.actions;
+
+    export default emergencySlice;
+    ```
+  </Step>
+  <Step title="Emergency State Selectors">
+    Memoized selectors for emergency state
+    
+    ```typescript
+    // store/selectors/emergencySelectors.ts
+    import { createSelector } from '@reduxjs/toolkit';
+    import { RootState } from '../index';
+
+    const selectEmergencyState = (state: RootState) => state.emergency;
+
+    export const selectActiveAlerts = createSelector(
+      [selectEmergencyState],
+      (emergency) => emergency.alerts.filter(alert => alert.status === 'active')
+    );
+
+    export const selectRecentAlerts = createSelector(
+      [selectEmergencyState],
+      (emergency) => {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        return emergency.alerts.filter(
+          alert => new Date(alert.createdAt) > twentyFourHoursAgo
+        );
+      }
+    );
+
+    export const selectIsInEmergency = createSelector(
+      [selectActiveAlerts],
+      (activeAlerts) => activeAlerts.length > 0
+    );
+
+    export const selectEscalationStatus = createSelector(
+      [selectEmergencyState],
+      (emergency) => ({
+        level: emergency.escalationLevel,
+        mode: emergency.emergencyMode,
+        countdown: {
+          active: emergency.countdownActive,
+          timeLeft: emergency.countdownTimeLeft,
+        },
+      })
+    );
+
+    export const selectEmergencyMetrics = createSelector(
+      [selectEmergencyState],
+      (emergency) => ({
+        totalAlerts: emergency.alerts.length,
+        activeAlerts: emergency.alerts.filter(a => a.status === 'active').length,
+        resolvedAlerts: emergency.alerts.filter(a => a.status === 'resolved').length,
+        averageResponseTime: emergency.alerts
+          .filter(a => a.acknowledgedAt)
+          .map(a => new Date(a.acknowledgedAt!).getTime() - new Date(a.createdAt).getTime())
+          .reduce((sum, time, _, arr) => sum + time / arr.length, 0),
+      })
+    );
+    ```
+  </Step>
+</Steps>
+
+## Location State Management
+
+### Location Tracking Slice
+
+<CodeGroup>
+```typescript Location Slice
+// store/slices/locationSlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { LocationService } from '../../services/location';
+
+interface LocationUpdate {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  altitude?: number;
+  heading?: number;
+  speed?: number;
+  timestamp: string;
+}
+
+interface LocationState {
+  currentLocation?: LocationUpdate;
+  locationHistory: LocationUpdate[];
+  isTracking: boolean;
+  isSharing: boolean;
+  sharingWith: string[];
+  accuracy: 'low' | 'medium' | 'high';
+  updateInterval: number;
+  lastUpdate?: string;
+  error?: string;
+  permissionStatus: 'granted' | 'denied' | 'restricted' | 'unknown';
+  batteryOptimization: boolean;
+}
+
+const initialState: LocationState = {
+  locationHistory: [],
+  isTracking: false,
+  isSharing: false,
+  sharingWith: [],
+  accuracy: 'high',
+  updateInterval: 30000, // 30 seconds default
+  permissionStatus: 'unknown',
+  batteryOptimization: true,
+};
+
+export const startLocationTracking = createAsyncThunk(
+  'location/startTracking',
+  async (options: { accuracy?: string; interval?: number } = {}) => {
+    const result = await LocationService.startTracking(options);
+    return result;
+  }
+);
+
+export const updateLocation = createAsyncThunk(
+  'location/updateLocation',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const accuracy = state.location.accuracy;
+      
+      const location = await LocationService.getCurrentPosition({
+        accuracy: accuracy === 'high' ? 'best' : accuracy === 'medium' ? 'balanced' : 'low',
+        timeout: 15000,
+        maximumAge: 60000,
+      });
+      
+      return {
+        ...location,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const shareLocationWith = createAsyncThunk(
+  'location/shareWith',
+  async (contactIds: string[]) => {
+    const result = await LocationService.shareLocation(contactIds);
+    return { contactIds, shareId: result.shareId };
+  }
+);
+
+const locationSlice = createSlice({
+  name: 'location',
+  initialState,
+  reducers: {
+    setAccuracy: (state, action: PayloadAction<'low' | 'medium' | 'high'>) => {
+      state.accuracy = action.payload;
+      
+      // Adjust update interval based on accuracy
+      switch (action.payload) {
+        case 'high':
+          state.updateInterval = 15000; // 15 seconds
+          break;
+        case 'medium':
+          state.updateInterval = 30000; // 30 seconds
+          break;
+        case 'low':
+          state.updateInterval = 60000; // 1 minute
+          break;
+      }
+    },
+    
+    setUpdateInterval: (state, action: PayloadAction<number>) => {
+      state.updateInterval = Math.max(5000, action.payload); // Min 5 seconds
+    },
+    
+    toggleBatteryOptimization: (state) => {
+      state.batteryOptimization = !state.batteryOptimization;
+      
+      if (state.batteryOptimization) {
+        // Increase interval for battery saving
+        state.updateInterval = Math.max(state.updateInterval, 30000);
+      }
+    },
+    
+    clearLocationHistory: (state) => {
+      state.locationHistory = [];
+    },
+    
+    setPermissionStatus: (state, action: PayloadAction<LocationState['permissionStatus']>) => {
+      state.permissionStatus = action.payload;
+    },
+    
+    stopSharing: (state) => {
+      state.isSharing = false;
+      state.sharingWith = [];
+    },
+    
+    addLocationUpdate: (state, action: PayloadAction<LocationUpdate>) => {
+      state.currentLocation = action.payload;
+      state.locationHistory.unshift(action.payload);
+      
+      // Keep only last 100 locations for performance
+      if (state.locationHistory.length > 100) {
+        state.locationHistory = state.locationHistory.slice(0, 100);
+      }
+      
+      state.lastUpdate = action.payload.timestamp;
+    },
+  },
+  
+  extraReducers: (builder) => {
+    builder
+      .addCase(startLocationTracking.pending, (state) => {
+        state.error = undefined;
+      })
+      .addCase(startLocationTracking.fulfilled, (state) => {
+        state.isTracking = true;
+        state.error = undefined;
+      })
+      .addCase(startLocationTracking.rejected, (state, action) => {
+        state.isTracking = false;
+        state.error = action.payload as string;
+      })
+      
+      .addCase(updateLocation.fulfilled, (state, action) => {
+        const location = action.payload;
+        state.currentLocation = location;
+        state.locationHistory.unshift(location);
+        
+        if (state.locationHistory.length > 100) {
+          state.locationHistory = state.locationHistory.slice(0, 100);
+        }
+        
+        state.lastUpdate = location.timestamp;
+        state.error = undefined;
+      })
+      .addCase(updateLocation.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      
+      .addCase(shareLocationWith.fulfilled, (state, action) => {
+        state.isSharing = true;
+        state.sharingWith = action.payload.contactIds;
+      });
+  },
+});
+
+export const {
+  setAccuracy,
+  setUpdateInterval,
+  toggleBatteryOptimization,
+  clearLocationHistory,
+  setPermissionStatus,
+  stopSharing,
+  addLocationUpdate,
+} = locationSlice.actions;
+
+export default locationSlice;
+```
+
+```typescript Location Selectors
+// store/selectors/locationSelectors.ts
+import { createSelector } from '@reduxjs/toolkit';
+import { RootState } from '../index';
+
+const selectLocationState = (state: RootState) => state.location;
+
+export const selectCurrentLocation = createSelector(
+  [selectLocationState],
+  (location) => location.currentLocation
+);
+
+export const selectLocationAccuracy = createSelector(
+  [selectCurrentLocation],
+  (current) => current?.accuracy || 999
+);
+
+export const selectIsLocationStale = createSelector(
+  [selectLocationState],
+  (location) => {
+    if (!location.lastUpdate) return true;
+    
+    const lastUpdate = new Date(location.lastUpdate);
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    
+    return lastUpdate < fiveMinutesAgo;
+  }
+);
+
+export const selectLocationSharingStatus = createSelector(
+  [selectLocationState],
+  (location) => ({
+    isSharing: location.isSharing,
+    sharingWith: location.sharingWith,
+    contactCount: location.sharingWith.length,
+  })
+);
+
+export const selectRecentLocationHistory = createSelector(
+  [selectLocationState],
+  (location) => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return location.locationHistory.filter(
+      update => new Date(update.timestamp) > oneHourAgo
+    );
+  }
+);
+
+export const selectLocationTrackingSettings = createSelector(
+  [selectLocationState],
+  (location) => ({
+    accuracy: location.accuracy,
+    interval: location.updateInterval,
+    batteryOptimization: location.batteryOptimization,
+    isTracking: location.isTracking,
+  })
+);
+```
+</CodeGroup>
+
+## Offline State Management
+
+### Offline Queue and Synchronization
+
+<Steps>
+  <Step title="Offline Actions Queue">
+    Queue actions when offline for later synchronization
+    
+    ```typescript
+    // store/slices/offlineSlice.ts
+    import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+    import { logger } from '../../utils/logger';
+
+    interface QueuedAction {
+      id: string;
+      action: any;
+      timestamp: string;
+      retryCount: number;
+      priority: 'low' | 'medium' | 'high' | 'critical';
+      maxRetries: number;
+    }
+
+    interface OfflineState {
+      isOnline: boolean;
+      queuedActions: QueuedAction[];
+      syncInProgress: boolean;
+      lastSyncAttempt?: string;
+      syncErrors: string[];
+    }
+
+    const initialState: OfflineState = {
+      isOnline: true,
+      queuedActions: [],
+      syncInProgress: false,
+      syncErrors: [],
+    };
+
+    const offlineSlice = createSlice({
+      name: 'offline',
+      initialState,
+      reducers: {
+        setOnlineStatus: (state, action: PayloadAction<boolean>) => {
+          const wasOffline = !state.isOnline;
+          state.isOnline = action.payload;
+          
+          // If coming back online, trigger sync
+          if (wasOffline && action.payload && state.queuedActions.length > 0) {
+            logger.info('Back online, will sync queued actions', {
+              queuedCount: state.queuedActions.length,
+            });
+          }
+        },
+        
+        queueAction: (state, action: PayloadAction<{
+          action: any;
+          priority?: QueuedAction['priority'];
+          maxRetries?: number;
+        }>) => {
+          const queuedAction: QueuedAction = {
+            id: `${Date.now()}-${Math.random()}`,
+            action: action.payload.action,
+            timestamp: new Date().toISOString(),
+            retryCount: 0,
+            priority: action.payload.priority || 'medium',
+            maxRetries: action.payload.maxRetries || 3,
+          };
+          
+          // Insert based on priority
+          const priorities = { critical: 0, high: 1, medium: 2, low: 3 };
+          const insertIndex = state.queuedActions.findIndex(
+            a => priorities[a.priority] > priorities[queuedAction.priority]
+          );
+          
+          if (insertIndex === -1) {
+            state.queuedActions.push(queuedAction);
+          } else {
+            state.queuedActions.splice(insertIndex, 0, queuedAction);
+          }
+          
+          logger.info('Action queued for offline sync', {
+            actionType: queuedAction.action.type,
+            priority: queuedAction.priority,
+            queueSize: state.queuedActions.length,
+          });
+        },
+        
+        removeQueuedAction: (state, action: PayloadAction<string>) => {
+          state.queuedActions = state.queuedActions.filter(
+            qa => qa.id !== action.payload
+          );
+        },
+        
+        incrementRetryCount: (state, action: PayloadAction<string>) => {
+          const queuedAction = state.queuedActions.find(qa => qa.id === action.payload);
+          if (queuedAction) {
+            queuedAction.retryCount += 1;
+            
+            // Remove if max retries exceeded
+            if (queuedAction.retryCount >= queuedAction.maxRetries) {
+              state.queuedActions = state.queuedActions.filter(
+                qa => qa.id !== action.payload
+              );
+              
+              state.syncErrors.push(
+                `Failed to sync action ${queuedAction.action.type} after ${queuedAction.maxRetries} retries`
+              );
+            }
+          }
+        },
+        
+        setSyncInProgress: (state, action: PayloadAction<boolean>) => {
+          state.syncInProgress = action.payload;
+          if (action.payload) {
+            state.lastSyncAttempt = new Date().toISOString();
+          }
+        },
+        
+        clearSyncErrors: (state) => {
+          state.syncErrors = [];
+        },
+        
+        clearQueue: (state) => {
+          state.queuedActions = [];
+        },
+      },
+    });
+
+    export const {
+      setOnlineStatus,
+      queueAction,
+      removeQueuedAction,
+      incrementRetryCount,
+      setSyncInProgress,
+      clearSyncErrors,
+      clearQueue,
+    } = offlineSlice.actions;
+
+    export default offlineSlice;
+    ```
+  </Step>
+  <Step title="Offline Middleware">
+    Middleware to handle offline actions automatically
+    
+    ```typescript
+    // store/middleware/offlineMiddleware.ts
+    import { Middleware } from '@reduxjs/toolkit';
+    import NetInfo from '@react-native-netinfo/netinfo';
+    import { queueAction, setOnlineStatus } from '../slices/offlineSlice';
+    import { logger } from '../../utils/logger';
+
+    // Actions that should be queued when offline
+    const QUEUEABLE_ACTIONS = [
+      'emergency/triggerAlert',
+      'location/updateLocation',
+      'contacts/addContact',
+      'contacts/updateContact',
+      // Add more as needed
+    ];
+
+    // Actions that are critical and should be prioritized
+    const CRITICAL_ACTIONS = [
+      'emergency/triggerAlert',
+      'emergency/acknowledgeAlert',
+    ];
+
+    export const offlineMiddleware: Middleware = (store) => {
+      // Monitor network status
+      NetInfo.addEventListener((state) => {
+        store.dispatch(setOnlineStatus(state.isConnected ?? false));
+      });
+
+      return (next) => (action) => {
+        const state = store.getState();
+        const isOnline = state.offline?.isOnline ?? true;
+
+        // If offline and action is queueable, queue it instead
+        if (!isOnline && QUEUEABLE_ACTIONS.includes(action.type)) {
+          const priority = CRITICAL_ACTIONS.includes(action.type) ? 'critical' : 'medium';
+          
+          store.dispatch(queueAction({
+            action,
+            priority,
+            maxRetries: priority === 'critical' ? 5 : 3,
+          }));
+
+          logger.info('Action queued due to offline status', {
+            actionType: action.type,
+            priority,
+          });
+
+          // Return a resolved promise for the action
+          return Promise.resolve({
+            type: action.type,
+            payload: { queued: true },
+            meta: { offline: true },
+          });
+        }
+
+        return next(action);
+      };
+    };
+    ```
+  </Step>
+</Steps>
+
+## React Query Integration
+
+### Server State Management
+
+<CodeGroup>
+```typescript Query Client Setup
+// lib/queryClient.ts
+import { QueryClient } from '@tanstack/react-query';
+import { persistQueryClient } from '@tanstack/react-query-persist-client-core';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { logger } from '../utils/logger';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error) => {
+        // More aggressive retries for emergency data
+        if (error?.message?.includes('emergency')) {
+          return failureCount < 5;
+        }
+        return failureCount < 3;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        // Emergency mutations get more retries
+        if (error?.message?.includes('emergency')) {
+          return failureCount < 3;
+        }
+        return failureCount < 1;
+      },
+      onError: (error, variables, context) => {
+        logger.emergency('Mutation failed', { error, variables });
+      },
+    },
+  },
+});
+
+// Persistence for offline capability
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: 'REACT_QUERY_OFFLINE_CACHE',
+});
+
+// Persist query client for offline use
+persistQueryClient({
+  queryClient,
+  persister: asyncStoragePersister,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  buster: 'v1', // Increment to invalidate cache
+});
+
+export { queryClient };
+```
+
+```typescript Emergency Queries
+// hooks/queries/useEmergencyQueries.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../lib/supabase';
+import { EmergencyService } from '../../services/emergency';
+import { useAppDispatch } from '../redux';
+import { triggerEmergencyAlert } from '../../store/slices/emergencySlice';
+
+export const useEmergencyAlerts = (userId: string) => {
+  return useQuery({
+    queryKey: ['emergency-alerts', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('emergency_alerts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+    staleTime: 30 * 1000, // 30 seconds - fresh for emergency data
+    refetchInterval: (data) => {
+      // Refetch more frequently if there are active alerts
+      const hasActiveAlerts = data?.some(alert => alert.status === 'active');
+      return hasActiveAlerts ? 10 * 1000 : 60 * 1000; // 10s vs 1min
+    },
+  });
+};
+
+export const useCreateEmergencyAlert = () => {
+  const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
+
+  return useMutation({
+    mutationFn: async (alertData: {
+      type: string;
+      location?: any;
+      message?: string;
+    }) => {
+      // Optimistic update to Redux store
+      const optimisticAction = dispatch(triggerEmergencyAlert(alertData));
+      
+      try {
+        const result = await EmergencyService.createAlert(alertData);
+        return result;
+      } catch (error) {
+        // Revert optimistic update on error
+        optimisticAction.abort();
+        throw error;
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch emergency alerts
+      queryClient.invalidateQueries({ queryKey: ['emergency-alerts'] });
+      
+      // Optimistic update for immediate UI feedback
+      queryClient.setQueryData(['emergency-alerts', data.user_id], (old: any) => {
+        return old ? [data, ...old] : [data];
+      });
+    },
+    onError: (error) => {
+      logger.emergency('Failed to create emergency alert', error);
+    },
+  });
+};
+
+export const useResolveEmergencyAlert = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (alertId: string) => {
+      return await EmergencyService.resolveAlert(alertId);
+    },
+    onMutate: async (alertId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['emergency-alerts'] });
+
+      // Snapshot previous value
+      const previousAlerts = queryClient.getQueryData(['emergency-alerts']);
+
+      // Optimistically update
+      queryClient.setQueriesData(
+        { queryKey: ['emergency-alerts'] },
+        (old: any) => {
+          if (!old) return old;
+          return old.map((alert: any) =>
+            alert.id === alertId
+              ? { ...alert, status: 'resolved', resolved_at: new Date().toISOString() }
+              : alert
+          );
+        }
+      );
+
+      return { previousAlerts };
+    },
+    onError: (err, alertId, context) => {
+      // Rollback on error
+      if (context?.previousAlerts) {
+        queryClient.setQueryData(['emergency-alerts'], context.previousAlerts);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ['emergency-alerts'] });
+    },
+  });
+};
+```
+</CodeGroup>
+
+## State Persistence Strategies
+
+### Critical Data Persistence
+
+<Accordion title="Secure State Persistence">
+```typescript
+// utils/statePersistence.ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import CryptoJS from 'crypto-js';
+import { logger } from './logger';
+
+export class StatePersistence {
+  private static encryptionKey = 'your-encryption-key'; // Use secure key management
+
+  // Secure storage for sensitive data
+  static async setSecureItem(key: string, value: any): Promise<void> {
+    try {
+      const encrypted = CryptoJS.AES.encrypt(
+        JSON.stringify(value),
+        this.encryptionKey
+      ).toString();
+      
+      await SecureStore.setItemAsync(key, encrypted);
+    } catch (error) {
+      logger.emergency('Failed to store secure item', { key, error });
+      throw error;
+    }
+  }
+
+  static async getSecureItem(key: string): Promise<any> {
+    try {
+      const encrypted = await SecureStore.getItemAsync(key);
+      if (!encrypted) return null;
+
+      const decrypted = CryptoJS.AES.decrypt(encrypted, this.encryptionKey);
+      return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
+    } catch (error) {
+      logger.emergency('Failed to retrieve secure item', { key, error });
+      return null;
+    }
+  }
+
+  // Regular storage for non-sensitive data
+  static async setItem(key: string, value: any): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      logger.emergency('Failed to store item', { key, error });
+    }
+  }
+
+  static async getItem(key: string): Promise<any> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      logger.emergency('Failed to retrieve item', { key, error });
+      return null;
+    }
+  }
+
+  // Emergency state backup
+  static async backupEmergencyState(state: any): Promise<void> {
+    await this.setItem('emergency_state_backup', {
+      ...state,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  static async restoreEmergencyState(): Promise<any> {
+    const backup = await this.getItem('emergency_state_backup');
+    
+    if (backup) {
+      const age = Date.now() - new Date(backup.timestamp).getTime();
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+      
+      if (age < maxAge) {
+        return backup;
+      }
+    }
+    
+    return null;
+  }
+
+  // Clear all sensitive data
+  static async clearSecureData(): Promise<void> {
+    try {
+      const secureKeys = [
+        'user_credentials',
+        'emergency_contacts',
+        'location_history',
+      ];
+      
+      await Promise.all(
+        secureKeys.map(key => SecureStore.deleteItemAsync(key))
+      );
+      
+      logger.info('Secure data cleared');
+    } catch (error) {
+      logger.emergency('Failed to clear secure data', error);
+    }
+  }
+}
+```
+</Accordion>
+
+## State Performance Optimization
+
+### Optimization Strategies
+
+<CardGroup cols={2}>
+  <Card title="Selector Optimization" icon="search">
+    Memoized selectors prevent unnecessary re-renders and improve performance
+  </Card>
+  <Card title="State Normalization" icon="layers">
+    Normalized state structure for efficient updates and lookups
+  </Card>
+  <Card title="Lazy Loading" icon="clock">
+    Load state chunks on demand to reduce initial bundle size
+  </Card>
+  <Card title="Memory Management" icon="memory">
+    Automatic cleanup of old state data to prevent memory leaks
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Optimized State Structure
+// types/state.ts
+// Normalized state structure for performance
+interface NormalizedState<T> {
+  byId: Record<string, T>;
+  allIds: string[];
+  loading: Record<string, boolean>;
+  errors: Record<string, string>;
+}
+
+export interface OptimizedEmergencyState {
+  alerts: NormalizedState<EmergencyAlert>;
+  contacts: NormalizedState<EmergencyContact>;
+  settings: {
+    emergencyTimeout: number;
+    escalationLevels: number[];
+    autoEscalation: boolean;
+  };
+  ui: {
+    activeAlertId?: string;
+    isCountdownActive: boolean;
+    countdownTimeLeft: number;
+  };
+}
+
+// Helper functions for normalized state
+export const createNormalizedState = <T extends { id: string }>(): NormalizedState<T> => ({
+  byId: {},
+  allIds: [],
+  loading: {},
+  errors: {},
+});
+
+export const addToNormalized = <T extends { id: string }>(
+  state: NormalizedState<T>,
+  item: T
+) => {
+  state.byId[item.id] = item;
+  if (!state.allIds.includes(item.id)) {
+    state.allIds.push(item.id);
+  }
+};
+
+export const removeFromNormalized = <T>(
+  state: NormalizedState<T>,
+  id: string
+) => {
+  delete state.byId[id];
+  state.allIds = state.allIds.filter(existingId => existingId !== id);
 };
 ```
 
+```typescript Performance Monitoring
+// hooks/useStatePerformance.ts
+import { useEffect, useRef } from 'react';
+import { useAppSelector } from './redux';
+import { logger } from '../utils/logger';
+
+export const useStatePerformanceMonitoring = () => {
+  const renderCount = useRef(0);
+  const lastRenderTime = useRef(Date.now());
+  
+  // Monitor state selector performance
+  const emergencyState = useAppSelector(state => state.emergency);
+  const locationState = useAppSelector(state => state.location);
+  
+  useEffect(() => {
+    renderCount.current += 1;
+    const now = Date.now();
+    const timeSinceLastRender = now - lastRenderTime.current;
+    
+    if (timeSinceLastRender < 16) { // Less than one frame at 60fps
+      logger.warning('Potential performance issue: rapid re-renders', {
+        renderCount: renderCount.current,
+        timeSinceLastRender,
+      });
+    }
+    
+    lastRenderTime.current = now;
+  });
+  
+  // Monitor state size
+  useEffect(() => {
+    const stateSize = {
+      emergencyAlerts: emergencyState.alerts.length,
+      locationHistory: locationState.locationHistory.length,
+    };
+    
+    if (stateSize.locationHistory > 1000) {
+      logger.warning('Location history growing too large', stateSize);
+    }
+    
+    if (stateSize.emergencyAlerts > 100) {
+      logger.warning('Emergency alerts history growing too large', stateSize);
+    }
+  }, [emergencyState.alerts.length, locationState.locationHistory.length]);
+};
+
+// Memory cleanup hook
+export const useMemoryCleanup = () => {
+  const dispatch = useAppDispatch();
+  
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      // Clean up old location history
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      dispatch(clearLocationHistory({ before: oneWeekAgo.toISOString() }));
+      
+      // Clean up resolved emergency alerts older than 30 days
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      dispatch(cleanupOldAlerts({ before: thirtyDaysAgo.toISOString() }));
+    }, 60 * 60 * 1000); // Run every hour
+    
+    return () => clearInterval(cleanup);
+  }, [dispatch]);
+};
+```
 </CodeGroup>
+
+## Development Tools Integration
+
+### Redux DevTools Configuration
+
+<Steps>
+  <Step title="Enhanced DevTools Setup">
+    Configure Redux DevTools for safety app debugging
+    
+    ```typescript
+    // store/devtools.ts
+    import { ActionCreator } from '@reduxjs/toolkit';
+    
+    export const devToolsConfig = {
+      name: 'Shelther Safety App',
+      trace: __DEV__,
+      traceLimit: 25,
+      
+      // Action sanitizer for sensitive data
+      actionSanitizer: (action: any) => {
+        if (action.type.includes('auth') && action.payload?.password) {
+          return {
+            ...action,
+            payload: {
+              ...action.payload,
+              password: '[REDACTED]',
+            },
+          };
+        }
+        
+        if (action.type.includes('location') && action.payload?.coordinates) {
+          return {
+            ...action,
+            payload: {
+              ...action.payload,
+              coordinates: '[LOCATION_DATA]',
+            },
+          };
+        }
+        
+        return action;
+      },
+      
+      // State sanitizer for sensitive data
+      stateSanitizer: (state: any) => {
+        return {
+          ...state,
+          auth: {
+            ...state.auth,
+            token: state.auth?.token ? '[TOKEN]' : null,
+          },
+          location: {
+            ...state.location,
+            currentLocation: state.location?.currentLocation ? '[LOCATION]' : null,
+            locationHistory: `[${state.location?.locationHistory?.length || 0} locations]`,
+          },
+        };
+      },
+      
+      // Feature flags for development
+      features: {
+        pause: true,
+        lock: true,
+        persist: true,
+        export: true,
+        import: 'custom',
+        jump: true,
+        skip: true,
+        reorder: true,
+        dispatch: true,
+        test: true,
+      },
+    };
+    ```
+  </Step>
+</Steps>
+
+## Testing State Management
+
+### State Testing Utilities
+
+<Accordion title="State Testing Helpers">
+```typescript
+// utils/testUtils.ts
+import { configureStore } from '@reduxjs/toolkit';
+import { Provider } from 'react-redux';
+import { render } from '@testing-library/react-native';
+import { rootReducer } from '../store';
+
+export const createTestStore = (initialState = {}) => {
+  return configureStore({
+    reducer: rootReducer,
+    preloadedState: initialState,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false, // Disable for testing
+      }),
+  });
+};
+
+export const renderWithStore = (
+  component: React.ReactElement,
+  initialState = {}
+) => {
+  const store = createTestStore(initialState);
+  
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  
+  return {
+    ...render(component, { wrapper: Wrapper }),
+    store,
+  };
+};
+
+// Mock state builders
+export const mockEmergencyState = {
+  alerts: [],
+  isTriggering: false,
+  escalationLevel: 0,
+  emergencyMode: false,
+  countdownActive: false,
+  countdownTimeLeft: 0,
+};
+
+export const mockLocationState = {
+  currentLocation: {
+    latitude: 40.7128,
+    longitude: -74.0060,
+    accuracy: 10,
+    timestamp: new Date().toISOString(),
+  },
+  locationHistory: [],
+  isTracking: false,
+  isSharing: false,
+  sharingWith: [],
+  accuracy: 'high' as const,
+  updateInterval: 30000,
+  permissionStatus: 'granted' as const,
+  batteryOptimization: true,
+};
+
+export const createMockAlert = (overrides = {}) => ({
+  id: 'test-alert-1',
+  type: 'manual',
+  status: 'active',
+  createdAt: new Date().toISOString(),
+  contactsNotified: [],
+  ...overrides,
+});
+```
+</Accordion>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**State Architecture Scalability:** This state management setup scales efficiently with app complexity while maintaining performance and safety data integrity.
+</Note>
+
+Next in **Phase 4**, I'll continue with `navigation.mdx` to cover React Navigation implementation, emergency route handling, and deep linking for safety features.
+
+<CardGroup cols={3}>
+  <Card title="Navigation" icon="compass" href="/development/navigation">
+    React Navigation setup with emergency routing and deep links
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Location Services" icon="map-pin" href="/development/location-services">
+    GPS tracking, geofencing, and location sharing implementation
+  </Card>
+  <Card title="Push Notifications" icon="bell" href="/development/push-notifications">
+    Emergency notifications and real-time alert delivery
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**State Security:** Never store sensitive authentication tokens or location data in unencrypted state. Use secure storage for critical safety information.
+</Warning>

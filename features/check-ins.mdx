@@ -1,59 +1,1012 @@
 ---
-title: "Check Ins"
-description: "Check Ins documentation for Core Features. Learn about implementation, configuration, and best practices."
+title: "Check-ins"
+description: "Smart safety check-ins with Shelther. Learn about scheduled check-ins, automatic location-based confirmations, missed check-in alerts, and escalation protocols."
 ---
 
-# Check Ins
+# Check-ins
+
+<Info>
+**Proactive Safety Monitoring:** Check-ins provide a simple way to let your Circle of Trust know you're safe during activities, travels, or daily routines. Smart automation reduces manual effort while ensuring help comes when you need it.
+</Info>
 
 ## Overview
 
-This page is automatically generated from the Mintlify docs.json structure.
+Shelther's intelligent check-in system combines manual confirmations with automatic location-based verification to ensure your safety network knows you're okay. The system adapts to your patterns, minimizes interruptions, and escalates appropriately when check-ins are missed.
 
-<Info>
-Add your content here following Mintlify's MDX guidelines.
-</Info>
+<CardGroup cols={2}>
+  <Card title="Smart Scheduling" icon="calendar">
+    AI-powered suggestions for check-in timing based on your activities and risk factors
+  </Card>
+  <Card title="Automatic Verification" icon="check-circle">
+    Location-based automatic check-ins when arriving at safe destinations
+  </Card>
+  <Card title="Gentle Escalation" icon="trending-up">
+    Progressive contact notification when check-ins are missed, avoiding false alarms
+  </Card>
+  <Card title="Activity Integration" icon="activity">
+    Context-aware check-ins that adapt to your current activity and location
+  </Card>
+</CardGroup>
 
-## Key Points
+## Check-in Types
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+### Manual Check-ins
 
-## Examples
+<Steps>
+  <Step title="Quick Check-in">
+    One-tap safety confirmation with optional status message
+  </Step>
+  <Step title="Detailed Check-in">
+    Include location, activity, estimated next check-in, and custom message
+  </Step>
+  <Step title="Emergency Check-in">
+    Urgent safety confirmation that bypasses normal notification settings
+  </Step>
+  <Step title="Scheduled Check-in">
+    Pre-planned check-ins for specific activities or time periods
+  </Step>
+</Steps>
 
 <CodeGroup>
+```typescript Manual Check-in Interface
+export const QuickCheckInButton = () => {
+  const [isChecking, setIsChecking] = useState(false);
+  const { performCheckIn, getLastCheckIn } = useCheckIns();
+  const { getCurrentLocation } = useLocation();
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
+  const handleQuickCheckIn = async () => {
+    try {
+      setIsChecking(true);
+      
+      // Get current location for context
+      const location = await getCurrentLocation();
+      
+      // Perform check-in
+      await performCheckIn({
+        type: 'manual_quick',
+        status: 'safe',
+        location,
+        message: 'All good! 👍',
+        contactsToNotify: 'default', // Use default notification settings
+      });
+      
+      // Show success feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Toast.show({
+        type: 'success',
+        text1: 'Check-in Complete',
+        text2: 'Your contacts have been notified that you\'re safe',
+        visibilityTime: 3000,
+      });
+      
+    } catch (error) {
+      console.error('Check-in failed:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Check-in Failed',
+        text2: 'Please try again or contact help manually',
+      });
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+  return (
+    <TouchableOpacity
+      style={[styles.checkInButton, isChecking && styles.checkInButtonLoading]}
+      onPress={handleQuickCheckIn}
+      disabled={isChecking}
+      accessibilityLabel="Quick safety check-in"
+      accessibilityHint="Tap to send a safety confirmation to your emergency contacts"
+    >
+      <View style={styles.buttonContent}>
+        {isChecking ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Icon name="check-circle" size={24} color="#FFFFFF" />
+        )}
+        <Text style={styles.buttonText}>
+          {isChecking ? 'Checking In...' : 'I\'m Safe'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const DetailedCheckInScreen = () => {
+  const [checkInData, setCheckInData] = useState<CheckInData>({
+    status: 'safe',
+    message: '',
+    location: null,
+    nextCheckInTime: null,
+    activity: 'general',
+    contactGroups: ['primary'],
+  });
+
+  const handleDetailedCheckIn = async () => {
+    try {
+      const result = await performCheckIn({
+        type: 'manual_detailed',
+        ...checkInData,
+        includeEvidence: checkInData.includePhoto || checkInData.includeAudio,
+      });
+
+      navigation.goBack();
+      
+      // Show confirmation with next check-in reminder
+      if (checkInData.nextCheckInTime) {
+        scheduleCheckInReminder(checkInData.nextCheckInTime);
+      }
+      
+    } catch (error) {
+      Alert.alert('Error', 'Failed to complete check-in. Please try again.');
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Safety Status</Text>
+        <StatusSelector
+          value={checkInData.status}
+          onChange={(status) => setCheckInData(prev => ({ ...prev, status }))}
+          options={[
+            { value: 'safe', label: 'All Good', icon: 'check-circle', color: '#4CAF50' },
+            { value: 'safe_with_concerns', label: 'Safe but Concerned', icon: 'alert-circle', color: '#FF9800' },
+            { value: 'need_support', label: 'Need Support', icon: 'help-circle', color: '#FF5722' },
+            { value: 'emergency', label: 'Emergency', icon: 'alert-triangle', color: '#F44336' },
+          ]}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Message (Optional)</Text>
+        <TextInput
+          style={styles.messageInput}
+          value={checkInData.message}
+          onChangeText={(message) => setCheckInData(prev => ({ ...prev, message }))}
+          placeholder="Add a quick update for your contacts..."
+          maxLength={200}
+          multiline
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Current Activity</Text>
+        <ActivitySelector
+          value={checkInData.activity}
+          onChange={(activity) => setCheckInData(prev => ({ ...prev, activity }))}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Next Check-in</Text>
+        <NextCheckInScheduler
+          value={checkInData.nextCheckInTime}
+          onChange={(time) => setCheckInData(prev => ({ ...prev, nextCheckInTime: time }))}
+          activity={checkInData.activity}
+        />
+      </View>
+
+      <TouchableOpacity style={styles.submitButton} onPress={handleDetailedCheckIn}>
+        <Text style={styles.submitButtonText}>Send Check-in</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 };
 ```
 
+```typescript Check-in Status Management
+interface CheckInData {
+  id?: string;
+  userId: string;
+  type: CheckInType;
+  status: SafetyStatus;
+  
+  // Content
+  message?: string;
+  activity: ActivityType;
+  location?: GeoLocation;
+  
+  // Evidence
+  photoUrl?: string;
+  audioUrl?: string;
+  includeDeviceState?: boolean;
+  
+  // Scheduling
+  scheduledTime?: string;
+  nextCheckInTime?: string;
+  reminderTime?: string;
+  
+  // Notifications
+  contactGroups: ContactGroup[];
+  customContacts?: string[];
+  notificationMethods: NotificationMethod[];
+  
+  // Context
+  riskLevel?: RiskLevel;
+  batteryLevel?: number;
+  networkStatus?: NetworkStatus;
+  
+  // Timestamps
+  createdAt: string;
+  completedAt?: string;
+}
+
+type CheckInType = 
+  | 'manual_quick'
+  | 'manual_detailed' 
+  | 'automatic_location'
+  | 'automatic_schedule'
+  | 'emergency_prompted'
+  | 'missed_followup';
+
+type SafetyStatus = 
+  | 'safe'
+  | 'safe_with_concerns'
+  | 'need_support'
+  | 'emergency'
+  | 'no_response';
+
+type ActivityType = 
+  | 'general'
+  | 'work'
+  | 'travel'
+  | 'social'
+  | 'exercise'
+  | 'date'
+  | 'alone_time'
+  | 'high_risk'
+  | 'medical'
+  | 'other';
+
+export class CheckInService {
+  async performCheckIn(checkInData: CheckInData): Promise<CheckInResult> {
+    try {
+      // Create check-in record
+      const checkIn = await this.createCheckInRecord(checkInData);
+      
+      // Send notifications to contacts
+      const notifications = await this.notifyContacts(checkIn);
+      
+      // Update user's safety status
+      await this.updateUserSafetyStatus(checkIn);
+      
+      // Schedule next reminder if applicable
+      if (checkIn.nextCheckInTime) {
+        await this.scheduleNextReminder(checkIn);
+      }
+      
+      // Cancel any pending missed check-in alerts
+      await this.cancelPendingAlerts(checkIn.userId);
+      
+      return {
+        success: true,
+        checkInId: checkIn.id,
+        notificationResults: notifications,
+        nextReminderScheduled: checkIn.nextCheckInTime,
+      };
+      
+    } catch (error) {
+      console.error('Check-in failed:', error);
+      throw new Error('Failed to complete check-in');
+    }
+  }
+
+  private async notifyContacts(checkIn: CheckInData): Promise<NotificationResult[]> {
+    const contacts = await this.getContactsForNotification(checkIn);
+    const results: NotificationResult[] = [];
+    
+    for (const contact of contacts) {
+      try {
+        const message = this.buildCheckInMessage(checkIn, contact);
+        const result = await this.sendCheckInNotification(contact, message, checkIn);
+        results.push(result);
+      } catch (error) {
+        results.push({
+          contactId: contact.id,
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+    
+    return results;
+  }
+
+  private buildCheckInMessage(checkIn: CheckInData, contact: EmergencyContact): string {
+    const user = checkIn.userId; // Get user name
+    const time = new Date(checkIn.completedAt || checkIn.createdAt).toLocaleTimeString();
+    const status = this.getStatusText(checkIn.status);
+    
+    let message = `${user} checked in at ${time} - ${status}`;
+    
+    if (checkIn.message) {
+      message += `\n\n"${checkIn.message}"`;
+    }
+    
+    if (checkIn.location && contact.permissions.viewLocation) {
+      const locationText = this.formatLocationForContact(checkIn.location, contact);
+      message += `\n\nLocation: ${locationText}`;
+    }
+    
+    if (checkIn.nextCheckInTime) {
+      const nextTime = new Date(checkIn.nextCheckInTime).toLocaleString();
+      message += `\n\nNext check-in expected: ${nextTime}`;
+    }
+    
+    return message;
+  }
+}
+```
 </CodeGroup>
+
+### Automatic Check-ins
+
+<Accordion title="Location-Based Automatic Check-ins">
+**Arrival-Based Check-ins:**
+- Automatic confirmation when arriving at safe zones (home, work, etc.)
+- Geofence-triggered check-ins with customizable radius and dwell time
+- Smart filtering to avoid multiple check-ins for brief stops
+- Integration with venue safety verification
+
+**Schedule-Based Check-ins:**
+- Automatic check-ins during regular routines
+- Time-based confirmations that learn from user patterns
+- Activity-aware scheduling that adapts to context
+- Battery and network optimization for reliability
+
+**Journey-Based Check-ins:**
+- Route completion confirmations for travel activities
+- Waypoint-based check-ins during long journeys
+- Public transport integration with schedule verification
+- Destination arrival confirmations with safety verification
+
+**Implementation Features:**
+```typescript
+export class AutomaticCheckInManager {
+  async configureAutomaticCheckIns(userId: string, preferences: AutoCheckInPreferences): Promise<void> {
+    // Location-based triggers
+    if (preferences.locationBased.enabled) {
+      await this.setupLocationTriggers(userId, preferences.locationBased);
+    }
+    
+    // Schedule-based triggers
+    if (preferences.scheduleBased.enabled) {
+      await this.setupScheduleTriggers(userId, preferences.scheduleBased);
+    }
+    
+    // Journey-based triggers  
+    if (preferences.journeyBased.enabled) {
+      await this.setupJourneyTriggers(userId, preferences.journeyBased);
+    }
+  }
+
+  private async handleLocationBasedCheckIn(
+    userId: string,
+    geofence: Geofence,
+    location: GeoLocation
+  ): Promise<void> {
+    // Verify this is a valid trigger
+    const shouldTrigger = await this.validateLocationTrigger(userId, geofence, location);
+    if (!shouldTrigger) return;
+
+    // Create automatic check-in
+    const checkIn = await this.createAutomaticCheckIn({
+      userId,
+      type: 'automatic_location',
+      status: 'safe',
+      location,
+      activity: this.inferActivityFromLocation(geofence),
+      message: `Arrived safely at ${geofence.name}`,
+      triggerData: {
+        geofenceId: geofence.id,
+        geofenceName: geofence.name,
+        arrivalTime: new Date().toISOString(),
+      }
+    });
+
+    // Notify relevant contacts
+    await this.processCheckIn(checkIn);
+  }
+}
+
+interface AutoCheckInPreferences {
+  locationBased: {
+    enabled: boolean;
+    safeZonesOnly: boolean;
+    minimumDwellTime: number; // minutes
+    notifyContacts: ContactGroup[];
+    quietHours?: TimeRange;
+  };
+  
+  scheduleBased: {
+    enabled: boolean;
+    workdaySchedule?: DailySchedule;
+    weekendSchedule?: DailySchedule;
+    customSchedules: CustomSchedule[];
+    adaptToRoutines: boolean;
+  };
+  
+  journeyBased: {
+    enabled: boolean;
+    travelCheckIns: boolean;
+    publicTransport: boolean;
+    walkingThreshold: number; // meters
+    drivingThreshold: number; // meters
+  };
+}
+```
+</Accordion>
+
+### Smart Scheduling
+
+<CardGroup cols={3}>
+  <Card title="AI-Powered Suggestions" icon="brain">
+    Machine learning suggests optimal check-in timing based on your patterns and risk factors
+  </Card>
+  <Card title="Context-Aware Timing" icon="clock">
+    Check-in frequency adapts based on activity, location, time of day, and safety factors
+  </Card>
+  <Card title="Gentle Reminders" icon="bell">
+    Non-intrusive reminder system that learns when you're most likely to respond
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Pattern Learning">
+    System learns your daily routines, travel patterns, and communication preferences
+  </Step>
+  <Step title="Risk Assessment">
+    Check-in frequency increases automatically during higher-risk activities or locations
+  </Step>
+  <Step title="Social Context">
+    Reduced check-in frequency when with trusted contacts or in verified safe locations
+  </Step>
+  <Step title="Feedback Integration">
+    User feedback helps refine scheduling suggestions and timing optimization
+  </Step>
+</Steps>
+
+## Missed Check-in Handling
+
+### Escalation Protocols
+
+<Note>
+**Gentle but Effective Escalation:** The system balances avoiding false alarms with ensuring missed check-ins receive appropriate attention when they might indicate a problem.
+</Note>
+
+<CodeGroup>
+```sql Missed Check-in Escalation
+CREATE TABLE missed_checkin_escalations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  checkin_id UUID REFERENCES check_ins(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Escalation details
+  missed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  grace_period_minutes INTEGER DEFAULT 15,
+  escalation_level INTEGER DEFAULT 0,
+  max_escalation_level INTEGER DEFAULT 3,
+  
+  -- Current status
+  status escalation_status DEFAULT 'grace_period',
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  resolution_type escalation_resolution,
+  
+  -- Escalation timing
+  next_escalation_at TIMESTAMP WITH TIME ZONE,
+  escalation_intervals JSONB DEFAULT '[15, 30, 60]'::jsonb, -- minutes
+  
+  -- Contact notification tracking
+  contacts_notified JSONB DEFAULT '[]'::jsonb,
+  notification_methods_tried JSONB DEFAULT '[]'::jsonb,
+  responses_received JSONB DEFAULT '[]'::jsonb,
+  
+  -- Context information
+  missed_checkin_context JSONB DEFAULT '{}'::jsonb,
+  user_last_seen_location GEOGRAPHY(POINT, 4326),
+  user_last_activity_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Override and manual control
+  manual_override BOOLEAN DEFAULT false,
+  override_reason VARCHAR(200),
+  paused_until TIMESTAMP WITH TIME ZONE,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TYPE escalation_status AS ENUM (
+  'grace_period',     -- Within grace period, no action yet
+  'gentle_reminder',  -- Sending gentle reminder to user
+  'contact_level_1',  -- Notifying primary contacts
+  'contact_level_2',  -- Notifying secondary contacts
+  'contact_level_3',  -- Notifying all contacts + emergency services
+  'resolved',         -- User or contact confirmed safety
+  'cancelled',        -- False alarm or user cancelled
+  'escalated'         -- Handed off to emergency services
+);
+
+CREATE TYPE escalation_resolution AS ENUM (
+  'user_responded',        -- User provided late check-in
+  'contact_confirmed',     -- Contact confirmed user safety
+  'false_alarm',          -- Determined to be false alarm
+  'emergency_services',   -- Escalated to emergency services
+  'user_found_safe',      -- User found safe by other means
+  'timeout_resolved',     -- Resolved after maximum time
+  'manual_resolution'     -- Manually resolved by user/contact
+);
+```
+
+```typescript Missed Check-in Escalation Manager
+export class MissedCheckInEscalationManager {
+  async handleMissedCheckIn(checkIn: CheckIn): Promise<void> {
+    // Create escalation record
+    const escalation = await this.createEscalationRecord(checkIn);
+    
+    // Start grace period
+    await this.startGracePeriod(escalation);
+    
+    // Schedule initial escalation
+    await this.scheduleNextEscalation(escalation);
+  }
+
+  private async createEscalationRecord(checkIn: CheckIn): Promise<MissedCheckInEscalation> {
+    const user = await this.getUserProfile(checkIn.userId);
+    const context = await this.gatherMissedCheckInContext(checkIn);
+    
+    return await this.db.missedCheckinEscalations.create({
+      checkinId: checkIn.id,
+      userId: checkIn.userId,
+      missedAt: new Date(),
+      gracePeriodMinutes: this.calculateGracePeriod(checkIn, context),
+      escalationIntervals: this.calculateEscalationIntervals(checkIn, context),
+      missedCheckinContext: context,
+      userLastSeenLocation: await this.getLastKnownLocation(checkIn.userId),
+      userLastActivityAt: await this.getLastActivity(checkIn.userId),
+    });
+  }
+
+  private async gatherMissedCheckInContext(checkIn: CheckIn): Promise<MissedCheckInContext> {
+    const location = await this.getLastKnownLocation(checkIn.userId);
+    const activity = await this.getCurrentUserActivity(checkIn.userId);
+    const riskFactors = await this.assessCurrentRiskFactors(checkIn.userId, location);
+    
+    return {
+      scheduledCheckInType: checkIn.type,
+      lastKnownLocation: location,
+      currentActivity: activity,
+      riskFactors,
+      timeOfDay: new Date().getHours(),
+      dayOfWeek: new Date().getDay(),
+      weatherConditions: await this.getWeatherConditions(location),
+      networkStatus: await this.getUserNetworkStatus(checkIn.userId),
+      batteryLevel: await this.getUserBatteryLevel(checkIn.userId),
+    };
+  }
+
+  async processEscalationLevel(escalation: MissedCheckInEscalation): Promise<void> {
+    const level = escalation.escalationLevel;
+    
+    switch (level) {
+      case 0:
+        await this.sendGentleReminder(escalation);
+        break;
+      case 1:
+        await this.notifyPrimaryContacts(escalation);
+        break;
+      case 2:
+        await this.notifySecondaryContacts(escalation);
+        break;
+      case 3:
+        await this.notifyAllContactsAndServices(escalation);
+        break;
+      default:
+        await this.handleMaxEscalation(escalation);
+    }
+    
+    // Schedule next escalation if not resolved
+    if (escalation.status !== 'resolved') {
+      await this.scheduleNextEscalation(escalation);
+    }
+  }
+
+  private async sendGentleReminder(escalation: MissedCheckInEscalation): Promise<void> {
+    const checkIn = await this.getCheckIn(escalation.checkinId);
+    const message = this.buildGentleReminderMessage(checkIn, escalation);
+    
+    try {
+      // Try multiple notification methods
+      const methods = ['push', 'sms', 'call'];
+      
+      for (const method of methods) {
+        const result = await this.sendUserNotification(
+          escalation.userId,
+          method,
+          message,
+          { priority: 'high', requireResponse: true }
+        );
+        
+        if (result.success) {
+          await this.recordNotificationAttempt(escalation.id, method, result);
+          break; // Stop after first successful delivery
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to send gentle reminder:', error);
+      // Proceed to next escalation level immediately
+      await this.escalateImmediately(escalation);
+    }
+  }
+
+  private async notifyPrimaryContacts(escalation: MissedCheckInEscalation): Promise<void> {
+    const contacts = await this.getPrimaryContacts(escalation.userId);
+    const message = this.buildContactNotificationMessage(escalation, 'primary');
+    
+    const notificationPromises = contacts.map(contact =>
+      this.notifyContactOfMissedCheckIn(contact, message, escalation)
+    );
+    
+    const results = await Promise.allSettled(notificationPromises);
+    
+    // Track notification results
+    await this.recordContactNotifications(escalation.id, results);
+    
+    // If no primary contacts responded, consider faster escalation
+    const successfulNotifications = results.filter(r => r.status === 'fulfilled').length;
+    if (successfulNotifications === 0) {
+      await this.considerFasterEscalation(escalation);
+    }
+  }
+
+  private buildContactNotificationMessage(
+    escalation: MissedCheckInEscalation,
+    level: ContactLevel
+  ): string {
+    const user = escalation.userId; // Get user name
+    const checkIn = escalation.checkinId; // Get check-in details
+    const timeMissed = this.formatTimeSince(escalation.missedAt);
+    
+    let message = `${user} missed their scheduled safety check-in ${timeMissed} ago. `;
+    
+    if (escalation.userLastSeenLocation) {
+      message += `Last known location: ${this.formatLocation(escalation.userLastSeenLocation)}. `;
+    }
+    
+    message += `Please try contacting them to confirm they're safe. `;
+    
+    if (level === 'primary') {
+      message += `If you can't reach them, this alert will escalate to more contacts in 30 minutes.`;
+    } else {
+      message += `This is an escalated alert - primary contacts were unable to confirm safety.`;
+    }
+    
+    return message;
+  }
+
+  async handleCheckInResponse(
+    escalationId: string,
+    response: CheckInResponse
+  ): Promise<void> {
+    const escalation = await this.getEscalation(escalationId);
+    
+    if (escalation.status === 'resolved') {
+      return; // Already resolved
+    }
+    
+    // Record the response
+    await this.recordEscalationResponse(escalationId, response);
+    
+    // Resolve the escalation
+    await this.resolveEscalation(escalationId, {
+      resolvedBy: response.responderId,
+      resolutionType: response.resolutionType,
+      resolutionNotes: response.notes,
+    });
+    
+    // Cancel future escalation notifications
+    await this.cancelScheduledEscalations(escalationId);
+    
+    // Notify all involved contacts of resolution
+    await this.notifyEscalationResolved(escalation, response);
+  }
+}
+```
+</CodeGroup>
+
+### Progressive Contact Notification
+
+<Steps>
+  <Step title="Grace Period (0-15 minutes)">
+    Gentle reminder sent to user via multiple notification channels
+  </Step>
+  <Step title="Primary Contacts (15-45 minutes)">
+    Primary Circle of Trust members notified with request to contact user
+  </Step>
+  <Step title="Secondary Contacts (45-90 minutes)">
+    Extended contact network notified with escalated urgency
+  </Step>
+  <Step title="Emergency Services (90+ minutes)">
+    Professional emergency services contacted with full context and evidence
+  </Step>
+</Steps>
+
+## Check-in Analytics and Insights
+
+### Pattern Recognition
+
+<CardGroup cols={2}>
+  <Card title="Routine Analysis" icon="repeat">
+    Identify check-in patterns and suggest optimal scheduling based on your habits
+  </Card>
+  <Card title="Risk Correlation" icon="trending-up">
+    Analyze check-in compliance against activity risk levels and safety outcomes
+  </Card>
+  <Card title="Contact Performance" icon="users">
+    Track which contacts are most responsive to missed check-in alerts
+  </Card>
+  <Card title="Effectiveness Metrics" icon="chart-line">
+    Measure check-in system effectiveness and suggest improvements
+  </Card>
+</CardGroup>
+
+<Accordion title="Check-in Analytics Dashboard">
+**Personal Insights:**
+- Check-in compliance rates by activity type and time period
+- Patterns in missed check-ins and their causes
+- Optimal check-in timing based on your daily routines
+- Correlation between check-in frequency and perceived safety
+
+**Network Performance:**
+- Contact response times to missed check-in alerts
+- Most effective notification methods for each contact
+- Escalation resolution patterns and success rates
+- Suggested improvements to contact notification settings
+
+**Safety Effectiveness:**
+- Incidents prevented or resolved through check-in system
+- False alarm rates and pattern analysis
+- User satisfaction with check-in timing and frequency
+- Recommendations for check-in schedule optimization
+
+**Implementation Example:**
+```typescript
+interface CheckInAnalytics {
+  userId: string;
+  analysisPeriod: DateRange;
+  
+  // Compliance metrics
+  totalScheduledCheckIns: number;
+  completedCheckIns: number;
+  missedCheckIns: number;
+  complianceRate: number;
+  
+  // Timing analysis
+  averageCheckInTime: number; // minutes after scheduled
+  onTimeCheckIns: number;
+  lateCheckIns: number;
+  
+  // Pattern insights
+  mostReliableTimeSlots: TimeSlot[];
+  problematicTimeSlots: TimeSlot[];
+  activityComplianceRates: ActivityComplianceRate[];
+  
+  // Contact performance
+  contactResponseMetrics: ContactResponseMetric[];
+  escalationResolutionRates: EscalationResolutionRate[];
+  
+  // Recommendations
+  schedulingRecommendations: SchedulingRecommendation[];
+  contactOptimizationSuggestions: ContactOptimizationSuggestion[];
+}
+
+export class CheckInAnalyticsService {
+  async generatePersonalizedRecommendations(
+    userId: string,
+    analytics: CheckInAnalytics
+  ): Promise<CheckInRecommendation[]> {
+    const recommendations: CheckInRecommendation[] = [];
+    
+    // Analyze compliance patterns
+    if (analytics.complianceRate < 0.8) {
+      const problematicPatterns = this.identifyProblematicPatterns(analytics);
+      recommendations.push(...this.generateComplianceRecommendations(problematicPatterns));
+    }
+    
+    // Analyze timing optimization
+    const timingInsights = this.analyzeCheckInTiming(analytics);
+    if (timingInsights.hasOptimizationOpportunities) {
+      recommendations.push(...this.generateTimingRecommendations(timingInsights));
+    }
+    
+    // Analyze contact network effectiveness
+    const contactInsights = this.analyzeContactPerformance(analytics);
+    if (contactInsights.hasImprovementOpportunities) {
+      recommendations.push(...this.generateContactRecommendations(contactInsights));
+    }
+    
+    return recommendations;
+  }
+}
+```
+</Accordion>
+
+## Integration with Other Features
+
+### Connected Safety Ecosystem
+
+<CardGroup cols={4}>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Emergency situations automatically trigger urgent check-in requests
+  </Card>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Location-based automatic check-ins when arriving at safe destinations
+  </Card>
+  <Card title="Journey Monitoring" icon="route" href="/features/journey-monitoring">
+    Journey completion triggers automatic arrival confirmations
+  </Card>
+  <Card title="Circle of Trust" icon="users" href="/features/circle-of-trust">
+    Check-in notifications sent to your configured emergency contacts
+  </Card>
+</CardGroup>
+
+### Smart Context Integration
+
+<Steps>
+  <Step title="Activity Awareness">
+    Check-in timing and content adapt based on your current activity type
+  </Step>
+  <Step title="Location Context">
+    Automatic check-ins trigger when entering or leaving significant locations
+  </Step>
+  <Step title="Social Context">
+    Reduced check-in frequency when with trusted contacts or in group settings
+  </Step>
+  <Step title="Risk Assessment">
+    Increased check-in frequency during higher-risk activities or locations
+  </Step>
+</Steps>
+
+## Privacy and Control
+
+### User Privacy Protection
+
+<Info>
+**Check-in Privacy:** You control who receives check-in notifications, what information is shared, and how often you're asked to check in.
+</Info>
+
+<CardGroup cols={3}>
+  <Card title="Selective Sharing" icon="eye">
+    Choose which contacts receive which types of check-in notifications
+  </Card>
+  <Card title="Information Control" icon="settings">
+    Configure what information (location, activity, message) is shared with each contact
+  </Card>
+  <Card title="Frequency Management" icon="clock">
+    Adjust check-in frequency based on your comfort level and safety needs
+  </Card>
+</CardGroup>
+
+<Accordion title="Check-in Privacy Controls">
+**Contact-Specific Settings:**
+- Which contacts receive automatic check-in confirmations
+- Which contacts are notified of missed check-ins and at what escalation level
+- What information (location, activity details, custom messages) each contact sees
+- Different notification preferences for different types of check-ins
+
+**Content Privacy:**
+- Option to send check-ins without location information
+- Ability to use generic status messages instead of detailed updates
+- Control over automatic vs manual check-in sharing
+- Privacy mode that reduces information sharing while maintaining safety
+
+**Temporal Privacy:**
+- Quiet hours when check-in reminders are suppressed
+- Weekend vs weekday different privacy levels
+- Vacation mode with reduced check-in requirements
+- Special event settings for modified privacy during activities
+
+**Example Configuration:**
+```typescript
+interface CheckInPrivacySettings {
+  defaultSharingLevel: 'minimal' | 'standard' | 'detailed';
+  
+  contactSpecificSettings: {
+    [contactId: string]: {
+      receiveRoutineCheckIns: boolean;
+      receiveMissedCheckInAlerts: boolean;
+      escalationLevel: number; // Which escalation level they're notified at
+      informationLevel: 'status_only' | 'status_and_location' | 'full_details';
+      notificationMethods: NotificationMethod[];
+    };
+  };
+  
+  contentFiltering: {
+    shareLocation: 'never' | 'emergencies_only' | 'always';
+    shareActivity: boolean;
+    shareCustomMessages: boolean;
+    allowAutomaticCheckIns: boolean;
+  };
+  
+  temporalControls: {
+    quietHours: TimeRange;
+    weekendMode: boolean;
+    vacationMode: boolean;
+    specialEventOverrides: SpecialEventOverride[];
+  };
+}
+```
+</Accordion>
+
+## Best Practices for Check-ins
+
+### Effective Check-in Strategies
+
+<Note>
+**Balance is Key:** Effective check-ins balance safety monitoring with daily life convenience. Too frequent and they become burdensome; too infrequent and they lose safety value.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Activity-Based Scheduling" icon="calendar">
+    Adjust check-in frequency based on activity risk level and duration
+  </Card>
+  <Card title="Contact Communication" icon="message-circle">
+    Keep your contacts informed about your check-in preferences and what to expect
+  </Card>
+  <Card title="Consistent Timing" icon="clock">
+    Establish predictable check-in patterns so contacts know when to expect them
+  </Card>
+  <Card title="Context Sharing" icon="info">
+    Provide enough context in check-ins for contacts to understand your situation
+  </Card>
+</CardGroup>
+
+### Recommended Check-in Frequencies
+
+| Activity Type | Suggested Frequency | Escalation Time | Notes |
+|---------------|-------------------|-----------------|--------|
+| **Daily Routine** | 1-2 times/day | 4-6 hours | Morning and evening check-ins |
+| **Work/School** | End of day | 2-3 hours | Confirm safe arrival home |
+| **Social Activities** | Every 2-4 hours | 1-2 hours | More frequent for late-night activities |
+| **Dating** | Every 1-2 hours | 30-60 minutes | Especially important for first dates |
+| **Travel** | At major waypoints | 2-4 hours | Arrival at destinations, transport changes |
+| **High-Risk Activities** | Every 30-60 minutes | 15-30 minutes | Solo hiking, late-night activities |
+| **Medical Appointments** | Before and after | 1-2 hours | Especially for procedures or new providers |
+
+---
+
+## Implementation Guidelines
+
+<Warning>
+**Critical Check-in Requirements:**
+- Check-in reminders must be gentle and non-intrusive to encourage compliance
+- Missed check-in escalation must balance false alarm prevention with rapid response
+- Automatic check-ins must be reliable and include manual override options
+- Contact notifications must be clear, actionable, and include context
+- Privacy controls must be granular and easily adjustable by users
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Circle of Trust Setup" icon="users" href="/features/circle-of-trust">
+    Configure which contacts receive check-in notifications and missed alerts
+  </Card>
+  <Card title="Location Configuration" icon="map-pin" href="/features/location-tracking">
+    Set up automatic location-based check-ins for safe zones
+  </Card>
+  <Card title="Emergency Integration" icon="bell" href="/features/emergency-alerts">
+    Understand how check-ins integrate with emergency alert systems
+  </Card>
+</CardGroup>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Set Up Your First Check-in" icon="check-circle" href="/quickstart/setup">
+    Configure check-in preferences and schedule your first safety check-in
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Configure Automatic Check-ins" icon="settings" href="/features/location-tracking">
+    Set up location-based automatic check-ins for your frequent destinations
   </Card>
 </CardGroup>
-
----
-
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>

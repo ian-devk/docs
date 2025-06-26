@@ -1,59 +1,820 @@
 ---
 title: "Safety Model"
-description: "Safety Model documentation for Data Models. Learn about implementation, configuration, and best practices."
+description: "Comprehensive safety data model for Shelther's emergency features. Learn about safety profiles, emergency protocols, threat detection, and automated safety monitoring systems."
 ---
 
 # Safety Model
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-First Data Design:** The safety model is the core of Shelther's protection system, designed to handle emergency scenarios with redundant data structures and fail-safe mechanisms.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+Shelther's safety model encompasses all data structures and relationships that enable personal protection features. This model prioritizes data integrity, real-time accessibility, and privacy while ensuring critical safety information is always available when needed.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Safety Profiles" icon="shield-check">
+    Personalized safety configurations with emergency contacts and preferences
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Emergency Protocols" icon="alert-triangle">
+    Automated response workflows triggered by various emergency scenarios
+  </Card>
+  <Card title="Threat Detection" icon="eye">
+    AI-powered anomaly detection and behavioral pattern analysis
+  </Card>
+  <Card title="Response Coordination" icon="users">
+    Multi-contact notification and escalation management systems
+  </Card>
+</CardGroup>
+
+## Core Safety Entities
+
+### Safety Profile Schema
+
+<CodeGroup>
+```sql Safety Profile Table
+CREATE TABLE safety_profiles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Emergency contact configuration
+  primary_contacts JSONB DEFAULT '[]'::jsonb,
+  secondary_contacts JSONB DEFAULT '[]'::jsonb,
+  emergency_services_contact JSONB DEFAULT '{}'::jsonb,
+  
+  -- Safety preferences
+  safety_mode VARCHAR(20) DEFAULT 'standard', -- standard, enhanced, maximum
+  auto_escalation_enabled BOOLEAN DEFAULT true,
+  escalation_timeout_minutes INTEGER DEFAULT 15,
+  
+  -- Alert configuration
+  alert_triggers JSONB DEFAULT '{
+    "shake_pattern": true,
+    "voice_activation": true,
+    "button_sequence": true,
+    "auto_detection": false,
+    "duress_code": false
+  }'::jsonb,
+  
+  -- Privacy settings
+  location_sharing_precision VARCHAR(20) DEFAULT 'exact', -- exact, approximate, city_only
+  data_retention_days INTEGER DEFAULT 30,
+  anonymous_reporting BOOLEAN DEFAULT false,
+  
+  -- Emergency protocols
+  emergency_instructions TEXT,
+  medical_information JSONB DEFAULT '{}'::jsonb,
+  special_considerations TEXT,
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_safety_profiles_user_id ON safety_profiles(user_id);
+CREATE INDEX idx_safety_profiles_safety_mode ON safety_profiles(safety_mode);
+```
+
+```typescript Safety Profile Interface
+interface SafetyProfile {
+  id: string;
+  userId: string;
+  
+  // Contact configuration
+  primaryContacts: EmergencyContact[];
+  secondaryContacts: EmergencyContact[];
+  emergencyServicesContact: EmergencyServicesConfig;
+  
+  // Safety settings
+  safetyMode: 'standard' | 'enhanced' | 'maximum';
+  autoEscalationEnabled: boolean;
+  escalationTimeoutMinutes: number;
+  
+  // Alert configuration
+  alertTriggers: AlertTriggerConfig;
+  
+  // Privacy controls
+  locationSharingPrecision: 'exact' | 'approximate' | 'city_only';
+  dataRetentionDays: number;
+  anonymousReporting: boolean;
+  
+  // Emergency information
+  emergencyInstructions?: string;
+  medicalInformation: MedicalInfo;
+  specialConsiderations?: string;
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EmergencyContact {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  email?: string;
+  relationship: string;
+  priority: number; // 1-10, lower numbers = higher priority
+  verified: boolean;
+  permissions: ContactPermissions;
+}
+
+interface AlertTriggerConfig {
+  shakePattern: boolean;
+  voiceActivation: boolean;
+  buttonSequence: boolean;
+  autoDetection: boolean;
+  duressCode: boolean;
+}
+```
+</CodeGroup>
+
+### Emergency Alert Schema
+
+<CodeGroup>
+```sql Emergency Alerts Table
+CREATE TABLE emergency_alerts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Alert classification
+  alert_type VARCHAR(50) NOT NULL, -- manual, automated, duress, medical, threat
+  severity_level INTEGER NOT NULL CHECK (severity_level BETWEEN 1 AND 5),
+  status VARCHAR(20) DEFAULT 'active', -- active, resolved, cancelled, escalated
+  
+  -- Location and context
+  location GEOGRAPHY(POINT, 4326),
+  location_accuracy REAL,
+  address TEXT,
+  venue_id UUID REFERENCES venues(id),
+  
+  -- Alert details
+  trigger_method VARCHAR(50), -- shake, voice, button, auto, duress
+  description TEXT,
+  audio_evidence_url TEXT,
+  photo_evidence_urls TEXT[],
+  video_evidence_url TEXT,
+  
+  -- Response tracking
+  contacts_notified JSONB DEFAULT '[]'::jsonb,
+  responses_received JSONB DEFAULT '[]'::jsonb,
+  escalation_level INTEGER DEFAULT 0,
+  authorities_contacted BOOLEAN DEFAULT false,
+  
+  -- Resolution
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  resolution_type VARCHAR(50), -- self_resolved, contact_assisted, authorities, false_alarm
+  resolution_notes TEXT,
+  
+  -- Timestamps
+  triggered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Critical indexes for emergency response
+CREATE INDEX idx_emergency_alerts_user_active ON emergency_alerts(user_id) 
+  WHERE status = 'active';
+CREATE INDEX idx_emergency_alerts_triggered_at ON emergency_alerts(triggered_at DESC);
+CREATE INDEX idx_emergency_alerts_location ON emergency_alerts USING GIST(location)
+  WHERE status = 'active';
+CREATE INDEX idx_emergency_alerts_severity ON emergency_alerts(severity_level DESC, triggered_at DESC);
+```
+
+```typescript Emergency Alert Interface
+interface EmergencyAlert {
+  id: string;
+  userId: string;
+  
+  // Classification
+  alertType: AlertType;
+  severityLevel: 1 | 2 | 3 | 4 | 5; // 5 = life-threatening
+  status: AlertStatus;
+  
+  // Location context
+  location: GeoLocation;
+  locationAccuracy?: number;
+  address?: string;
+  venueId?: string;
+  
+  // Alert details
+  triggerMethod: TriggerMethod;
+  description?: string;
+  evidence: AlertEvidence;
+  
+  // Response tracking
+  contactsNotified: NotificationRecord[];
+  responsesReceived: ContactResponse[];
+  escalationLevel: number;
+  authoritiesContacted: boolean;
+  
+  // Resolution
+  resolvedAt?: string;
+  resolutionType?: ResolutionType;
+  resolutionNotes?: string;
+  
+  // Timestamps
+  triggeredAt: string;
+  lastUpdated: string;
+}
+
+type AlertType = 'manual' | 'automated' | 'duress' | 'medical' | 'threat';
+type AlertStatus = 'active' | 'resolved' | 'cancelled' | 'escalated';
+type TriggerMethod = 'shake' | 'voice' | 'button' | 'auto' | 'duress';
+type ResolutionType = 'self_resolved' | 'contact_assisted' | 'authorities' | 'false_alarm';
+```
+</CodeGroup>
+
+## Safety Monitoring Systems
+
+### Threat Detection Model
+
+<Accordion title="Behavioral Pattern Analysis">
+**Pattern Recognition Engine:**
+- Movement anomaly detection using accelerometer and GPS data
+- Audio pattern analysis for distress signals or unusual environments
+- Time-based behavior analysis for routine deviation detection
+- Context-aware threat assessment based on location and time
+
+**Machine Learning Models:**
+- Personal baseline establishment through normal usage patterns
+- Anomaly scoring using isolation forest and autoencoder networks
+- Real-time inference with on-device processing for privacy
+- Continuous model adaptation based on user feedback
+
+**Detection Triggers:**
+```typescript
+interface ThreatDetectionConfig {
+  movementAnalysis: {
+    enabled: boolean;
+    sensitivity: 'low' | 'medium' | 'high';
+    fallingDetection: boolean;
+    panicMovementDetection: boolean;
+  };
+  audioAnalysis: {
+    enabled: boolean;
+    distressWords: string[];
+    volumeThresholds: AudioThresholds;
+    backgroundNoiseAnalysis: boolean;
+  };
+  contextualAnalysis: {
+    timeBasedRisks: boolean;
+    locationBasedRisks: boolean;
+    routineDeviationDetection: boolean;
+  };
+  userFeedback: {
+    falsePositiveReduction: boolean;
+    adaptiveSensitivity: boolean;
+  };
+}
+```
+</Accordion>
+
+### Check-in System Model
+
+<CodeGroup>
+```sql Check-ins Table
+CREATE TABLE check_ins (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Check-in details
+  check_in_type VARCHAR(30) NOT NULL, -- scheduled, manual, arrival, departure
+  status VARCHAR(20) DEFAULT 'pending', -- pending, completed, missed, cancelled
+  
+  -- Scheduling
+  scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  reminder_time TIMESTAMP WITH TIME ZONE,
+  grace_period_minutes INTEGER DEFAULT 15,
+  
+  -- Location context
+  expected_location GEOGRAPHY(POINT, 4326),
+  actual_location GEOGRAPHY(POINT, 4326),
+  location_tolerance_meters INTEGER DEFAULT 100,
+  venue_id UUID REFERENCES venues(id),
+  
+  -- Completion details
+  completed_at TIMESTAMP WITH TIME ZONE,
+  completion_method VARCHAR(20), -- manual, auto, proximity
+  safety_status VARCHAR(20) DEFAULT 'safe', -- safe, concern, emergency
+  notes TEXT,
+  
+  -- Escalation handling
+  missed_notifications_sent BOOLEAN DEFAULT false,
+  escalation_triggered BOOLEAN DEFAULT false,
+  escalation_level INTEGER DEFAULT 0,
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for check-in monitoring
+CREATE INDEX idx_check_ins_user_pending ON check_ins(user_id, scheduled_time) 
+  WHERE status IN ('pending', 'missed');
+CREATE INDEX idx_check_ins_scheduled_time ON check_ins(scheduled_time)
+  WHERE status = 'pending';
+CREATE INDEX idx_check_ins_location ON check_ins USING GIST(expected_location);
+```
+
+```typescript Check-in Interface
+interface CheckIn {
+  id: string;
+  userId: string;
+  
+  // Check-in configuration
+  checkInType: CheckInType;
+  status: CheckInStatus;
+  
+  // Scheduling
+  scheduledTime: string;
+  reminderTime?: string;
+  gracePeriodMinutes: number;
+  
+  // Location verification
+  expectedLocation?: GeoLocation;
+  actualLocation?: GeoLocation;
+  locationToleranceMeters: number;
+  venueId?: string;
+  
+  // Completion
+  completedAt?: string;
+  completionMethod?: CompletionMethod;
+  safetyStatus: SafetyStatus;
+  notes?: string;
+  
+  // Escalation
+  missedNotificationsSent: boolean;
+  escalationTriggered: boolean;
+  escalationLevel: number;
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+
+type CheckInType = 'scheduled' | 'manual' | 'arrival' | 'departure';
+type CheckInStatus = 'pending' | 'completed' | 'missed' | 'cancelled';
+type CompletionMethod = 'manual' | 'auto' | 'proximity';
+type SafetyStatus = 'safe' | 'concern' | 'emergency';
+```
+</CodeGroup>
+
+## Safety Network Model
+
+### Contact Verification System
+
+<Steps>
+  <Step title="Contact Registration">
+    Emergency contacts register through secure invitation system with identity verification
+  </Step>
+  <Step title="Two-Way Verification">
+    Both parties confirm the safety relationship with defined permissions and responsibilities
+  </Step>
+  <Step title="Ongoing Validation">
+    Regular verification pings ensure contacts remain active and responsive
+  </Step>
+  <Step title="Emergency Testing">
+    Periodic test alerts verify notification delivery and contact responsiveness
+  </Step>
+</Steps>
+
+<CodeGroup>
+```sql Contact Relationships Table
+CREATE TABLE contact_relationships (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  contact_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Relationship details
+  relationship_type VARCHAR(30) NOT NULL, -- family, friend, partner, professional
+  priority_level INTEGER NOT NULL CHECK (priority_level BETWEEN 1 AND 10),
+  verified BOOLEAN DEFAULT false,
+  
+  -- Permissions
+  permissions JSONB DEFAULT '{
+    "receive_alerts": true,
+    "view_location": false,
+    "emergency_override": false,
+    "medical_information": false
+  }'::jsonb,
+  
+  -- Contact preferences
+  notification_methods JSONB DEFAULT '{
+    "push": true,
+    "sms": true,
+    "email": false,
+    "call": false
+  }'::jsonb,
+  
+  -- Response tracking
+  last_response_at TIMESTAMP WITH TIME ZONE,
+  response_rate DECIMAL(3,2) DEFAULT 0.0, -- 0.0 to 1.0
+  average_response_time_minutes INTEGER,
+  
+  -- Verification
+  verification_token UUID,
+  verification_sent_at TIMESTAMP WITH TIME ZONE,
+  verification_completed_at TIMESTAMP WITH TIME ZONE,
+  last_test_alert_at TIMESTAMP WITH TIME ZONE,
+  test_response_success BOOLEAN,
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'pending', -- pending, active, inactive, blocked
+  blocked_at TIMESTAMP WITH TIME ZONE,
+  block_reason VARCHAR(100),
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Ensure no self-relationships
+  CONSTRAINT no_self_contact CHECK (user_id != contact_user_id),
+  UNIQUE(user_id, contact_user_id)
+);
+```
+
+```typescript Contact Relationship Interface
+interface ContactRelationship {
+  id: string;
+  userId: string;
+  contactUserId: string;
+  
+  // Relationship details
+  relationshipType: RelationshipType;
+  priorityLevel: number; // 1-10
+  verified: boolean;
+  
+  // Permissions
+  permissions: ContactPermissions;
+  notificationMethods: NotificationMethods;
+  
+  // Performance metrics
+  lastResponseAt?: string;
+  responseRate: number; // 0.0 to 1.0
+  averageResponseTimeMinutes?: number;
+  
+  // Verification status
+  verificationToken?: string;
+  verificationSentAt?: string;
+  verificationCompletedAt?: string;
+  lastTestAlertAt?: string;
+  testResponseSuccess?: boolean;
+  
+  // Status
+  status: ContactStatus;
+  blockedAt?: string;
+  blockReason?: string;
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ContactPermissions {
+  receiveAlerts: boolean;
+  viewLocation: boolean;
+  emergencyOverride: boolean;
+  medicalInformation: boolean;
+}
+
+type RelationshipType = 'family' | 'friend' | 'partner' | 'professional';
+type ContactStatus = 'pending' | 'active' | 'inactive' | 'blocked';
+```
+</CodeGroup>
+
+## Safety Analytics Model
+
+### Risk Assessment Framework
+
+<CardGroup cols={2}>
+  <Card title="Environmental Risk Analysis" icon="map">
+    Location-based risk scoring using historical data, crime statistics, and real-time conditions
+  </Card>
+  <Card title="Behavioral Risk Modeling" icon="activity">
+    Personal risk assessment based on activity patterns, timing, and context
+  </Card>
+  <Card title="Network Risk Evaluation" icon="users">
+    Safety network strength assessment and contact reliability scoring
+  </Card>
+  <Card title="Predictive Risk Modeling" icon="trending-up">
+    Machine learning models for proactive risk identification and mitigation
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```sql Risk Assessment Table
+CREATE TABLE risk_assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Assessment context
+  assessment_type VARCHAR(30) NOT NULL, -- location, activity, network, predictive
+  trigger_event VARCHAR(50), -- venue_entry, time_change, route_deviation
+  
+  -- Risk scoring
+  overall_risk_score DECIMAL(3,2) NOT NULL CHECK (overall_risk_score BETWEEN 0 AND 1),
+  risk_factors JSONB NOT NULL DEFAULT '{}'::jsonb,
+  risk_category VARCHAR(20) NOT NULL, -- low, medium, high, critical
+  
+  -- Context data
+  location GEOGRAPHY(POINT, 4326),
+  venue_id UUID REFERENCES venues(id),
+  time_of_assessment TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  activity_context JSONB DEFAULT '{}'::jsonb,
+  
+  -- Recommendations
+  recommended_actions JSONB DEFAULT '[]'::jsonb,
+  safety_suggestions TEXT[],
+  escalation_recommended BOOLEAN DEFAULT false,
+  
+  -- Validation
+  user_feedback VARCHAR(20), -- accurate, inaccurate, partially_accurate
+  actual_outcome VARCHAR(30), -- safe, minor_issue, major_issue, emergency
+  
+  -- Metadata
+  model_version VARCHAR(20),
+  confidence_score DECIMAL(3,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for risk analysis
+CREATE INDEX idx_risk_assessments_user_time ON risk_assessments(user_id, time_of_assessment DESC);
+CREATE INDEX idx_risk_assessments_location ON risk_assessments USING GIST(location);
+CREATE INDEX idx_risk_assessments_score ON risk_assessments(overall_risk_score DESC, time_of_assessment DESC);
+```
+
+```typescript Risk Assessment Interface
+interface RiskAssessment {
+  id: string;
+  userId: string;
+  
+  // Assessment context
+  assessmentType: AssessmentType;
+  triggerEvent?: string;
+  
+  // Risk evaluation
+  overallRiskScore: number; // 0.0 to 1.0
+  riskFactors: RiskFactors;
+  riskCategory: RiskCategory;
+  
+  // Context
+  location?: GeoLocation;
+  venueId?: string;
+  timeOfAssessment: string;
+  activityContext: ActivityContext;
+  
+  // Recommendations
+  recommendedActions: RecommendedAction[];
+  safetySuggestions: string[];
+  escalationRecommended: boolean;
+  
+  // Validation and learning
+  userFeedback?: FeedbackType;
+  actualOutcome?: OutcomeType;
+  
+  // Model metadata
+  modelVersion: string;
+  confidenceScore: number;
+  createdAt: string;
+}
+
+interface RiskFactors {
+  locationRisk: number;
+  timeRisk: number;
+  activityRisk: number;
+  networkStrength: number;
+  historicalIncidents: number;
+  environmentalFactors: number;
+}
+
+type AssessmentType = 'location' | 'activity' | 'network' | 'predictive';
+type RiskCategory = 'low' | 'medium' | 'high' | 'critical';
+type FeedbackType = 'accurate' | 'inaccurate' | 'partially_accurate';
+type OutcomeType = 'safe' | 'minor_issue' | 'major_issue' | 'emergency';
+```
+</CodeGroup>
+
+## Safety Configuration Management
+
+### Adaptive Safety Modes
+
+<Note>
+**Dynamic Safety Adjustment:** Safety modes automatically adapt based on context, user behavior, and environmental factors while allowing manual override for specific situations.
+</Note>
+
+| Safety Mode | Location Frequency | Contact Notifications | Auto-Escalation | Battery Impact |
+|-------------|-------------------|----------------------|------------------|----------------|
+| **Minimal** | Every 10 minutes | Emergency only | Manual only | Very Low |
+| **Standard** | Every 5 minutes | Emergency + missed check-ins | 30 minutes | Low |
+| **Enhanced** | Every 2 minutes | All safety events | 15 minutes | Medium |
+| **Maximum** | Every 30 seconds | Real-time updates | 5 minutes | High |
+| **Emergency** | Continuous | Immediate all contacts | Immediate | Override |
+
+<CodeGroup>
+```typescript Safety Mode Configuration
+interface SafetyModeConfig {
+  mode: SafetyMode;
+  
+  // Location tracking
+  locationUpdateInterval: number; // seconds
+  locationAccuracyRequired: number; // meters
+  backgroundLocationEnabled: boolean;
+  
+  // Communication
+  contactNotificationTriggers: NotificationTrigger[];
+  autoEscalationDelay: number; // minutes
+  emergencyServiceIntegration: boolean;
+  
+  // Monitoring
+  anomalyDetectionSensitivity: 'low' | 'medium' | 'high';
+  checkInFrequency: number; // hours
+  mandatoryCheckIns: boolean;
+  
+  // Privacy vs Safety trade-offs
+  dataRetentionPeriod: number; // days
+  shareLocationWithContacts: boolean;
+  allowEmergencyOverride: boolean;
+  
+  // Battery management
+  batterySavingEnabled: boolean;
+  lowBatteryProtocol: LowBatteryProtocol;
+}
+
+type SafetyMode = 'minimal' | 'standard' | 'enhanced' | 'maximum' | 'emergency';
+
+interface LowBatteryProtocol {
+  enableLowPowerMode: boolean;
+  notifyContacts: boolean;
+  reduceLocationAccuracy: boolean;
+  disableNonEssentialFeatures: boolean;
+}
+```
+</CodeGroup>
+
+## Privacy and Safety Balance
+
+### Data Minimization Strategies
+
+<Steps>
+  <Step title="Purpose Limitation">
+    Collect only data necessary for safety features with clear retention policies
+  </Step>
+  <Step title="Consent Management">
+    Granular consent controls for different types of safety data and sharing
+  </Step>
+  <Step title="Data Anonymization">
+    Automatic anonymization of non-emergency data after specified periods
+  </Step>
+  <Step title="User Control">
+    Complete user control over data retention, sharing, and deletion
+  </Step>
+</Steps>
+
+<Accordion title="Privacy-Preserving Safety Features">
+**Location Privacy Techniques:**
+- Differential privacy for crowd-sourced safety data
+- Location obfuscation for non-emergency sharing
+- Temporal data aggregation to prevent tracking
+- Selective precision based on threat level
+
+**Communication Privacy:**
+- End-to-end encryption for all safety communications
+- Anonymous emergency reporting options
+- Contact identity protection in public safety data
+- Secure multi-party computation for safety analytics
+
+**Implementation:**
+```typescript
+interface PrivacySafetySettings {
+  // Data collection consent
+  locationDataConsent: ConsentLevel;
+  audioRecordingConsent: ConsentLevel;
+  emergencyDataSharing: ConsentLevel;
+  analyticsDataSharing: ConsentLevel;
+  
+  // Privacy preferences
+  anonymousReporting: boolean;
+  locationObfuscation: boolean;
+  emergencyContactProtection: boolean;
+  temporaryDataRetention: boolean;
+  
+  // Safety override permissions
+  emergencyOverrideEnabled: boolean;
+  overrideContactNotification: boolean;
+  overrideLocationSharing: boolean;
+  overrideDataRetention: boolean;
+}
+
+type ConsentLevel = 'denied' | 'basic' | 'full' | 'emergency_only';
+```
+</Accordion>
+
+## Real-time Safety Monitoring
+
+### Live Safety Dashboard
+
+<CardGroup cols={3}>
+  <Card title="Active Monitoring" icon="monitor">
+    Real-time status of all safety features and active monitoring sessions
+  </Card>
+  <Card title="Contact Network" icon="network">
+    Live view of contact availability and response capabilities
+  </Card>
+  <Card title="Risk Assessment" icon="shield-alert">
+    Current risk levels and recommended safety actions
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```sql Real-time Safety Status View
+-- Real-time safety monitoring view
+CREATE OR REPLACE VIEW user_safety_status AS
+SELECT 
+  u.id as user_id,
+  u.email,
+  sp.safety_mode,
+  
+  -- Current location status
+  (SELECT location FROM location_updates 
+   WHERE user_id = u.id 
+   ORDER BY timestamp DESC LIMIT 1) as current_location,
+  
+  -- Active emergency status
+  (SELECT COUNT(*) FROM emergency_alerts 
+   WHERE user_id = u.id AND status = 'active') as active_emergencies,
+  
+  -- Pending check-ins
+  (SELECT COUNT(*) FROM check_ins 
+   WHERE user_id = u.id AND status = 'pending' 
+   AND scheduled_time <= NOW() + INTERVAL '15 minutes') as pending_checkins,
+  
+  -- Contact network strength
+  (SELECT COUNT(*) FROM contact_relationships 
+   WHERE user_id = u.id AND status = 'active' AND verified = true) as verified_contacts,
+  
+  -- Recent risk assessment
+  (SELECT overall_risk_score FROM risk_assessments 
+   WHERE user_id = u.id 
+   ORDER BY time_of_assessment DESC LIMIT 1) as current_risk_score,
+  
+  -- Last activity
+  GREATEST(
+    (SELECT MAX(timestamp) FROM location_updates WHERE user_id = u.id),
+    (SELECT MAX(completed_at) FROM check_ins WHERE user_id = u.id),
+    (SELECT MAX(last_updated) FROM emergency_alerts WHERE user_id = u.id)
+  ) as last_activity
+
+FROM users u
+LEFT JOIN safety_profiles sp ON u.id = sp.user_id
+WHERE u.id IS NOT NULL;
+```
+</CodeGroup>
+
+## Safety Model Best Practices
+
+### Implementation Guidelines
+
+<Warning>
+**Critical Safety Considerations:**
+- All safety data must have backup storage mechanisms
+- Emergency features must work offline with sync when connectivity returns
+- Privacy controls must never compromise emergency response capabilities
+- Real-time features require redundant notification pathways
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Data Integrity" icon="shield-check">
+    Implement ACID transactions for all safety-critical operations with comprehensive validation
+  </Card>
+  <Card title="Performance Optimization" icon="zap">
+    Use strategic indexing and caching for sub-second emergency response times
+  </Card>
+  <Card title="Scalability Planning" icon="trending-up">
+    Design for horizontal scaling with geographic distribution for disaster scenarios
+  </Card>
+  <Card title="Privacy Compliance" icon="lock">
+    Implement privacy-by-design with user control while maintaining safety effectiveness
   </Card>
 </CardGroup>
 
 ---
 
+## Next Steps
+
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Related Documentation:** The safety model integrates closely with location tracking and emergency response systems. Review the related model documentation for complete implementation context.
 </Note>
+
+<CardGroup cols={3}>
+  <Card title="Location Model" icon="map-pin" href="/architecture/location-model">
+    Location tracking, geofencing, and geographic safety features
+  </Card>
+  <Card title="Emergency Model" icon="bell" href="/architecture/emergency-model">
+    Emergency alert processing, escalation protocols, and response coordination
+  </Card>
+  <Card title="Security Design" icon="shield" href="/architecture/security-design">
+    Security architecture ensuring safety data protection and system integrity
+  </Card>
+</CardGroup>

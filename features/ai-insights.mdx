@@ -1,59 +1,709 @@
 ---
-title: "Ai Insights"
-description: "Ai Insights documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+title: "AI Insights"
+description: "Intelligent safety analytics and personalized recommendations powered by machine learning. Learn how Shelther's AI provides proactive safety insights, risk assessment, and behavioral pattern analysis."
+sidebarTitle: "AI Insights"
 ---
 
-# Ai Insights
+# AI Insights
+
+<Info>
+**Intelligent Safety Intelligence:** Shelther's AI Insights feature uses advanced machine learning to analyze patterns, predict risks, and provide personalized safety recommendations that adapt to your lifestyle and preferences.
+</Info>
 
 ## Overview
 
-This page is automatically generated from the Mintlify docs.json structure.
+AI Insights transforms your safety data into actionable intelligence, helping you make informed decisions about your personal safety. The system analyzes location patterns, timing data, venue history, and community reports to provide personalized recommendations and early warning systems.
 
-<Info>
-Add your content here following Mintlify's MDX guidelines.
-</Info>
+<CardGroup cols={2}>
+  <Card title="Behavioral Analysis" icon="brain">
+    Learn your routine patterns and detect deviations that might indicate safety concerns
+  </Card>
+  <Card title="Risk Assessment" icon="shield-alert">
+    Real-time risk scoring for locations and activities based on multiple data sources
+  </Card>
+  <Card title="Predictive Alerts" icon="bell-ring">
+    Proactive notifications about potential safety concerns before they escalate
+  </Card>
+  <Card title="Personal Recommendations" icon="lightbulb">
+    Customized safety tips and suggestions based on your behavior and preferences
+  </Card>
+</CardGroup>
 
-## Key Points
+## Key AI Capabilities
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+### Behavioral Pattern Recognition
 
-## Examples
+The AI system continuously learns your normal patterns to identify potential anomalies:
 
-<CodeGroup>
+<Steps>
+  <Step title="Routine Learning">
+    Analyzes your typical locations, timing, and movement patterns to establish baseline behavior
+  </Step>
+  <Step title="Anomaly Detection">
+    Identifies deviations from normal patterns that might indicate safety concerns or emergencies
+  </Step>
+  <Step title="Context Awareness">
+    Considers factors like day of week, time, weather, and events when evaluating patterns
+  </Step>
+  <Step title="Adaptive Learning">
+    Continuously updates models as your routines change while maintaining privacy
+  </Step>
+</Steps>
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+### Risk Assessment Engine
+
+<Accordion title="Real-time Risk Scoring">
+**Location Risk Factors:**
+- Historical incident reports from community
+- Time-of-day risk variations
+- Crowd density and activity levels
+- Proximity to emergency services
+- Lighting and visibility conditions
+
+**Personal Risk Factors:**
+- Your historical comfort levels with venues
+- Previous safety incidents or concerns
+- Social context (alone vs. with others)
+- Transportation method and timing
+- Battery level and connectivity status
+
+**Dynamic Risk Calculation:**
+```typescript
+interface RiskAssessment {
+  overall_score: number;        // 0-100 risk level
+  confidence: number;           // Model confidence in assessment
+  contributing_factors: {
+    location_history: number;   // Historical safety data
+    time_context: number;       // Time-based risk factors  
+    social_context: number;     // Alone vs. group factors
+    environmental: number;      // Weather, lighting, etc.
+    personal_history: number;   // Your past experiences
+  };
+  recommendations: string[];    // Actionable safety suggestions
+  alert_thresholds: {
+    yellow: number;            // Caution level
+    orange: number;            // Elevated concern
+    red: number;               // High risk
+  };
 }
 ```
+</Accordion>
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+### Predictive Safety Alerts
+
+<Warning>
+**Proactive Protection:** AI Insights can predict potential safety concerns 15-30 minutes before they might occur, giving you time to take preventive action.
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Route Safety Analysis" icon="route">
+    Analyzes planned routes for safety concerns and suggests alternatives
+  </Card>
+  <Card title="Venue Risk Prediction" icon="building">
+    Warns about venues with elevated risk based on time, events, or recent reports
+  </Card>
+  <Card title="Social Context Alerts" icon="users">
+    Identifies when you're in potentially vulnerable situations (alone, late hours)
+  </Card>
+</CardGroup>
+
+## Implementation Details
+
+### On-Device Machine Learning
+
+<CodeGroup>
+```typescript AI Model Configuration
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-react-native';
+
+interface AIInsightsConfig {
+  models: {
+    behavioral_analysis: {
+      model_path: string;
+      update_frequency: 'daily' | 'weekly';
+      training_data_retention: number; // days
+    };
+    risk_assessment: {
+      model_path: string;
+      confidence_threshold: number;
+      feature_weights: {
+        location: number;
+        temporal: number;
+        social: number;
+        environmental: number;
+      };
+    };
+    anomaly_detection: {
+      model_path: string;
+      sensitivity: 'low' | 'medium' | 'high';
+      adaptation_rate: number;
+    };
+  };
+  privacy: {
+    local_processing: boolean;
+    data_anonymization: boolean;
+    federated_learning: boolean;
+    opt_out_available: boolean;
+  };
+}
+
+export const aiInsightsConfig: AIInsightsConfig = {
+  models: {
+    behavioral_analysis: {
+      model_path: 'models/behavioral_v2.1.json',
+      update_frequency: 'weekly',
+      training_data_retention: 90,
+    },
+    risk_assessment: {
+      model_path: 'models/risk_assessment_v1.3.json',
+      confidence_threshold: 0.75,
+      feature_weights: {
+        location: 0.3,
+        temporal: 0.25,
+        social: 0.2,
+        environmental: 0.25,
+      },
+    },
+    anomaly_detection: {
+      model_path: 'models/anomaly_v1.1.json',
+      sensitivity: 'medium',
+      adaptation_rate: 0.1,
+    },
+  },
+  privacy: {
+    local_processing: true,
+    data_anonymization: true,
+    federated_learning: true,
+    opt_out_available: true,
+  },
 };
 ```
 
+```typescript Real-time Analysis
+import { useAIInsights } from '@/hooks/useAIInsights';
+
+export const SafetyDashboard = () => {
+  const {
+    currentRiskScore,
+    behavioralInsights,
+    recommendations,
+    predictiveAlerts,
+    isAnalyzing
+  } = useAIInsights({
+    updateInterval: 30000, // 30 seconds
+    enablePredictive: true,
+    sensitivityLevel: 'medium'
+  });
+
+  return (
+    <View style={styles.dashboard}>
+      <RiskScoreIndicator 
+        score={currentRiskScore.overall_score}
+        confidence={currentRiskScore.confidence}
+        factors={currentRiskScore.contributing_factors}
+      />
+      
+      <InsightCards insights={behavioralInsights} />
+      
+      <RecommendationsList 
+        recommendations={recommendations}
+        priority="safety"
+      />
+      
+      {predictiveAlerts.length > 0 && (
+        <PredictiveAlertBanner alerts={predictiveAlerts} />
+      )}
+    </View>
+  );
+};
+
+const useAIInsights = (config: AIInsightsConfig) => {
+  const [insights, setInsights] = useState<AIInsights>();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    const analyzePatterns = async () => {
+      setIsAnalyzing(true);
+      try {
+        const currentLocation = await getCurrentLocation();
+        const recentActivity = await getRecentActivity();
+        const userPreferences = await getUserPreferences();
+        
+        const analysis = await runAIAnalysis({
+          location: currentLocation,
+          activity: recentActivity,
+          preferences: userPreferences,
+          historical_data: await getHistoricalData()
+        });
+        
+        setInsights(analysis);
+      } catch (error) {
+        console.error('AI analysis failed:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+
+    analyzePatterns();
+    const interval = setInterval(analyzePatterns, config.updateInterval);
+    
+    return () => clearInterval(interval);
+  }, [config.updateInterval]);
+
+  return { insights, isAnalyzing };
+};
+```
 </CodeGroup>
 
-## Next Steps
+### Privacy-Preserving Analytics
+
+<Note>
+**Privacy First:** All AI processing happens locally on your device. No personal data is sent to external servers for analysis, ensuring your privacy while providing intelligent insights.
+</Note>
+
+<Steps>
+  <Step title="Local Processing">
+    AI models run entirely on your device using TensorFlow Lite for privacy and performance
+  </Step>
+  <Step title="Data Anonymization">
+    Personal identifiers are removed before any pattern analysis or model training
+  </Step>
+  <Step title="Federated Learning">
+    Models improve through collective learning without sharing individual user data
+  </Step>
+  <Step title="User Control">
+    Complete control over what data is analyzed and how insights are generated
+  </Step>
+</Steps>
+
+## Feature Categories
+
+### Personal Safety Intelligence
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Routine Analysis" icon="calendar">
+    **What it does:** Learns your daily patterns and identifies deviations
+    **Example:** "You usually arrive home by 11 PM on weeknights. It's now 11:45 PM - would you like to share your location?"
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Risk Trend Analysis" icon="trending-up">
+    **What it does:** Tracks safety metrics over time to identify improving or declining trends
+    **Example:** "Your overall safety score has improved 15% this month due to better venue choices"
+  </Card>
+  <Card title="Comfort Zone Mapping" icon="map-pin">
+    **What it does:** Identifies your safe zones and alerts when venturing into unfamiliar areas
+    **Example:** "This area is outside your usual safe zone. Would you like safety tips for this location?"
+  </Card>
+  <Card title="Social Pattern Recognition" icon="users">
+    **What it does:** Analyzes when you're with trusted contacts vs. alone
+    **Example:** "You're typically with friends at this venue. Enhanced monitoring is now active."
+  </Card>
+</CardGroup>
+
+### Predictive Safety Features
+
+<Accordion title="Smart Route Optimization">
+**Real-time Route Analysis:**
+- Analyzes planned routes for safety concerns
+- Suggests alternative paths based on current conditions
+- Considers time of day, weather, and recent incidents
+- Integrates with navigation apps for seamless experience
+
+**Example Scenarios:**
+- "Your usual route home has increased activity tonight. Here's a safer alternative."
+- "Construction on Main St may affect lighting. Consider the University route instead."
+- "Your planned route passes three venues with recent safety reports. Route alternatives available."
+
+**Implementation:**
+```typescript
+interface RouteAnalysis {
+  route_id: string;
+  safety_score: number;          // 0-100, higher is safer
+  risk_factors: {
+    lighting: 'good' | 'fair' | 'poor';
+    foot_traffic: 'high' | 'medium' | 'low';
+    recent_incidents: number;
+    emergency_access: boolean;
+  };
+  alternatives: RouteOption[];
+  estimated_arrival: Date;
+  confidence_level: number;
+}
+```
+</Accordion>
+
+<Accordion title="Behavioral Anomaly Detection">
+**Continuous Monitoring:**
+- Tracks movement patterns, speed, and direction
+- Detects unusual stops, route deviations, or timing changes
+- Considers context like traffic, weather, or events
+- Triggers alerts for concerning pattern changes
+
+**Detection Algorithms:**
+- **Movement Analysis:** Speed, direction changes, stopped duration
+- **Location Clustering:** Unusual areas or venue types
+- **Temporal Patterns:** Significant timing deviations
+- **Communication Patterns:** Changes in contact frequency
+
+**Privacy Protection:**
+- All analysis happens locally on device
+- No location data transmitted to servers
+- User-configurable sensitivity levels
+- Easy opt-out for any user
+</Accordion>
+
+### Intelligent Recommendations
+
+<Warning>
+**Actionable Intelligence:** AI recommendations are designed to be immediately actionable, providing specific steps you can take to improve your safety.
+</Warning>
+
+<Steps>
+  <Step title="Venue Recommendations">
+    Suggests safer alternatives based on your preferences and current safety data
+  </Step>
+  <Step title="Timing Optimization">
+    Recommends optimal times for activities based on safety patterns and your schedule
+  </Step>
+  <Step title="Safety Habit Building">
+    Identifies opportunities to improve your safety practices with gentle nudges
+  </Step>
+  <Step title="Emergency Preparedness">
+    Personalized tips for improving your emergency response readiness
+  </Step>
+</Steps>
+
+## User Interface & Experience
+
+### AI Insights Dashboard
+
+<CodeGroup>
+```typescript Dashboard Components
+interface AIDashboardProps {
+  timeframe: '24h' | '7d' | '30d';
+  insights_enabled: boolean;
+  user_preferences: UserPreferences;
+}
+
+export const AIDashboard: React.FC<AIDashboardProps> = ({
+  timeframe,
+  insights_enabled,
+  user_preferences
+}) => {
+  const { insights, loading } = useAIInsights({
+    timeframe,
+    enabled: insights_enabled
+  });
+
+  if (!insights_enabled) {
+    return <AIOptInPrompt />;
+  }
+
+  return (
+    <ScrollView style={styles.dashboard}>
+      {/* Current Safety Score */}
+      <SafetyScoreCard 
+        score={insights.current_safety_score}
+        trend={insights.score_trend}
+        factors={insights.contributing_factors}
+      />
+      
+      {/* Behavioral Insights */}
+      <InsightSection
+        title="Your Safety Patterns"
+        insights={insights.behavioral_analysis}
+        timeframe={timeframe}
+      />
+      
+      {/* Recommendations */}
+      <RecommendationSection
+        recommendations={insights.personalized_recommendations}
+        priority_filter="high"
+      />
+      
+      {/* Predictive Alerts */}
+      {insights.predictive_alerts.length > 0 && (
+        <AlertSection alerts={insights.predictive_alerts} />
+      )}
+    </ScrollView>
+  );
+};
+```
+
+```typescript Insight Visualization
+export const SafetyTrendChart = ({ data, timeframe }) => {
+  const chartData = useMemo(() => 
+    data.map(point => ({
+      timestamp: point.timestamp,
+      safety_score: point.safety_score,
+      confidence: point.confidence,
+      major_factors: point.major_factors
+    })), [data]
+  );
+
+  return (
+    <LineChart
+      width={screenWidth - 32}
+      height={200}
+      data={chartData}
+      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+    >
+      <XAxis 
+        dataKey="timestamp" 
+        tickFormatter={(value) => format(new Date(value), 'MMM dd')}
+      />
+      <YAxis domain={[0, 100]} />
+      <CartesianGrid strokeDasharray="3 3" />
+      <Line 
+        type="monotone" 
+        dataKey="safety_score" 
+        stroke="#4CAF50" 
+        strokeWidth={2}
+        dot={{ fill: '#4CAF50', strokeWidth: 2, r: 4 }}
+      />
+      <Tooltip 
+        labelFormatter={(value) => format(new Date(value), 'PPpp')}
+        formatter={(value, name) => [
+          `${value}%`, 
+          name === 'safety_score' ? 'Safety Score' : name
+        ]}
+      />
+    </LineChart>
+  );
+};
+```
+</CodeGroup>
+
+### Smart Notifications
+
+<Note>
+**Intelligent Timing:** AI-powered notifications are delivered at optimal times based on your patterns, ensuring important safety information reaches you when you're most likely to act on it.
+</Note>
+
+| Notification Type | Timing Strategy | Example |
+|------------------|----------------|---------|
+| **Route Alerts** | 10-15 minutes before departure | "Safer route available for your 8 PM trip" |
+| **Venue Recommendations** | When planning or approaching venues | "Consider The Garden Café - high safety rating nearby" |
+| **Pattern Insights** | Weekly summary during low-activity periods | "Your safety habits improved 20% this week" |
+| **Anomaly Alerts** | Real-time when deviations detected | "Unusual route detected - is everything okay?" |
+| **Predictive Warnings** | 30-60 minutes before predicted issues | "Increased activity expected at your destination tonight" |
+
+## Configuration & Settings
+
+### AI Preferences
+
+<CardGroup cols={2}>
+  <Card title="Sensitivity Levels" icon="sliders">
+    Adjust how sensitive the AI is to pattern changes and anomalies
+  </Card>
+  <Card title="Learning Scope" icon="graduation-cap">
+    Control what types of patterns the AI analyzes and learns from
+  </Card>
+  <Card title="Notification Frequency" icon="bell">
+    Customize when and how often you receive AI-generated insights
+  </Card>
+  <Card title="Data Retention" icon="clock">
+    Set how long historical data is used for pattern analysis
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript AI Configuration
+interface AIPreferences {
+  analysis_enabled: boolean;
+  sensitivity_level: 'low' | 'medium' | 'high';
+  learning_categories: {
+    location_patterns: boolean;
+    temporal_patterns: boolean;
+    social_patterns: boolean;
+    safety_preferences: boolean;
+  };
+  notification_settings: {
+    insights_frequency: 'daily' | 'weekly' | 'monthly';
+    alert_types: string[];
+    quiet_hours: {
+      start: string; // HH:mm format
+      end: string;   // HH:mm format
+    };
+  };
+  privacy_controls: {
+    data_retention_days: number;
+    anonymous_analytics: boolean;
+    model_improvement: boolean;
+  };
+}
+
+export const defaultAIPreferences: AIPreferences = {
+  analysis_enabled: true,
+  sensitivity_level: 'medium',
+  learning_categories: {
+    location_patterns: true,
+    temporal_patterns: true,
+    social_patterns: true,
+    safety_preferences: true,
+  },
+  notification_settings: {
+    insights_frequency: 'weekly',
+    alert_types: ['safety_tips', 'pattern_insights', 'route_recommendations'],
+    quiet_hours: {
+      start: '22:00',
+      end: '07:00',
+    },
+  },
+  privacy_controls: {
+    data_retention_days: 90,
+    anonymous_analytics: true,
+    model_improvement: true,
+  },
+};
+```
+</CodeGroup>
+
+## Privacy & Security
+
+### Data Protection Measures
+
+<Info>
+**Privacy by Design:** AI Insights implements privacy protection at every level, ensuring your personal patterns remain secure while providing meaningful safety intelligence.
+</Info>
+
+<Steps>
+  <Step title="Local Processing">
+    All AI analysis happens on your device - no personal data sent to external servers
+  </Step>
+  <Step title="Data Minimization">
+    Only necessary data points are collected and analyzed for safety insights
+  </Step>
+  <Step title="Automatic Expiration">
+    Personal data automatically expires based on your retention preferences
+  </Step>
+  <Step title="User Control">
+    Complete control over what data is analyzed and how insights are generated
+  </Step>
+</Steps>
+
+### Security Implementation
+
+<Accordion title="AI Model Security">
+**Model Integrity:**
+- Cryptographic signatures verify model authenticity
+- Regular security audits of AI algorithms
+- Protection against adversarial attacks
+- Secure model update mechanisms
+
+**Data Security:**
+- End-to-end encryption for any data transmission
+- Secure local storage with device keystore integration
+- Regular security assessment of AI infrastructure
+- Privacy-preserving federated learning protocols
+
+**Access Controls:**
+- Biometric authentication for sensitive AI insights
+- Role-based access to different insight categories
+- Audit logging for AI decision processes
+- User consent required for all AI analysis
+</Accordion>
+
+## Performance Optimization
+
+### Efficient AI Processing
+
+<CardGroup cols={3}>
+  <Card title="On-Device Models" icon="microchip">
+    Lightweight TensorFlow Lite models optimized for mobile performance
+  </Card>
+  <Card title="Adaptive Processing" icon="settings">
+    AI intensity adjusts based on battery level and device performance
+  </Card>
+  <Card title="Smart Caching" icon="database">
+    Intelligent caching of analysis results to minimize repeated processing
+  </Card>
+</CardGroup>
+
+### Battery Optimization
+
+<Note>
+**Power Efficiency:** AI Insights is designed to provide maximum intelligence with minimal battery impact, using adaptive algorithms that scale processing based on device resources.
+</Note>
+
+| Battery Level | AI Processing Level | Features Active |
+|---------------|-------------------|-----------------|
+| **&gt;50%** | Full processing | All AI features, real-time analysis |
+| **20-50%** | Optimized processing | Core insights, reduced frequency |
+| **&lt;20%** | Essential only | Emergency detection, critical alerts |
+| **Emergency Mode** | Maximum processing | All safety features regardless of battery |
+
+## Integration with Other Features
+
+### Cross-Feature Intelligence
+
+<Steps>
+  <Step title="Emergency System Integration">
+    AI patterns help improve emergency detection accuracy and reduce false alarms
+  </Step>
+  <Step title="Location Service Enhancement">
+    Behavioral analysis optimizes location tracking frequency and accuracy
+  </Step>
+  <Step title="Contact Notification Optimization">
+    AI determines optimal contact notification timing and escalation patterns
+  </Step>
+  <Step title="Check-in System Intelligence">
+    Smart suggestions for check-in timing based on analyzed patterns and risk levels
+  </Step>
+</Steps>
+
+## Getting Started
+
+### Enabling AI Insights
+
+<Warning>
+**First-Time Setup:** AI Insights requires a learning period of 7-14 days to establish your baseline patterns before providing personalized recommendations.
+</Warning>
+
+<Steps>
+  <Step title="Enable AI Analysis">
+    Navigate to Settings &gt; AI Insights and enable the analysis features you want to use
+  </Step>
+  <Step title="Set Preferences">
+    Configure sensitivity levels, notification preferences, and privacy controls
+  </Step>
+  <Step title="Learning Period">
+    Use the app normally for 1-2 weeks while AI learns your patterns
+  </Step>
+  <Step title="Review Insights">
+    Begin receiving personalized insights and recommendations based on your patterns
+  </Step>
+</Steps>
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Consistent Usage" icon="calendar-check">
+    Regular app usage improves AI accuracy and insight quality
+  </Card>
+  <Card title="Feedback Provision" icon="message-circle">
+    Rate AI recommendations to help improve future suggestions
+  </Card>
+  <Card title="Privacy Review" icon="shield-check">
+    Regularly review and adjust privacy settings as your needs change
+  </Card>
+  <Card title="Insight Application" icon="target">
+    Actively apply AI recommendations to improve your overall safety
   </Card>
 </CardGroup>
 
 ---
 
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wearable Integration" icon="watch" href="/features/wearable-integration">
+    Learn how AI Insights enhances wearable device safety monitoring
+  </Card>
+  <Card title="App Widget Features" icon="grid" href="/features/app-widget">
+    Discover how AI insights are surfaced in the home screen widget
+  </Card>
+</CardGroup>
+
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Future AI Enhancements:** Upcoming AI features include voice pattern analysis, social context intelligence, and predictive emergency detection. Stay tuned for updates that will make your safety even smarter.
 </Note>

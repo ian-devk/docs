@@ -1,59 +1,1015 @@
 ---
 title: "Offline Mode"
-description: "Offline Mode documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Comprehensive offline capabilities ensuring safety features work even without internet connectivity. Learn how Shelther maintains emergency functionality, location caching, and contact notification through SMS and local storage."
+sidebarTitle: "Offline Mode"
 ---
 
 # Offline Mode
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety Without Connectivity:** Shelther's offline mode ensures critical safety features remain functional even when internet connectivity is limited or unavailable, providing reliable protection in all environments.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Offline mode is a core safety feature that enables Shelther to maintain essential functionality during network outages, poor connectivity, or when deliberately disconnected. The system intelligently caches data, stores critical information locally, and provides alternative communication methods to ensure your safety network remains intact.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Emergency Functionality" icon="shield-alert">
+    Full emergency alert capabilities work offline with SMS fallback and local audio alarms
+  </Card>
+  <Card title="Local Data Storage" icon="database">
+    Critical safety data cached locally for instant access without network dependency
+  </Card>
+  <Card title="SMS Fallbacks" icon="message-square">
+    Automatic SMS notifications to emergency contacts when data connectivity is unavailable
+  </Card>
+  <Card title="Intelligent Sync" icon="refresh-cw">
+    Smart data synchronization when connectivity returns, prioritizing safety-critical information
+  </Card>
+</CardGroup>
 
-<CodeGroup>
+## Core Offline Capabilities
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+### Emergency Features (Always Available)
+
+<Steps>
+  <Step title="Emergency Alert Triggers">
+    All emergency trigger methods work offline - button combinations, voice commands, and automatic detection
+  </Step>
+  <Step title="Local Audio Alarms">
+    Device speakers activate with loud emergency tones to attract attention when other methods fail
+  </Step>
+  <Step title="SMS Emergency Notifications">
+    Automatic SMS dispatch to emergency contacts with location data when internet is unavailable
+  </Step>
+  <Step title="Local Evidence Recording">
+    Audio and video recording capabilities continue offline for emergency documentation
+  </Step>
+</Steps>
+
+### Data Persistence & Caching
+
+<Note>
+**Intelligent Caching:** Shelther preemptively caches essential data during connectivity to ensure offline functionality, including maps, contact information, and venue safety data.
+</Note>
+
+<Accordion title="Offline Data Architecture">
+**Critical Data Always Cached:**
+- Emergency contact information and phone numbers
+- Recent location history and safe zones
+- Venue safety ratings and information
+- User safety preferences and settings
+- Check-in schedules and protocols
+- Emergency procedures and escalation paths
+
+**Smart Caching Strategy:**
+```typescript
+interface OfflineCacheConfig {
+  emergency_contacts: {
+    cache_all: boolean;
+    include_photos: boolean;
+    phone_numbers_required: boolean;
+    backup_methods: string[];
+  };
+  location_data: {
+    recent_locations_days: number;
+    safe_zones_all: boolean;
+    venue_data_radius_km: number;
+    map_tiles_zoom_levels: number[];
+  };
+  safety_preferences: {
+    user_settings: boolean;
+    ai_thresholds: boolean;
+    notification_preferences: boolean;
+    privacy_controls: boolean;
+  };
+  content_cache: {
+    safety_tips: boolean;
+    emergency_procedures: boolean;
+    venue_safety_data: boolean;
+    community_reports_recent: boolean;
+  };
 }
-```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+export const defaultOfflineCache: OfflineCacheConfig = {
+  emergency_contacts: {
+    cache_all: true,
+    include_photos: true,
+    phone_numbers_required: true,
+    backup_methods: ['sms', 'call', 'email']
+  },
+  location_data: {
+    recent_locations_days: 30,
+    safe_zones_all: true,
+    venue_data_radius_km: 50,
+    map_tiles_zoom_levels: [10, 12, 14, 16]
+  },
+  safety_preferences: {
+    user_settings: true,
+    ai_thresholds: true,
+    notification_preferences: true,
+    privacy_controls: true
+  },
+  content_cache: {
+    safety_tips: true,
+    emergency_procedures: true,
+    venue_safety_data: true,
+    community_reports_recent: true
+  }
 };
 ```
 
+**Local Storage Implementation:**
+```typescript
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
+
+class OfflineStorageManager {
+  private db: SQLite.WebSQLDatabase;
+  
+  async initializeOfflineStorage() {
+    this.db = SQLite.openDatabase('shelther_offline.db');
+    
+    await this.createTables();
+    await this.setupCacheCleanup();
+  }
+  
+  private async createTables() {
+    await this.db.execAsync(`
+      CREATE TABLE IF NOT EXISTS emergency_contacts (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT,
+        relationship TEXT,
+        priority INTEGER,
+        photo_uri TEXT,
+        cached_at INTEGER
+      );
+      
+      CREATE TABLE IF NOT EXISTS offline_locations (
+        id TEXT PRIMARY KEY,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        accuracy REAL,
+        timestamp INTEGER NOT NULL,
+        venue_name TEXT,
+        safety_rating INTEGER,
+        cached_at INTEGER
+      );
+      
+      CREATE TABLE IF NOT EXISTS pending_actions (
+        id TEXT PRIMARY KEY,
+        action_type TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        priority INTEGER DEFAULT 1
+      );
+      
+      CREATE TABLE IF NOT EXISTS offline_maps (
+        tile_key TEXT PRIMARY KEY,
+        tile_data BLOB,
+        zoom_level INTEGER,
+        cached_at INTEGER,
+        expires_at INTEGER
+      );
+    `);
+  }
+  
+  async cacheEmergencyContacts(contacts: EmergencyContact[]) {
+    const timestamp = Date.now();
+    
+    for (const contact of contacts) {
+      await this.db.execAsync(
+        'INSERT OR REPLACE INTO emergency_contacts VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [contact.id, contact.name, contact.phone, contact.email, 
+         contact.relationship, contact.priority, contact.photo_uri, timestamp]
+      );
+    }
+  }
+  
+  async triggerOfflineEmergency(emergencyData: EmergencyAlert): Promise<string> {
+    const emergencyId = generateUUID();
+    
+    // Store locally immediately
+    await this.storeOfflineAction({
+      id: emergencyId,
+      action_type: 'emergency_alert',
+      data: JSON.stringify(emergencyData),
+      created_at: Date.now(),
+      priority: 5 // Highest priority
+    });
+    
+    // Attempt SMS notifications
+    await this.sendOfflineEmergencyNotifications(emergencyData);
+    
+    // Trigger local alarm
+    await this.activateLocalEmergencyAlarm();
+    
+    return emergencyId;
+  }
+  
+  private async sendOfflineEmergencyNotifications(emergency: EmergencyAlert) {
+    const contacts = await this.getCachedEmergencyContacts();
+    const locationText = emergency.location 
+      ? `Location: ${emergency.location.latitude}, ${emergency.location.longitude}`
+      : 'Location unavailable';
+    
+    const message = `EMERGENCY ALERT from ${emergency.user_name}: ${emergency.message || 'Help needed'}. ${locationText}. Sent via Shelther Safety App.`;
+    
+    for (const contact of contacts) {
+      try {
+        await this.sendSMSFallback(contact.phone, message);
+      } catch (error) {
+        console.error(`Failed to send SMS to ${contact.phone}:`, error);
+      }
+    }
+  }
+}
+```
+</Accordion>
+
+## Offline Emergency Features
+
+### SMS Fallback System
+
+<Warning>
+**Critical Backup:** SMS fallback ensures emergency notifications reach your contacts even when internet is completely unavailable, using cellular voice/SMS networks as a backup communication channel.
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Automatic SMS Dispatch" icon="send">
+    Emergency alerts automatically send SMS messages when data connectivity fails
+  </Card>
+  <Card title="Location Coordinates" icon="map-pin">
+    GPS coordinates included in SMS messages for emergency responder location
+  </Card>
+  <Card title="Escalation Protocol" icon="trending-up">
+    Progressive SMS notifications to primary, secondary, and emergency contacts
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript SMS Fallback Implementation
+import { SMS } from 'expo-sms';
+
+interface SMSFallbackConfig {
+  enabled: boolean;
+  max_retries: number;
+  retry_delay_seconds: number;
+  include_location: boolean;
+  message_templates: {
+    emergency: string;
+    check_in_missed: string;
+    safety_concern: string;
+    custom: string;
+  };
+  escalation_timing: {
+    primary_contacts_delay: number;
+    secondary_contacts_delay: number;
+    emergency_services_delay: number;
+  };
+}
+
+export class SMSFallbackManager {
+  private config: SMSFallbackConfig;
+  
+  constructor(config: SMSFallbackConfig) {
+    this.config = config;
+  }
+  
+  async sendEmergencySMS(
+    emergency: EmergencyAlert,
+    contacts: EmergencyContact[]
+  ): Promise<SMSResult[]> {
+    const results: SMSResult[] = [];
+    
+    const locationText = emergency.location 
+      ? `Lat: ${emergency.location.latitude.toFixed(6)}, Lng: ${emergency.location.longitude.toFixed(6)}`
+      : 'Location unknown';
+      
+    const timestamp = new Date().toLocaleString();
+    
+    const message = this.config.message_templates.emergency
+      .replace('{user_name}', emergency.user_name)
+      .replace('{timestamp}', timestamp)
+      .replace('{location}', locationText)
+      .replace('{custom_message}', emergency.message || '');
+    
+    // Sort contacts by priority
+    const sortedContacts = contacts.sort((a, b) => a.priority - b.priority);
+    
+    for (const contact of sortedContacts) {
+      try {
+        const smsResult = await this.sendSMSWithRetry(contact.phone, message);
+        results.push({
+          contact_id: contact.id,
+          phone: contact.phone,
+          success: smsResult.result === 'sent',
+          error: smsResult.error
+        });
+      } catch (error) {
+        results.push({
+          contact_id: contact.id,
+          phone: contact.phone,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+    
+    return results;
+  }
+  
+  private async sendSMSWithRetry(
+    phone: string, 
+    message: string,
+    retries: number = 0
+  ): Promise<{ result: string; error?: string }> {
+    try {
+      const isAvailable = await SMS.isAvailableAsync();
+      if (!isAvailable) {
+        throw new Error('SMS not available on this device');
+      }
+      
+      const result = await SMS.sendSMSAsync([phone], message);
+      return { result: result.result };
+    } catch (error) {
+      if (retries < this.config.max_retries) {
+        await new Promise(resolve => 
+          setTimeout(resolve, this.config.retry_delay_seconds * 1000)
+        );
+        return this.sendSMSWithRetry(phone, message, retries + 1);
+      }
+      
+      return { result: 'failed', error: error.message };
+    }
+  }
+}
+```
+
+```typescript Offline Emergency Protocol
+export class OfflineEmergencyManager {
+  private smsManager: SMSFallbackManager;
+  private audioManager: LocalAudioManager;
+  private storageManager: OfflineStorageManager;
+  
+  async handleOfflineEmergency(trigger: EmergencyTrigger): Promise<OfflineEmergencyResult> {
+    const startTime = Date.now();
+    
+    // 1. Create emergency record locally
+    const emergency = await this.createLocalEmergencyRecord(trigger);
+    
+    // 2. Get current location (GPS works offline)
+    const location = await this.getCurrentLocationOffline();
+    emergency.location = location;
+    
+    // 3. Load cached emergency contacts
+    const contacts = await this.storageManager.getCachedEmergencyContacts();
+    
+    // 4. Start local alarm system
+    await this.audioManager.activateEmergencyAlarm();
+    
+    // 5. Send SMS notifications
+    const smsResults = await this.smsManager.sendEmergencySMS(emergency, contacts);
+    
+    // 6. Store pending online actions for sync
+    await this.storageManager.queueOnlineAction({
+      type: 'emergency_alert',
+      data: emergency,
+      sms_results: smsResults,
+      priority: 'critical'
+    });
+    
+    // 7. Start escalation protocol if needed
+    this.startOfflineEscalationProtocol(emergency, contacts);
+    
+    return {
+      emergency_id: emergency.id,
+      local_storage_success: true,
+      sms_notifications_sent: smsResults.filter(r => r.success).length,
+      total_contacts_attempted: contacts.length,
+      local_alarm_active: true,
+      processing_time_ms: Date.now() - startTime
+    };
+  }
+  
+  private async getCurrentLocationOffline(): Promise<Location | null> {
+    try {
+      // GPS works without internet connectivity
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 10000, // 10 second timeout
+      });
+      
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      console.error('Failed to get offline location:', error);
+      
+      // Try to use last known location from cache
+      return await this.storageManager.getLastKnownLocation();
+    }
+  }
+}
+```
 </CodeGroup>
 
-## Next Steps
+### Local Audio Emergency System
+
+<Accordion title="Audio Emergency Features">
+**Alarm System Components:**
+- High-volume emergency siren (adjustable 80-110 dB)
+- Attention-getting tone patterns designed for emergency recognition
+- Voice announcements with emergency status and location coordinates
+- Customizable alarm duration and automatic timeout safety
+
+**Audio Accessibility:**
+- Support for hearing-impaired users with vibration patterns
+- Multiple tone frequencies for different hearing capabilities
+- Voice announcements in multiple languages
+- Integration with device accessibility features
+
+**Battery Considerations:**
+- Efficient audio processing to preserve battery during emergencies
+- Progressive volume increase to balance attention and battery usage
+- Automatic audio timeout to prevent complete battery drain
+- Override controls for emergency situations regardless of battery level
+
+**Implementation:**
+```typescript
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
+
+class LocalAudioManager {
+  private audioSession: Audio.Sound | null = null;
+  private emergencyTone: Audio.Sound | null = null;
+  
+  async activateEmergencyAlarm(config: AudioAlarmConfig): Promise<void> {
+    // Set audio session for emergency override
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true, // Override silent mode
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      shouldDuckAndroid: false,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+    });
+    
+    // Start haptic feedback for accessibility
+    await this.startEmergencyHaptics();
+    
+    // Load and play emergency tone
+    await this.playEmergencyTone(config);
+    
+    // Announce emergency status
+    if (config.voice_announcements) {
+      await this.announceEmergencyStatus(config);
+    }
+  }
+  
+  private async playEmergencyTone(config: AudioAlarmConfig): Promise<void> {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/emergency_siren.mp3'),
+      {
+        isLooping: true,
+        volume: config.volume_level / 100,
+        rate: 1.0,
+        shouldCorrectPitch: false,
+      }
+    );
+    
+    this.emergencyTone = sound;
+    await sound.playAsync();
+    
+    // Auto-timeout after configured duration
+    setTimeout(async () => {
+      await this.stopEmergencyAlarm();
+    }, config.alarm_duration_seconds * 1000);
+  }
+  
+  private async startEmergencyHaptics(): Promise<void> {
+    // Continuous emergency haptic pattern
+    const pattern = [100, 200, 100, 200, 300, 100]; // ms intervals
+    
+    for (let i = 0; i < 10; i++) {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      await new Promise(resolve => setTimeout(resolve, pattern[i % pattern.length]));
+    }
+  }
+}
+```
+</Accordion>
+
+## Smart Synchronization
+
+### Intelligent Data Sync
+
+<Note>
+**Priority-Based Sync:** When connectivity returns, Shelther intelligently prioritizes syncing emergency data, then safety-critical information, followed by general app data.
+</Note>
+
+<Steps>
+  <Step title="Connection Detection">
+    Automatic detection of connectivity restoration with network quality assessment
+  </Step>
+  <Step title="Priority Queue Processing">
+    Emergency alerts and safety data sync first, followed by user actions and preferences
+  </Step>
+  <Step title="Conflict Resolution">
+    Smart conflict resolution prioritizing safety data and recent emergency actions
+  </Step>
+  <Step title="Background Sync">
+    Transparent background synchronization without interrupting user experience
+  </Step>
+</Steps>
+
+### Sync Strategy Implementation
+
+<CodeGroup>
+```typescript Smart Sync Manager
+import NetInfo from '@react-native-netinfo';
+
+interface SyncQueueItem {
+  id: string;
+  type: 'emergency_alert' | 'check_in' | 'location_update' | 'safety_preference';
+  data: any;
+  priority: 1 | 2 | 3 | 4 | 5; // 5 is highest (emergency)
+  created_at: number;
+  retry_count: number;
+  max_retries: number;
+}
+
+export class SmartSyncManager {
+  private syncQueue: SyncQueueItem[] = [];
+  private isSyncing = false;
+  private networkQuality: 'poor' | 'good' | 'excellent' = 'good';
+  
+  constructor() {
+    this.initializeNetworkMonitoring();
+  }
+  
+  private initializeNetworkMonitoring() {
+    NetInfo.addEventListener(state => {
+      if (state.isConnected && !this.isSyncing) {
+        this.assessNetworkQuality(state);
+        this.startSyncProcess();
+      }
+    });
+  }
+  
+  private assessNetworkQuality(networkState: any) {
+    if (networkState.type === 'wifi') {
+      this.networkQuality = 'excellent';
+    } else if (networkState.type === 'cellular') {
+      const details = networkState.details;
+      if (details.cellularGeneration === '4g' || details.cellularGeneration === '5g') {
+        this.networkQuality = 'good';
+      } else {
+        this.networkQuality = 'poor';
+      }
+    } else {
+      this.networkQuality = 'poor';
+    }
+  }
+  
+  async queueOfflineAction(item: Omit<SyncQueueItem, 'id' | 'retry_count'>): Promise<void> {
+    const queueItem: SyncQueueItem = {
+      ...item,
+      id: generateUUID(),
+      retry_count: 0
+    };
+    
+    // Insert based on priority (higher priority first)
+    const insertIndex = this.syncQueue.findIndex(existing => 
+      existing.priority < queueItem.priority
+    );
+    
+    if (insertIndex === -1) {
+      this.syncQueue.push(queueItem);
+    } else {
+      this.syncQueue.splice(insertIndex, 0, queueItem);
+    }
+    
+    // Store persistently
+    await this.persistSyncQueue();
+  }
+  
+  private async startSyncProcess(): Promise<void> {
+    if (this.isSyncing || this.syncQueue.length === 0) {
+      return;
+    }
+    
+    this.isSyncing = true;
+    
+    try {
+      while (this.syncQueue.length > 0) {
+        const item = this.syncQueue[0];
+        
+        try {
+          await this.syncItem(item);
+          this.syncQueue.shift(); // Remove successfully synced item
+        } catch (error) {
+          console.error(`Sync failed for item ${item.id}:`, error);
+          
+          item.retry_count++;
+          if (item.retry_count >= item.max_retries) {
+            console.error(`Max retries exceeded for item ${item.id}, removing from queue`);
+            this.syncQueue.shift();
+          } else {
+            // Move to end of queue for retry
+            this.syncQueue.shift();
+            this.syncQueue.push(item);
+            
+            // Wait before retrying based on network quality
+            const retryDelay = this.getRetryDelay();
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
+        }
+        
+        // Yield between items for better UX
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    } finally {
+      this.isSyncing = false;
+      await this.persistSyncQueue();
+    }
+  }
+  
+  private async syncItem(item: SyncQueueItem): Promise<void> {
+    switch (item.type) {
+      case 'emergency_alert':
+        await this.syncEmergencyAlert(item.data);
+        break;
+      case 'check_in':
+        await this.syncCheckIn(item.data);
+        break;
+      case 'location_update':
+        await this.syncLocationUpdate(item.data);
+        break;
+      case 'safety_preference':
+        await this.syncSafetyPreference(item.data);
+        break;
+      default:
+        throw new Error(`Unknown sync item type: ${item.type}`);
+    }
+  }
+  
+  private getRetryDelay(): number {
+    switch (this.networkQuality) {
+      case 'excellent': return 1000;  // 1 second
+      case 'good': return 3000;       // 3 seconds
+      case 'poor': return 10000;      // 10 seconds
+      default: return 5000;           // 5 seconds
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Offline Maps & Navigation
+
+### Cached Map Data
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Preemptive Caching" icon="download">
+    Maps automatically cache based on your frequent locations and planned routes
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Emergency Zones" icon="shield">
+    High-priority caching of maps around emergency services and safe zones
+  </Card>
+  <Card title="Offline Navigation" icon="navigation">
+    Basic turn-by-turn navigation using cached map data and GPS
+  </Card>
+  <Card title="Storage Management" icon="database">
+    Intelligent cache management to balance functionality with storage usage
+  </Card>
+</CardGroup>
+
+<Accordion title="Map Caching Strategy">
+**Automatic Caching Triggers:**
+- Regular locations (home, work, frequently visited venues)
+- Planned routes and destinations from calendar integration
+- Emergency service locations within 25km radius
+- Safe zones and trusted venue locations
+- Recent travel patterns and route history
+
+**Cache Prioritization:**
+1. **Critical Safety Zones:** Hospital, police, fire stations
+2. **Personal Safe Zones:** Home, work, trusted venues
+3. **Frequent Routes:** Daily commute and regular travel paths
+4. **Recent Activity:** Locations visited in past 30 days
+5. **Planned Routes:** Calendar events and scheduled activities
+
+**Storage Optimization:**
+```typescript
+interface MapCacheConfig {
+  max_storage_mb: number;
+  cache_zoom_levels: number[];
+  retention_policy: {
+    critical_zones_days: number;
+    personal_zones_days: number;
+    frequent_routes_days: number;
+    recent_activity_days: number;
+  };
+  auto_cleanup: {
+    enabled: boolean;
+    storage_threshold_percent: number;
+    cleanup_strategy: 'oldest_first' | 'least_used' | 'lowest_priority';
+  };
+}
+
+export class OfflineMapManager {
+  private cacheConfig: MapCacheConfig;
+  
+  async cacheMapTiles(
+    centerLocation: Location,
+    radiusKm: number,
+    zoomLevels: number[],
+    priority: 'critical' | 'high' | 'normal' | 'low'
+  ): Promise<CacheResult> {
+    const tiles = this.calculateRequiredTiles(centerLocation, radiusKm, zoomLevels);
+    const totalSize = await this.estimateCacheSize(tiles);
+    
+    if (await this.hasStorageSpace(totalSize)) {
+      return await this.downloadAndCacheTiles(tiles, priority);
+    } else {
+      await this.performCleanup();
+      return await this.downloadAndCacheTiles(tiles, priority);
+    }
+  }
+  
+  async getOfflineRoute(
+    start: Location,
+    end: Location
+  ): Promise<OfflineRoute | null> {
+    // Check if we have cached map data for the route
+    const routePath = this.calculateRoutePath(start, end);
+    const cachedTiles = await this.getCachedTilesForRoute(routePath);
+    
+    if (cachedTiles.coverage >= 0.8) { // 80% coverage threshold
+      return {
+        path: routePath,
+        instructions: this.generateBasicInstructions(routePath),
+        estimated_duration_minutes: this.estimateTravelTime(routePath),
+        cache_coverage: cachedTiles.coverage,
+        offline_capable: true
+      };
+    }
+    
+    return null; // Route not available offline
+  }
+}
+```
+</Accordion>
+
+## Battery Management in Offline Mode
+
+### Power Conservation Strategy
+
+<Warning>
+**Extended Battery Life:** Offline mode implements aggressive battery conservation to ensure safety features remain available for extended periods without charging.
+</Warning>
+
+<Steps>
+  <Step title="Reduced Update Frequency">
+    Location updates, UI refreshes, and background tasks operate at reduced frequencies
+  </Step>
+  <Step title="Feature Prioritization">
+    Non-essential features disabled while maintaining core safety functionality
+  </Step>
+  <Step title="Display Optimization">
+    Screen brightness reduction and simplified UI to conserve power
+  </Step>
+  <Step title="Emergency Override">
+    Battery restrictions lifted during active emergency situations
+  </Step>
+</Steps>
+
+### Power Management Implementation
+
+<CodeGroup>
+```typescript Battery Conservation Manager
+interface OfflineBatteryConfig {
+  conservation_levels: {
+    normal: { // >50% battery
+      location_update_interval_seconds: number;
+      ui_refresh_rate_hz: number;
+      background_tasks_enabled: boolean;
+      display_brightness_percent: number;
+    };
+    moderate: { // 20-50% battery
+      location_update_interval_seconds: number;
+      ui_refresh_rate_hz: number;
+      background_tasks_enabled: boolean;
+      display_brightness_percent: number;
+    };
+    aggressive: { // <20% battery
+      location_update_interval_seconds: number;
+      ui_refresh_rate_hz: number;
+      background_tasks_enabled: boolean;
+      display_brightness_percent: number;
+    };
+  };
+  emergency_override: {
+    ignore_battery_restrictions: boolean;
+    max_emergency_duration_minutes: number;
+    post_emergency_conservation: boolean;
+  };
+}
+
+export class OfflineBatteryManager {
+  private config: OfflineBatteryConfig;
+  private currentLevel: 'normal' | 'moderate' | 'aggressive' = 'normal';
+  private isEmergencyActive = false;
+  
+  async optimizeForOfflineMode(): Promise<void> {
+    const batteryLevel = await Battery.getBatteryLevelAsync();
+    const newLevel = this.determineConservationLevel(batteryLevel);
+    
+    if (newLevel !== this.currentLevel) {
+      await this.applyConservationLevel(newLevel);
+      this.currentLevel = newLevel;
+    }
+  }
+  
+  private determineConservationLevel(batteryPercent: number): 'normal' | 'moderate' | 'aggressive' {
+    if (this.isEmergencyActive && this.config.emergency_override.ignore_battery_restrictions) {
+      return 'normal'; // Override restrictions during emergency
+    }
+    
+    if (batteryPercent > 50) return 'normal';
+    if (batteryPercent > 20) return 'moderate';
+    return 'aggressive';
+  }
+  
+  private async applyConservationLevel(level: 'normal' | 'moderate' | 'aggressive'): Promise<void> {
+    const settings = this.config.conservation_levels[level];
+    
+    // Adjust location update frequency
+    await LocationManager.setUpdateInterval(settings.location_update_interval_seconds);
+    
+    // Modify UI refresh rate
+    await UIManager.setRefreshRate(settings.ui_refresh_rate_hz);
+    
+    // Control background tasks
+    await BackgroundTaskManager.setEnabled(settings.background_tasks_enabled);
+    
+    // Adjust display brightness
+    await ScreenManager.setBrightness(settings.display_brightness_percent / 100);
+    
+    console.log(`Applied ${level} battery conservation mode`);
+  }
+  
+  async activateEmergencyOverride(): Promise<void> {
+    this.isEmergencyActive = true;
+    await this.applyConservationLevel('normal');
+    
+    // Set emergency timeout
+    setTimeout(() => {
+      this.isEmergencyActive = false;
+      this.optimizeForOfflineMode(); // Reapply battery-aware settings
+    }, this.config.emergency_override.max_emergency_duration_minutes * 60 * 1000);
+  }
+}
+```
+</CodeGroup>
+
+## Offline User Experience
+
+### UI Adaptations
+
+<Note>
+**Clear Offline Indicators:** The interface clearly communicates offline status and available functionality to prevent user confusion during connectivity issues.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="Status Indicators" icon="wifi-slash">
+    Clear visual indicators showing offline mode and connectivity status
+  </Card>
+  <Card title="Feature Availability" icon="check-circle">
+    Visual cues about which features are available offline vs. require connectivity
+  </Card>
+  <Card title="Sync Progress" icon="refresh-cw">
+    Real-time feedback about data synchronization when connectivity returns
+  </Card>
+</CardGroup>
+
+### User Guidance
+
+<Accordion title="Offline Mode Education">
+**First-Time Offline Experience:**
+- Interactive tutorial explaining offline capabilities
+- Demonstration of emergency features without connectivity
+- Explanation of SMS fallback and local storage benefits
+- Best practices for preparing for offline situations
+
+**Proactive User Education:**
+- Notifications about offline mode preparation before travel
+- Reminders to test offline features periodically
+- Tips for optimizing battery life during extended offline periods
+- Guidance on when to prioritize connectivity vs. battery conservation
+
+**Emergency Preparedness:**
+- Pre-emergency checklist for offline readiness
+- Instructions for emergency contacts about SMS alerts
+- Backup communication plan development
+- Regular offline feature testing recommendations
+</Accordion>
+
+## Testing & Validation
+
+### Offline Feature Testing
+
+<Steps>
+  <Step title="Controlled Testing">
+    Enable airplane mode to test all offline features in a safe, controlled environment
+  </Step>
+  <Step title="Emergency Simulation">
+    Practice emergency procedures offline to ensure familiarity with the process
+  </Step>
+  <Step title="SMS Verification">
+    Test SMS fallback with trusted contacts to verify message delivery and content
+  </Step>
+  <Step title="Battery Scenarios">
+    Test offline functionality at different battery levels to understand limitations
+  </Step>
+</Steps>
+
+### Validation Checklist
+
+<CardGroup cols={2}>
+  <Card title="Core Functions" icon="shield-check">
+    ✅ Emergency triggers work offline
+    ✅ SMS notifications send successfully
+    ✅ Local audio alarms activate
+    ✅ Location capture functions
+  </Card>
+  <Card title="Data Integrity" icon="database">
+    ✅ Emergency data stored locally
+    ✅ Contact information cached
+    ✅ Sync queue maintained
+    ✅ No data loss during offline periods
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+### Offline Preparation
+
+<Warning>
+**Proactive Preparation:** The best offline experience requires preparation while connected. Ensure critical data is cached and emergency contacts are configured before venturing into areas with poor connectivity.
+</Warning>
+
+<Steps>
+  <Step title="Regular Cache Updates">
+    Allow app to update cached data regularly while connected to ensure offline readiness
+  </Step>
+  <Step title="Emergency Contact Verification">
+    Verify emergency contact phone numbers work and contacts understand SMS alert format
+  </Step>
+  <Step title="Battery Management">
+    Maintain adequate battery levels and consider portable chargers for extended offline periods
+  </Step>
+  <Step title="Feature Testing">
+    Regularly test offline features to ensure familiarity and proper functionality
+  </Step>
+</Steps>
+
+### Usage Recommendations
+
+<CardGroup cols={2}>
+  <Card title="Travel Preparation" icon="map">
+    Cache maps and venue data for planned destinations before traveling to remote areas
+  </Card>
+  <Card title="Emergency Contacts" icon="users">
+    Ensure emergency contacts understand they may receive SMS alerts and know how to respond
+  </Card>
+  <Card title="Device Settings" icon="settings">
+    Configure device to allow SMS sending even when in airplane mode or low battery
+  </Card>
+  <Card title="Backup Plans" icon="shield">
+    Maintain alternative communication methods and emergency plans beyond the app
   </Card>
 </CardGroup>
 
 ---
 
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Accessibility Features" icon="accessibility" href="/features/accessibility">
+    Learn how offline mode accommodates users with different accessibility needs
+  </Card>
+  <Card title="Emergency Procedures" icon="alert-triangle" href="/features/emergency-alerts">
+    Review complete emergency alert system including offline capabilities
+  </Card>
+</CardGroup>
+
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Offline Limitations:** While offline mode provides extensive safety functionality, some features like real-time venue safety updates and AI insights require connectivity. Plan accordingly for extended offline periods.
 </Note>

@@ -1,59 +1,931 @@
 ---
 title: "App Widget"
-description: "App Widget documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Quick access to Shelther safety features directly from your home screen. Configure widgets for emergency triggers, safety status, location sharing, and quick check-ins without opening the main app."
+sidebarTitle: "App Widget"
 ---
 
 # App Widget
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Instant Safety Access:** Shelther's home screen widgets provide immediate access to critical safety features without opening the app, ensuring help is always just one tap away during emergency situations.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+App widgets bring Shelther's most important safety features directly to your device's home screen, lock screen, and notification center. Access emergency triggers, check safety status, start location sharing, and perform quick check-ins with minimal interaction time.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Emergency Triggers" icon="shield-alert">
+    One-tap emergency activation directly from your home screen
+  </Card>
+  <Card title="Quick Check-ins" icon="clock">
+    Instant check-in buttons with preset messages and timing
+  </Card>
+  <Card title="Safety Status" icon="activity">
+    Real-time display of your current safety status and active monitoring
+  </Card>
+  <Card title="Location Sharing" icon="map-pin">
+    Start or stop location sharing with trusted contacts instantly
+  </Card>
+</CardGroup>
 
-<CodeGroup>
+## Widget Types & Sizes
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+### iOS Widgets
+
+<Steps>
+  <Step title="Small Widget (2x2)">
+    Emergency button with safety status indicator - perfect for quick access
+  </Step>
+  <Step title="Medium Widget (4x2)">
+    Multiple quick actions including emergency, check-in, and location sharing
+  </Step>
+  <Step title="Large Widget (4x4)">
+    Comprehensive dashboard with safety status, recent activity, and all quick actions
+  </Step>
+  <Step title="Lock Screen Widgets">
+    Critical emergency access even when device is locked (iOS 16+)
+  </Step>
+</Steps>
+
+### Android Widgets
+
+<CardGroup cols={2}>
+  <Card title="1x1 Mini Widget" icon="minimize">
+    Single emergency button with status color indicator
+  </Card>
+  <Card title="2x1 Small Widget" icon="rectangle-horizontal">
+    Emergency button plus one additional quick action
+  </Card>
+  <Card title="4x2 Medium Widget" icon="square">
+    Multiple actions with safety status and recent activity
+  </Card>
+  <Card title="4x4 Large Widget" icon="maximize">
+    Full dashboard with comprehensive safety information and controls
+  </Card>
+</CardGroup>
+
+## Widget Configurations
+
+### Emergency Action Widget
+
+<Note>
+**Fastest Emergency Access:** The emergency widget is designed to trigger help in &lt;2 seconds from home screen tap to emergency alert processing.
+</Note>
+
+<Accordion title="Emergency Widget Features">
+**Quick Emergency Triggers:**
+- Large, easily accessible emergency button
+- Configurable countdown timer (3, 5, or 10 seconds)
+- Visual and haptic feedback during activation
+- Immediate location capture and contact notification
+
+**Safety Status Indicators:**
+- Color-coded status (Green: Safe, Yellow: Caution, Red: Emergency)
+- Last check-in time display
+- Active monitoring indicators
+- Battery level for safety features
+
+**Implementation:**
+```swift
+// iOS Widget Implementation
+import WidgetKit
+import SwiftUI
+
+struct EmergencyWidget: Widget {
+    let kind: String = "EmergencyWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: EmergencyProvider()) { entry in
+            EmergencyWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Emergency Access")
+        .description("Quick access to emergency features")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
+struct EmergencyWidgetEntryView: View {
+    var entry: EmergencyProvider.Entry
+
+    var body: some View {
+        VStack {
+            // Emergency Button
+            Button(intent: TriggerEmergencyIntent()) {
+                ZStack {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 80, height: 80)
+                    
+                    Text("SOS")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            // Status Text
+            Text(entry.safetyStatus)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.top, 4)
+        }
+        .padding()
+    }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript
+// React Native Widget Configuration
+interface EmergencyWidgetConfig {
+  widget_id: string;
+  size: 'small' | 'medium' | 'large';
+  emergency_settings: {
+    countdown_duration: number;
+    require_confirmation: boolean;
+    haptic_feedback: boolean;
+    visual_feedback: boolean;
+  };
+  status_display: {
+    show_last_checkin: boolean;
+    show_active_monitoring: boolean;
+    show_battery_level: boolean;
+    color_coding: boolean;
+  };
+  quick_actions: string[];
+}
+
+export const createEmergencyWidget = (config: EmergencyWidgetConfig) => {
+  return {
+    id: config.widget_id,
+    type: 'emergency',
+    size: config.size,
+    updateInterval: 30, // seconds
+    actions: [
+      {
+        id: 'emergency_trigger',
+        label: 'SOS',
+        color: '#FF4444',
+        action: 'TRIGGER_EMERGENCY',
+        requires_confirmation: config.emergency_settings.require_confirmation
+      },
+      ...config.quick_actions.map(action => ({
+        id: action,
+        label: getActionLabel(action),
+        action: action.toUpperCase(),
+        color: getActionColor(action)
+      }))
+    ]
+  };
 };
 ```
+</Accordion>
 
+### Quick Check-in Widget
+
+<CardGroup cols={3}>
+  <Card title="Preset Messages" icon="message-square">
+    Pre-configured check-in messages for common situations
+  </Card>
+  <Card title="Location Tagging" icon="map-pin">
+    Automatic location capture with check-in confirmation
+  </Card>
+  <Card title="Timer Integration" icon="timer">
+    Set automatic next check-in reminders based on activity
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Quick Check-in Configuration
+interface CheckinWidgetConfig {
+  preset_messages: {
+    id: string;
+    text: string;
+    emoji: string;
+    next_checkin_minutes: number;
+  }[];
+  location_settings: {
+    auto_capture: boolean;
+    precision: 'exact' | 'approximate' | 'general';
+    include_venue_name: boolean;
+  };
+  notification_settings: {
+    confirm_to_contacts: boolean;
+    update_status: boolean;
+    set_next_reminder: boolean;
+  };
+}
+
+export const defaultCheckinPresets = [
+  {
+    id: 'arrived_safely',
+    text: "Arrived safely!",
+    emoji: "✅",
+    next_checkin_minutes: 60
+  },
+  {
+    id: 'having_fun',
+    text: "Having a great time!",
+    emoji: "🎉",
+    next_checkin_minutes: 120
+  },
+  {
+    id: 'heading_home',
+    text: "Heading home now",
+    emoji: "🏠",
+    next_checkin_minutes: 30
+  },
+  {
+    id: 'running_late',
+    text: "Running a bit late",
+    emoji: "⏰",
+    next_checkin_minutes: 45
+  }
+];
+
+export const performQuickCheckin = async (
+  presetId: string,
+  config: CheckinWidgetConfig
+): Promise<CheckinResult> => {
+  const preset = config.preset_messages.find(p => p.id === presetId);
+  if (!preset) throw new Error('Invalid preset');
+
+  const location = config.location_settings.auto_capture 
+    ? await getCurrentLocation(config.location_settings.precision)
+    : null;
+
+  const checkin = await createCheckin({
+    message: preset.text,
+    emoji: preset.emoji,
+    location: location,
+    timestamp: new Date(),
+    next_checkin_minutes: preset.next_checkin_minutes
+  });
+
+  if (config.notification_settings.confirm_to_contacts) {
+    await notifyEmergencyContacts(checkin);
+  }
+
+  if (config.notification_settings.set_next_reminder) {
+    await scheduleNextCheckinReminder(preset.next_checkin_minutes);
+  }
+
+  return checkin;
+};
+```
 </CodeGroup>
+
+### Location Sharing Widget
+
+<Warning>
+**Privacy Control:** Location sharing widgets include clear visual indicators of sharing status and one-tap controls to start or stop sharing with specific contacts.
+</Warning>
+
+<Accordion title="Location Sharing Controls">
+**Sharing Management:**
+- Toggle sharing with specific contacts or groups
+- Visual indicators showing who can see your location
+- Temporary sharing with auto-expiration timers
+- Precision controls for shared location data
+
+**Quick Share Options:**
+- Share for specific durations (30 min, 1 hour, 2 hours, custom)
+- Activity-based sharing (night out, date, travel)
+- Emergency sharing with extended permissions
+- Silent sharing activation for discreet situations
+
+**Privacy Features:**
+- Clear sharing status indicators
+- One-tap sharing termination
+- Granular permission controls
+- Sharing history and activity logs
+
+**Implementation:**
+```typescript
+interface LocationSharingWidget {
+  active_shares: {
+    contact_id: string;
+    contact_name: string;
+    started_at: Date;
+    expires_at: Date | null;
+    precision: 'exact' | 'approximate' | 'general';
+    auto_stop: boolean;
+  }[];
+  quick_share_options: {
+    duration_minutes: number;
+    contact_groups: string[];
+    activity_type: string;
+    precision: 'exact' | 'approximate' | 'general';
+  }[];
+  privacy_settings: {
+    max_sharing_duration: number;
+    default_precision: string;
+    require_confirmation: boolean;
+    show_sharing_status: boolean;
+  };
+}
+
+export const toggleLocationSharing = async (
+  contactId: string,
+  duration?: number
+): Promise<LocationShare> => {
+  const existingShare = await getActiveLocationShare(contactId);
+  
+  if (existingShare) {
+    // Stop existing share
+    await stopLocationSharing(existingShare.id);
+    return { status: 'stopped', contact_id: contactId };
+  } else {
+    // Start new share
+    const share = await startLocationSharing({
+      contact_id: contactId,
+      duration_minutes: duration || 60,
+      precision: 'exact',
+      auto_stop: true
+    });
+    return share;
+  }
+};
+```
+</Accordion>
+
+## Advanced Widget Features
+
+### Contextual Intelligence
+
+<Steps>
+  <Step title="Smart Recommendations">
+    AI-powered suggestions for check-in timing and location sharing based on your patterns
+  </Step>
+  <Step title="Situation Awareness">
+    Widget appearance and options adapt based on time, location, and activity context
+  </Step>
+  <Step title="Battery Optimization">
+    Intelligent update frequency based on device battery level and usage patterns
+  </Step>
+  <Step title="Offline Functionality">
+    Core widget functions work even without internet connectivity
+  </Step>
+</Steps>
+
+### Dynamic Content Updates
+
+<Note>
+**Real-time Information:** Widgets update dynamically to show current safety status, active monitoring, and relevant contextual information without opening the app.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Status Indicators" icon="activity">
+    Real-time safety status with color coding and trend indicators
+  </Card>
+  <Card title="Activity Updates" icon="clock">
+    Recent check-ins, location shares, and emergency contact activity
+  </Card>
+  <Card title="Smart Suggestions" icon="lightbulb">
+    AI-powered recommendations for safety actions based on current context
+  </Card>
+  <Card title="Weather Integration" icon="cloud">
+    Weather-aware safety recommendations and travel alerts
+  </Card>
+</CardGroup>
+
+### Multi-Contact Management
+
+<Accordion title="Contact Group Widgets">
+**Quick Contact Access:**
+- Dedicated widgets for different contact groups (family, friends, emergency)
+- One-tap calling or messaging to specific safety contacts
+- Visual status indicators showing contact availability
+- Emergency escalation workflows through widget interface
+
+**Group Coordination:**
+- Broadcast check-ins to multiple contacts simultaneously
+- Group location sharing for coordinated activities
+- Collective safety status for group events
+- Emergency contact chain activation
+
+**Smart Contact Suggestions:**
+- Context-aware contact recommendations
+- Activity-based contact filtering
+- Availability-based contact prioritization
+- Recent interaction history integration
+</Accordion>
+
+## Platform-Specific Features
+
+### iOS Integration
+
+<CodeGroup>
+```swift iOS 16+ Lock Screen Widgets
+import WidgetKit
+import SwiftUI
+
+struct LockScreenEmergencyWidget: Widget {
+    let kind: String = "LockScreenEmergency"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: LockScreenProvider()) { entry in
+            LockScreenEmergencyView(entry: entry)
+        }
+        .configurationDisplayName("Emergency Lock Screen")
+        .description("Emergency access from lock screen")
+        .supportedFamilies([.accessoryCircular, .accessoryRectangular])
+    }
+}
+
+struct LockScreenEmergencyView: View {
+    var entry: LockScreenProvider.Entry
+
+    var body: some View {
+        Button(intent: EmergencyTriggerIntent()) {
+            ZStack {
+                Circle()
+                    .fill(Color.red)
+                
+                Text("SOS")
+                    .foregroundColor(.white)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// App Intent for Lock Screen Actions
+struct EmergencyTriggerIntent: AppIntent {
+    static var title: LocalizedStringResource = "Trigger Emergency"
+    static var description = IntentDescription("Triggers emergency alert")
+    
+    func perform() async throws -> some IntentResult {
+        await EmergencyManager.shared.triggerEmergency(source: .lockScreenWidget)
+        return .result()
+    }
+}
+```
+
+```swift Shortcuts Integration
+import Intents
+import IntentsUI
+
+struct CheckInShortcut: INIntent {
+    @NSManaged public var message: String?
+    @NSManaged public var contacts: [INPerson]?
+    @NSManaged public var includeLocation: NSNumber?
+}
+
+class CheckInIntentHandler: NSObject, CheckInShortcutHandling {
+    func handle(intent: CheckInShortcut, completion: @escaping (CheckInShortcutResponse) -> Void) {
+        // Process check-in with specified parameters
+        let response = CheckInShortcutResponse(code: .success, userActivity: nil)
+        response.message = "Check-in sent successfully"
+        completion(response)
+    }
+    
+    func resolveMessage(for intent: CheckInShortcut, with completion: @escaping (INStringResolutionResult) -> Void) {
+        guard let message = intent.message else {
+            completion(INStringResolutionResult.needsValue())
+            return
+        }
+        completion(INStringResolutionResult.success(with: message))
+    }
+}
+```
+</CodeGroup>
+
+### Android Integration
+
+<CodeGroup>
+```kotlin Android Widget Implementation
+import android.appwidget.AppWidgetProvider
+import android.appwidget.AppWidgetManager
+import android.content.Context
+import android.widget.RemoteViews
+
+class ShelterEmergencyWidget : AppWidgetProvider() {
+    
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        for (appWidgetId in appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId)
+        }
+    }
+    
+    private fun updateAppWidget(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int
+    ) {
+        val views = RemoteViews(context.packageName, R.layout.emergency_widget)
+        
+        // Set up emergency button
+        val emergencyIntent = Intent(context, EmergencyTriggerService::class.java)
+        val emergencyPendingIntent = PendingIntent.getService(
+            context, 0, emergencyIntent, 
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.emergency_button, emergencyPendingIntent)
+        
+        // Update safety status
+        val safetyStatus = getSafetyStatus(context)
+        views.setTextViewText(R.id.status_text, safetyStatus.displayText)
+        views.setInt(R.id.status_indicator, "setBackgroundColor", safetyStatus.color)
+        
+        // Set up quick check-in
+        val checkinIntent = Intent(context, QuickCheckinService::class.java)
+        val checkinPendingIntent = PendingIntent.getService(
+            context, 1, checkinIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.checkin_button, checkinPendingIntent)
+        
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+}
+
+class EmergencyTriggerService : IntentService("EmergencyTriggerService") {
+    override fun onHandleIntent(intent: Intent?) {
+        // Process emergency trigger
+        val emergencyManager = EmergencyManager.getInstance(this)
+        emergencyManager.triggerEmergency(EmergencySource.WIDGET)
+        
+        // Update widget to show emergency status
+        updateWidgetEmergencyStatus(this)
+    }
+}
+```
+
+```xml Android Widget Layout
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Emergency Button -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+        
+        <Button
+            android:id="@+id/emergency_button"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:background="@drawable/emergency_button_background"
+            android:text="SOS"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+            
+    </FrameLayout>
+
+    <!-- Status Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="8dp">
+
+        <View
+            android:id="@+id/status_indicator"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:background="@drawable/status_indicator"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Status: Safe"
+            android:textSize="12sp"
+            android:textColor="@android:color/black" />
+
+    </LinearLayout>
+
+    <!-- Quick Actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="4dp">
+
+        <Button
+            android:id="@+id/checkin_button"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/checkin_button_background"
+            android:text="Check In"
+            android:textSize="10sp"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/share_location_button"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/share_button_background"
+            android:text="Share"
+            android:textSize="10sp"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>
+```
+</CodeGroup>
+
+## Customization & Configuration
+
+### Widget Personalization
+
+<Steps>
+  <Step title="Visual Customization">
+    Choose themes, colors, and layouts that match your preferences and accessibility needs
+  </Step>
+  <Step title="Action Configuration">
+    Customize which quick actions appear and their behavior based on your usage patterns
+  </Step>
+  <Step title="Information Display">
+    Select what safety information is shown and how frequently it updates
+  </Step>
+  <Step title="Privacy Settings">
+    Control what information is visible on widgets and who can access widget functions
+  </Step>
+</Steps>
+
+### Widget Behavior Settings
+
+<CardGroup cols={2}>
+  <Card title="Update Frequency" icon="refresh-cw">
+    Control how often widgets refresh to balance information freshness with battery life
+  </Card>
+  <Card title="Interaction Modes" icon="touch">
+    Set whether actions require confirmation or execute immediately for different situations
+  </Card>
+  <Card title="Context Adaptation" icon="brain">
+    Enable AI-powered widget adaptation based on time, location, and activity patterns
+  </Card>
+  <Card title="Emergency Overrides" icon="alert-triangle">
+    Configure special widget behavior during emergency situations
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Widget Configuration
+interface WidgetConfiguration {
+  widget_id: string;
+  type: 'emergency' | 'checkin' | 'location_sharing' | 'dashboard';
+  size: 'small' | 'medium' | 'large';
+  theme: {
+    primary_color: string;
+    background_style: 'light' | 'dark' | 'auto';
+    text_size: 'small' | 'medium' | 'large';
+    high_contrast: boolean;
+  };
+  behavior: {
+    update_frequency_seconds: number;
+    require_confirmation: boolean;
+    haptic_feedback: boolean;
+    battery_optimization: boolean;
+  };
+  content: {
+    show_status_indicator: boolean;
+    show_last_activity: boolean;
+    show_battery_level: boolean;
+    show_contact_count: boolean;
+  };
+  actions: WidgetAction[];
+  privacy: {
+    hide_sensitive_info: boolean;
+    require_authentication: boolean;
+    timeout_seconds: number;
+  };
+}
+
+interface WidgetAction {
+  id: string;
+  type: 'emergency' | 'checkin' | 'share_location' | 'call_contact';
+  label: string;
+  icon: string;
+  color: string;
+  requires_confirmation: boolean;
+  parameters: Record<string, any>;
+}
+
+export const createCustomWidget = (config: WidgetConfiguration): Widget => {
+  return {
+    id: config.widget_id,
+    type: config.type,
+    size: config.size,
+    configuration: config,
+    render: () => renderWidget(config),
+    update: (newConfig) => updateWidget(config.widget_id, newConfig),
+    destroy: () => removeWidget(config.widget_id)
+  };
+};
+```
+</CodeGroup>
+
+## Performance & Battery Optimization
+
+### Efficient Widget Updates
+
+<Note>
+**Smart Updates:** Widgets use intelligent update strategies to provide real-time information while minimizing battery drain and network usage.
+</Note>
+
+<Accordion title="Update Optimization Strategies">
+**Adaptive Update Frequency:**
+- High frequency during active safety monitoring
+- Reduced frequency during low-risk periods
+- Battery-aware updates based on device power level
+- Network-conscious updates on cellular connections
+
+**Content Prioritization:**
+- Critical safety information updates immediately
+- Non-essential information batched for efficiency
+- Progressive data loading for large widgets
+- Selective updates based on visible content
+
+**Background Processing:**
+- Minimal background processing for widget updates
+- Shared update cycles across multiple widgets
+- Efficient data caching and state management
+- Intelligent prefetching of likely-needed data
+
+**Performance Targets:**
+- Widget update time: &lt;100ms
+- Battery impact: &lt;2% per day
+- Network usage: &lt;1MB per day
+- Memory footprint: &lt;10MB per widget
+</Accordion>
+
+### Resource Management
+
+<Steps>
+  <Step title="Memory Efficiency">
+    Optimized widget rendering with minimal memory usage and efficient image caching
+  </Step>
+  <Step title="Network Optimization">
+    Batched API calls and intelligent data synchronization to reduce network overhead
+  </Step>
+  <Step title="Processing Efficiency">
+    Lightweight data processing and smart caching to minimize CPU usage
+  </Step>
+  <Step title="Storage Management">
+    Efficient local storage with automatic cleanup of outdated widget data
+  </Step>
+</Steps>
+
+## Security & Privacy
+
+### Widget Security Model
+
+<Warning>
+**Security Considerations:** While widgets provide convenient access to safety features, they implement additional security measures to protect sensitive information and prevent unauthorized access.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Information Protection" icon="shield">
+    Sensitive data is masked or hidden in widgets with authentication required for access
+  </Card>
+  <Card title="Action Authentication" icon="lock">
+    Critical actions like emergency triggers can require biometric or PIN confirmation
+  </Card>
+  <Card title="Session Management" icon="clock">
+    Widget sessions timeout automatically to prevent unauthorized access to safety features
+  </Card>
+  <Card title="Privacy Controls" icon="eye-slash">
+    Granular controls over what information is displayed and accessible through widgets
+  </Card>
+</CardGroup>
+
+### Data Protection Measures
+
+<Steps>
+  <Step title="Local Data Security">
+    Widget data stored locally with encryption and secure access controls
+  </Step>
+  <Step title="Transmission Security">
+    All widget-initiated actions use encrypted communication channels
+  </Step>
+  <Step title="Access Logging">
+    Widget usage logged for security auditing and unauthorized access detection
+  </Step>
+  <Step title="Privacy Compliance">
+    Widget behavior respects all user privacy settings and regulatory requirements
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### Common Widget Issues
+
+<Accordion title="Widget Not Updating">
+**Possible Causes:**
+- Background app refresh disabled for Shelther
+- Device battery optimization affecting widget updates
+- Network connectivity issues preventing data sync
+- Widget configuration errors or corruption
+
+**Solutions:**
+- Enable background app refresh in device settings
+- Add Shelther to battery optimization exemptions
+- Check network connectivity and app permissions
+- Remove and re-add widgets to reset configuration
+- Update to latest app version for bug fixes
+</Accordion>
+
+<Accordion title="Emergency Features Not Working">
+**Diagnostic Steps:**
+- Test emergency features from main app first
+- Verify widget authentication and permissions
+- Check emergency contact configuration
+- Test with airplane mode to verify offline functionality
+
+**Common Fixes:**
+- Re-authenticate widget access in app settings
+- Update emergency contact information
+- Reset widget emergency settings to defaults
+- Contact support if issues persist after troubleshooting
+</Accordion>
+
+### Widget Performance Issues
+
+<Note>
+**Performance Monitoring:** If widgets are causing device performance issues, check update frequency settings and consider using smaller widget sizes or fewer simultaneous widgets.
+</Note>
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Slow Widget Loading** | High update frequency | Reduce update frequency in settings |
+| **Battery Drain** | Multiple large widgets | Use fewer or smaller widgets |
+| **Memory Usage** | Widget memory leaks | Restart app or remove/re-add widgets |
+| **Network Overuse** | Frequent updates on cellular | Enable Wi-Fi-only updates |
+
+## Best Practices
+
+### Optimal Widget Setup
+
+<CardGroup cols={2}>
+  <Card title="Essential Widgets Only" icon="minimize">
+    Use only the widgets you need regularly to minimize battery impact and clutter
+  </Card>
+  <Card title="Strategic Placement" icon="target">
+    Place emergency widgets in easily accessible locations on your home screen
+  </Card>
+  <Card title="Regular Testing" icon="test-tube">
+    Test widget emergency features monthly to ensure proper functionality
+  </Card>
+  <Card title="Privacy Awareness" icon="eye">
+    Consider what information is visible to others when widgets are displayed
+  </Card>
+</CardGroup>
+
+### Usage Recommendations
+
+<Steps>
+  <Step title="Emergency Widget Priority">
+    Always include at least one emergency access widget on your primary home screen
+  </Step>
+  <Step title="Context-Appropriate Widgets">
+    Use different widget configurations for work, personal, and travel contexts
+  </Step>
+  <Step title="Regular Updates">
+    Keep widgets updated with current emergency contacts and preferences
+  </Step>
+  <Step title="Backup Access Methods">
+    Ensure you have alternative ways to access safety features if widgets fail
+  </Step>
+</Steps>
+
+---
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Offline Mode Features" icon="wifi-slash" href="/features/offline-mode">
+    Learn how widgets work when your device has no internet connectivity
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Widget Development Guide" icon="code" href="/development/widget-implementation">
+    Technical guide for implementing and customizing Shelther widgets
   </Card>
 </CardGroup>
 
----
-
 <Note>
-This page was generated automatically. Update the content to match your documentation requirements.
+**Widget Updates:** Widget features and capabilities are continuously improved based on user feedback and platform updates. Check for app updates regularly to access the latest widget enhancements.
 </Note>

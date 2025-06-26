@@ -1,59 +1,1081 @@
 ---
 title: "Journey Monitoring"
-description: "Journey Monitoring documentation for Advanced Features. Learn about implementation, configuration, and best practices."
+description: "Real-time journey tracking and safety monitoring with Shelther. Learn about route sharing, deviation alerts, arrival confirmations, and intelligent travel safety features."
 ---
 
 # Journey Monitoring
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Travel Safety Made Simple:** Journey monitoring provides real-time tracking and safety verification for all your travels - from daily commutes to cross-country trips. Share your route, get deviation alerts, and ensure safe arrivals.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's journey monitoring transforms any trip into a shared safety experience. Your Circle of Trust can follow your progress in real-time, receive arrival confirmations, and be alerted if something seems wrong. The system works for all travel modes and adapts to your preferences.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Real-Time Tracking" icon="map">
+    Live journey progress sharing with your Circle of Trust and ETA updates
+  </Card>
+  <Card title="Route Deviation Alerts" icon="alert-triangle">
+    Automatic alerts when you deviate significantly from your planned route
+  </Card>
+  <Card title="Multi-Modal Transport" icon="navigation">
+    Support for driving, walking, public transport, rideshare, and flights
+  </Card>
+  <Card title="Intelligent Arrival Detection" icon="check-circle">
+    Automatic arrival confirmations with manual override options
+  </Card>
+</CardGroup>
+
+## Journey Types and Modes
+
+### Supported Journey Types
+
+<Steps>
+  <Step title="Daily Commutes">
+    Regular routes with learned patterns and automatic monitoring
+  </Step>
+  <Step title="Social Activities">
+    One-time or occasional trips to social events, dates, or entertainment
+  </Step>
+  <Step title="Business Travel">
+    Work-related travel with professional contact integration
+  </Step>
+  <Step title="Long-Distance Travel">
+    Extended journeys with waypoint tracking and multi-day monitoring
+  </Step>
+</Steps>
+
+<CardGroup cols={4}>
+  <Card title="Driving" icon="car">
+    Personal vehicle trips with route optimization and traffic-aware monitoring
+  </Card>
+  <Card title="Walking" icon="footprints">
+    Pedestrian journeys with safety zone awareness and pace monitoring
+  </Card>
+  <Card title="Public Transport" icon="bus">
+    Bus, train, and metro journeys with schedule integration
+  </Card>
+  <Card title="Rideshare/Taxi" icon="smartphone">
+    Uber, Lyft, and taxi trips with driver verification and route monitoring
+  </Card>
+</CardGroup>
+
+### Journey Configuration
 
 <CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
+```typescript Journey Planning Interface
+interface JourneyPlan {
   id: string;
-  name: string;
+  userId: string;
+  
+  // Basic journey information
+  title: string;
+  description?: string;
+  journeyType: JourneyType;
+  transportMode: TransportMode;
+  
+  // Route information
+  startLocation: JourneyLocation;
+  endLocation: JourneyLocation;
+  waypoints: JourneyWaypoint[];
+  plannedRoute?: RouteData;
+  alternativeRoutes?: RouteData[];
+  
+  // Timing
+  plannedDepartureTime: string;
+  estimatedArrivalTime: string;
+  estimatedDuration: number; // minutes
+  maxDeviationTime: number; // minutes before alert
+  
+  // Monitoring settings
+  trackingEnabled: boolean;
+  sharingLevel: SharingLevel;
+  monitoringIntensity: MonitoringIntensity;
+  
+  // Contact settings
+  sharedWithContacts: ContactSharingConfig[];
+  emergencyContactOverrides: EmergencyContactConfig[];
+  
+  // Safety settings
+  deviationAlertDistance: number; // meters
+  inactivityAlertTime: number; // minutes
+  safetyCheckpoints: SafetyCheckpoint[];
+  
+  // Status
+  status: JourneyStatus;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
 }
-```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+type JourneyType = 
+  | 'daily_commute'
+  | 'social_activity'
+  | 'date'
+  | 'business_travel'
+  | 'leisure_travel'
+  | 'emergency_travel'
+  | 'routine_errand'
+  | 'exercise'
+  | 'other';
+
+type TransportMode = 
+  | 'driving'
+  | 'walking'
+  | 'cycling'
+  | 'public_transport'
+  | 'rideshare'
+  | 'taxi'
+  | 'flight'
+  | 'train'
+  | 'mixed_modal';
+
+type SharingLevel = 
+  | 'private'           // No sharing except emergencies
+  | 'departure_arrival' // Share start and end only
+  | 'major_waypoints'   // Share key progress points
+  | 'real_time'         // Continuous location sharing
+  | 'emergency_only';   // Only share during emergencies
+
+interface ContactSharingConfig {
+  contactId: string;
+  sharingLevel: SharingLevel;
+  receiveDeviationAlerts: boolean;
+  receiveDelayAlerts: boolean;
+  receiveArrivalConfirmation: boolean;
+  canViewRouteDetails: boolean;
+}
+
+export const JourneyPlanningScreen = () => {
+  const [journeyPlan, setJourneyPlan] = useState<Partial<JourneyPlan>>({
+    journeyType: 'social_activity',
+    transportMode: 'driving',
+    sharingLevel: 'major_waypoints',
+    monitoringIntensity: 'standard',
+  });
+
+  const handleStartJourney = async () => {
+    try {
+      // Validate journey plan
+      const validatedPlan = await validateJourneyPlan(journeyPlan);
+      
+      // Start journey monitoring
+      const activeJourney = await JourneyService.startJourney(validatedPlan);
+      
+      // Navigate to live tracking screen
+      navigation.navigate('LiveJourneyTracking', { journeyId: activeJourney.id });
+      
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start journey monitoring. Please check your settings and try again.');
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Journey Details</Text>
+        
+        <JourneyTypeSelector
+          value={journeyPlan.journeyType}
+          onChange={(type) => setJourneyPlan(prev => ({ ...prev, journeyType: type }))}
+        />
+        
+        <TransportModeSelector
+          value={journeyPlan.transportMode}
+          onChange={(mode) => setJourneyPlan(prev => ({ ...prev, transportMode: mode }))}
+          journeyType={journeyPlan.journeyType}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Route Planning</Text>
+        
+        <LocationInput
+          label="Starting From"
+          value={journeyPlan.startLocation}
+          onChange={(location) => setJourneyPlan(prev => ({ ...prev, startLocation: location }))}
+          placeholder="Current location or enter address"
+        />
+        
+        <LocationInput
+          label="Going To"
+          value={journeyPlan.endLocation}
+          onChange={(location) => setJourneyPlan(prev => ({ ...prev, endLocation: location }))}
+          placeholder="Enter destination address"
+          required
+        />
+        
+        <WaypointManager
+          waypoints={journeyPlan.waypoints || []}
+          onChange={(waypoints) => setJourneyPlan(prev => ({ ...prev, waypoints }))}
+          transportMode={journeyPlan.transportMode}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Timing & Safety</Text>
+        
+        <DepartureTimeSelector
+          value={journeyPlan.plannedDepartureTime}
+          onChange={(time) => setJourneyPlan(prev => ({ ...prev, plannedDepartureTime: time }))}
+        />
+        
+        <SafetySettings
+          deviationAlertDistance={journeyPlan.deviationAlertDistance}
+          inactivityAlertTime={journeyPlan.inactivityAlertTime}
+          onChange={(settings) => setJourneyPlan(prev => ({ ...prev, ...settings }))}
+          journeyType={journeyPlan.journeyType}
+          transportMode={journeyPlan.transportMode}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Share With Contacts</Text>
+        
+        <ContactSharingManager
+          selectedContacts={journeyPlan.sharedWithContacts || []}
+          onChange={(contacts) => setJourneyPlan(prev => ({ ...prev, sharedWithContacts: contacts }))}
+          defaultSharingLevel={journeyPlan.sharingLevel}
+        />
+      </View>
+
+      <TouchableOpacity 
+        style={styles.startButton} 
+        onPress={handleStartJourney}
+        disabled={!journeyPlan.endLocation}
+      >
+        <Text style={styles.startButtonText}>Start Journey Monitoring</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 };
 ```
 
+```typescript Journey Service Implementation
+export class JourneyService {
+  static async startJourney(plan: JourneyPlan): Promise<ActiveJourney> {
+    try {
+      // Create journey record
+      const journey = await this.createJourneyRecord(plan);
+      
+      // Calculate optimal route
+      const routeData = await this.calculateRoute(plan);
+      
+      // Start location tracking
+      await this.startLocationTracking(journey, routeData);
+      
+      // Set up monitoring
+      await this.setupJourneyMonitoring(journey);
+      
+      // Notify contacts
+      await this.notifyContactsOfJourneyStart(journey);
+      
+      // Schedule safety checkpoints
+      await this.scheduleSafetyCheckpoints(journey);
+      
+      return journey;
+      
+    } catch (error) {
+      console.error('Failed to start journey:', error);
+      throw error;
+    }
+  }
+
+  private static async calculateRoute(plan: JourneyPlan): Promise<RouteData> {
+    const routeRequest = {
+      origin: plan.startLocation,
+      destination: plan.endLocation,
+      waypoints: plan.waypoints,
+      mode: this.getGoogleMapsMode(plan.transportMode),
+      alternatives: true,
+      optimize: true,
+      departureTime: plan.plannedDepartureTime,
+    };
+
+    const routes = await GoogleMapsService.calculateRoutes(routeRequest);
+    
+    // Select best route based on safety and efficiency
+    const selectedRoute = this.selectOptimalRoute(routes, plan);
+    
+    return {
+      primary: selectedRoute,
+      alternatives: routes.filter(r => r.id !== selectedRoute.id),
+      totalDistance: selectedRoute.distance,
+      estimatedDuration: selectedRoute.duration,
+      safetyScore: selectedRoute.safetyScore,
+    };
+  }
+
+  private static async setupJourneyMonitoring(journey: ActiveJourney): Promise<void> {
+    // Set up real-time location monitoring
+    await LocationService.startJourneyTracking({
+      journeyId: journey.id,
+      updateFrequency: this.getUpdateFrequency(journey.monitoringIntensity),
+      routeData: journey.routeData,
+      deviationThreshold: journey.deviationAlertDistance,
+    });
+
+    // Set up geofence monitoring for waypoints
+    for (const waypoint of journey.waypoints) {
+      await GeofenceService.createTemporaryGeofence({
+        center: waypoint.location,
+        radius: waypoint.radius || 100,
+        name: waypoint.name,
+        journeyId: journey.id,
+        triggers: ['entry', 'exit'],
+        expiresAt: journey.estimatedCompletionTime,
+      });
+    }
+
+    // Set up deviation monitoring
+    await this.startDeviationMonitoring(journey);
+    
+    // Set up inactivity monitoring
+    await this.startInactivityMonitoring(journey);
+  }
+
+  static async updateJourneyProgress(
+    journeyId: string,
+    currentLocation: GeoLocation
+  ): Promise<JourneyProgressUpdate> {
+    const journey = await this.getActiveJourney(journeyId);
+    
+    // Calculate progress
+    const progress = await this.calculateJourneyProgress(journey, currentLocation);
+    
+    // Check for deviations
+    const deviationCheck = await this.checkRouteDeviation(journey, currentLocation);
+    
+    // Update ETA
+    const updatedETA = await this.updateEstimatedArrival(journey, currentLocation, progress);
+    
+    // Check waypoint completion
+    const waypointUpdates = await this.checkWaypointCompletion(journey, currentLocation);
+    
+    // Notify contacts if significant update
+    if (this.isSignificantUpdate(progress, deviationCheck, waypointUpdates)) {
+      await this.notifyContactsOfProgress(journey, progress, currentLocation);
+    }
+    
+    return {
+      journeyId,
+      currentLocation,
+      progress,
+      deviation: deviationCheck,
+      estimatedArrival: updatedETA,
+      waypointUpdates,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+```
 </CodeGroup>
 
-## Next Steps
+## Real-Time Journey Tracking
+
+### Live Progress Monitoring
+
+<CardGroup cols={3}>
+  <Card title="Progress Visualization" icon="bar-chart">
+    Real-time progress bar and map view showing journey completion percentage
+  </Card>
+  <Card title="ETA Updates" icon="clock">
+    Dynamic arrival time estimates based on current traffic and pace
+  </Card>
+  <Card title="Contact Dashboard" icon="users">
+    Live tracking dashboard for contacts following your journey
+  </Card>
+</CardGroup>
+
+<Accordion title="Real-Time Tracking Features">
+**User Journey View:**
+- Live map with current location and route overlay
+- Progress indicators showing completion percentage
+- Real-time ETA updates with traffic considerations
+- Battery and signal strength monitoring
+- Quick emergency trigger access
+- Manual check-in options at any point
+
+**Contact Following View:**
+- Real-time location updates on shared map
+- Journey progress with key milestone notifications
+- Estimated arrival time with range
+- Deviation alerts and explanations
+- Communication options with traveler
+- Emergency response triggers if needed
+
+**System Monitoring:**
+- Automatic route deviation detection
+- Inactivity pattern monitoring
+- Network connectivity tracking
+- Battery level monitoring with alerts
+- Transport mode validation
+- Anomaly detection for safety issues
+
+**Implementation Features:**
+```typescript
+export const LiveJourneyTrackingScreen = ({ journeyId }) => {
+  const [journey, setJourney] = useState<ActiveJourney>();
+  const [currentLocation, setCurrentLocation] = useState<GeoLocation>();
+  const [progress, setProgress] = useState<JourneyProgress>();
+  const [isTracking, setIsTracking] = useState(true);
+
+  useEffect(() => {
+    // Set up real-time journey tracking
+    const unsubscribe = JourneyService.subscribeToJourneyUpdates(
+      journeyId,
+      (update: JourneyProgressUpdate) => {
+        setCurrentLocation(update.currentLocation);
+        setProgress(update.progress);
+        
+        // Handle significant events
+        if (update.deviation?.isSignificant) {
+          handleRouteDeviation(update.deviation);
+        }
+        
+        if (update.waypointUpdates?.length > 0) {
+          handleWaypointUpdates(update.waypointUpdates);
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [journeyId]);
+
+  const handleEmergencyTrigger = async () => {
+    try {
+      await EmergencyService.triggerEmergencyAlert({
+        journeyId,
+        currentLocation,
+        context: 'journey_emergency',
+        urgency: 'high',
+      });
+    } catch (error) {
+      Alert.alert('Emergency Alert Failed', 'Please try again or call emergency services directly.');
+    }
+  };
+
+  const handleManualCheckIn = async () => {
+    try {
+      await CheckInService.performCheckIn({
+        type: 'journey_manual',
+        journeyId,
+        location: currentLocation,
+        status: 'safe',
+        message: 'Manual check-in during journey',
+      });
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Check-in Sent',
+        text2: 'Your contacts have been updated on your progress',
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Check-in Failed',
+        text2: 'Please try again',
+      });
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <JourneyMapView
+        journey={journey}
+        currentLocation={currentLocation}
+        progress={progress}
+        style={styles.map}
+      />
+      
+      <View style={styles.progressPanel}>
+        <JourneyProgressIndicator progress={progress} />
+        <ETADisplay 
+          estimatedArrival={progress?.estimatedArrival}
+          confidence={progress?.etaConfidence}
+        />
+        <NextWaypointInfo 
+          nextWaypoint={progress?.nextWaypoint}
+          distance={progress?.distanceToNext}
+        />
+      </View>
+      
+      <View style={styles.actionBar}>
+        <TouchableOpacity 
+          style={styles.checkInButton}
+          onPress={handleManualCheckIn}
+        >
+          <Icon name="check-circle" size={20} color="#4CAF50" />
+          <Text style={styles.buttonText}>Check In</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.emergencyButton}
+          onPress={handleEmergencyTrigger}
+        >
+          <Icon name="alert-triangle" size={20} color="#FFFFFF" />
+          <Text style={styles.emergencyButtonText}>Emergency</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.stopButton}
+          onPress={() => setShowStopDialog(true)}
+        >
+          <Icon name="square" size={20} color="#FF5722" />
+          <Text style={styles.buttonText}>Stop Tracking</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+```
+</Accordion>
+
+### Intelligent Route Deviation Detection
+
+<Steps>
+  <Step title="Baseline Route Learning">
+    System learns your normal route patterns and typical deviation ranges
+  </Step>
+  <Step title="Context-Aware Analysis">
+    Traffic, road closures, and transport delays considered before alerting
+  </Step>
+  <Step title="Progressive Alert Thresholds">
+    Minor deviations noted, major deviations trigger immediate alerts
+  </Step>
+  <Step title="User Intent Recognition">
+    Distinguish between intentional stops and potential problems
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Route Deviation Detection
+export class RouteDeviationDetector {
+  private static readonly DEVIATION_THRESHOLDS = {
+    walking: { minor: 50, major: 200, critical: 500 },      // meters
+    driving: { minor: 200, major: 1000, critical: 2000 },   // meters
+    public_transport: { minor: 500, major: 1500, critical: 3000 }, // meters
+  };
+
+  static async analyzeDeviation(
+    journey: ActiveJourney,
+    currentLocation: GeoLocation,
+    plannedRoute: RouteData
+  ): Promise<DeviationAnalysis> {
+    
+    // Calculate distance from planned route
+    const distanceFromRoute = this.calculateRouteDistance(currentLocation, plannedRoute);
+    
+    // Get deviation thresholds for transport mode
+    const thresholds = this.DEVIATION_THRESHOLDS[journey.transportMode] || 
+                      this.DEVIATION_THRESHOLDS.walking;
+    
+    // Determine deviation severity
+    const severity = this.classifyDeviationSeverity(distanceFromRoute, thresholds);
+    
+    // Analyze context for legitimate reasons
+    const context = await this.analyzeDeviationContext(journey, currentLocation, distanceFromRoute);
+    
+    // Check if this might be intentional
+    const intentionalityScore = await this.assessIntentionality(journey, currentLocation, context);
+    
+    return {
+      distanceFromRoute,
+      severity,
+      context,
+      isLikelyIntentional: intentionalityScore > 0.7,
+      requiresAlert: this.shouldTriggerAlert(severity, intentionalityScore, context),
+      recommendedActions: this.getRecommendedActions(severity, context, intentionalityScore),
+    };
+  }
+
+  private static async analyzeDeviationContext(
+    journey: ActiveJourney,
+    currentLocation: GeoLocation,
+    deviation: number
+  ): Promise<DeviationContext> {
+    
+    // Check traffic conditions
+    const trafficData = await TrafficService.getCurrentConditions(currentLocation);
+    
+    // Check for road closures
+    const roadClosures = await TrafficService.getRoadClosures(currentLocation, 1000);
+    
+    // Check for nearby points of interest
+    const nearbyPOIs = await PlacesService.getNearbyPlaces(currentLocation, 200);
+    
+    // Check recent user activity patterns
+    const activityPattern = await this.getUserActivityPattern(journey.userId, currentLocation);
+    
+    // Check for public transport delays
+    const transitDelays = journey.transportMode === 'public_transport' ?
+      await TransitService.getDelays(currentLocation) : null;
+
+    return {
+      trafficConditions: trafficData,
+      roadClosures,
+      nearbyPOIs: nearbyPOIs.filter(poi => this.isRelevantPOI(poi)),
+      activityPattern,
+      transitDelays,
+      timeOfDay: new Date().getHours(),
+      weatherConditions: await WeatherService.getCurrentConditions(currentLocation),
+    };
+  }
+
+  private static shouldTriggerAlert(
+    severity: DeviationSeverity,
+    intentionalityScore: number,
+    context: DeviationContext
+  ): boolean {
+    
+    // Always alert on critical deviations
+    if (severity === 'critical') return true;
+    
+    // Don't alert if likely intentional and minor
+    if (intentionalityScore > 0.8 && severity === 'minor') return false;
+    
+    // Consider context factors
+    if (context.trafficConditions?.severity === 'heavy' && severity === 'major') {
+      return false; // Traffic likely explains deviation
+    }
+    
+    if (context.roadClosures?.length > 0 && severity === 'major') {
+      return false; // Road closure likely explains deviation
+    }
+    
+    // Check if stopped at reasonable location
+    const stoppedAtPOI = context.nearbyPOIs?.some(poi => 
+      ['gas_station', 'restaurant', 'store', 'rest_area'].includes(poi.type)
+    );
+    
+    if (stoppedAtPOI && severity === 'major') {
+      return false; // Reasonable stop
+    }
+    
+    // Default: alert on major deviations, escalate on critical
+    return severity === 'major' || severity === 'critical';
+  }
+
+  static async handleDeviationAlert(
+    journey: ActiveJourney,
+    deviation: DeviationAnalysis
+  ): Promise<void> {
+    
+    // Create deviation record
+    const deviationRecord = await this.createDeviationRecord(journey, deviation);
+    
+    // Determine notification strategy
+    const notificationStrategy = this.getNotificationStrategy(deviation.severity, journey.sharingLevel);
+    
+    if (notificationStrategy.notifyUser) {
+      await this.notifyUserOfDeviation(journey, deviation);
+    }
+    
+    if (notificationStrategy.notifyContacts) {
+      await this.notifyContactsOfDeviation(journey, deviation);
+    }
+    
+    // Adjust monitoring intensity if needed
+    if (deviation.severity === 'major' || deviation.severity === 'critical') {
+      await this.increaseMoni toringIntensity(journey);
+    }
+    
+    // Schedule follow-up checks
+    await this.scheduleDeviationFollowUp(journey, deviation);
+  }
+
+  private static async notifyContactsOfDeviation(
+    journey: ActiveJourney,
+    deviation: DeviationAnalysis
+  ): Promise<void> {
+    
+    const message = this.buildDeviationMessage(journey, deviation);
+    const urgency = deviation.severity === 'critical' ? 'high' : 'medium';
+    
+    const contactsToNotify = journey.sharedWithContacts.filter(contact =>
+      contact.receiveDeviationAlerts
+    );
+    
+    for (const contact of contactsToNotify) {
+      try {
+        await NotificationService.sendDeviationAlert(contact, {
+          journeyId: journey.id,
+          message,
+          urgency,
+          currentLocation: deviation.currentLocation,
+          deviationDistance: deviation.distanceFromRoute,
+          context: deviation.context,
+          actions: this.getContactActions(deviation.severity),
+        });
+      } catch (error) {
+        console.error(`Failed to notify contact ${contact.contactId}:`, error);
+      }
+    }
+  }
+}
+
+type DeviationSeverity = 'minor' | 'major' | 'critical';
+
+interface DeviationAnalysis {
+  distanceFromRoute: number;
+  severity: DeviationSeverity;
+  context: DeviationContext;
+  isLikelyIntentional: boolean;
+  requiresAlert: boolean;
+  recommendedActions: RecommendedAction[];
+  currentLocation: GeoLocation;
+  timestamp: string;
+}
+
+interface DeviationContext {
+  trafficConditions?: TrafficData;
+  roadClosures?: RoadClosure[];
+  nearbyPOIs?: PlaceOfInterest[];
+  activityPattern?: ActivityPattern;
+  transitDelays?: TransitDelay[];
+  timeOfDay: number;
+  weatherConditions?: WeatherData;
+}
+```
+</CodeGroup>
+
+## Waypoint and Checkpoint Management
+
+### Smart Checkpoint System
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Automatic Waypoints" icon="map-pin">
+    AI-suggested checkpoints based on journey length, risk factors, and transport mode
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Custom Checkpoints" icon="flag">
+    User-defined safety checkpoints with specific arrival time expectations
+  </Card>
+  <Card title="Milestone Notifications" icon="bell">
+    Automatic contact updates when reaching significant journey milestones
+  </Card>
+  <Card title="Checkpoint Validation" icon="check">
+    Multiple verification methods to confirm safe checkpoint completion
+  </Card>
+</CardGroup>
+
+<Accordion title="Checkpoint Configuration and Management">
+**Automatic Checkpoint Selection:**
+- Journey length-based: One checkpoint per hour for journeys over 2 hours
+- Risk-based: More frequent checkpoints in unfamiliar or higher-risk areas
+- Transport mode considerations: Public transport stations, rest stops for driving
+- Time-based: Evening and late-night journeys get more frequent checkpoints
+
+**Manual Checkpoint Creation:**
+- Custom waypoints with specific arrival time windows
+- Special checkpoints for high-risk journey segments
+- Meeting point confirmations for social activities
+- Business travel checkpoints for client meetings or conferences
+
+**Checkpoint Verification Methods:**
+- Automatic location-based confirmation when entering checkpoint geofence
+- Manual check-in with status update and optional message
+- Photo or video confirmation for high-security checkpoints
+- Contact verification through third-party confirmation
+
+**Missed Checkpoint Handling:**
+- Grace period based on checkpoint type and transport mode
+- Progressive escalation similar to missed check-ins
+- Context-aware delays (traffic, transport delays, etc.)
+- Emergency alert triggers for critical checkpoint failures
+
+**Implementation Example:**
+```typescript
+interface JourneyCheckpoint {
+  id: string;
+  journeyId: string;
+  type: CheckpointType;
+  
+  // Location and timing
+  location: GeoLocation;
+  name: string;
+  plannedArrivalTime: string;
+  arrivalTimeWindow: number; // minutes of acceptable delay
+  
+  // Verification requirements
+  verificationMethod: VerificationMethod;
+  requiresManualConfirmation: boolean;
+  photoDo cumentationRequired: boolean;
+  contactVerificationRequired: boolean;
+  
+  // Status tracking
+  status: CheckpointStatus;
+  actualArrivalTime?: string;
+  completedAt?: string;
+  verificationData?: VerificationData;
+  
+  // Escalation settings
+  gracePeriodMinutes: number;
+  escalationContacts: string[];
+  escalationLevel: EscalationLevel;
+}
+
+type CheckpointType = 
+  | 'automatic_milestone'
+  | 'safety_checkpoint' 
+  | 'destination_waypoint'
+  | 'meeting_point'
+  | 'rest_stop'
+  | 'transport_change'
+  | 'custom_waypoint';
+
+export class CheckpointManager {
+  static async generateAutomaticCheckpoints(journey: JourneyPlan): Promise<JourneyCheckpoint[]> {
+    const checkpoints: JourneyCheckpoint[] = [];
+    const route = journey.plannedRoute;
+    const duration = journey.estimatedDuration;
+    
+    // Generate time-based checkpoints for long journeys
+    if (duration > 120) { // 2+ hours
+      const checkpointInterval = this.getCheckpointInterval(journey.journeyType, journey.transportMode);
+      const numberOfCheckpoints = Math.floor(duration / checkpointInterval) - 1;
+      
+      for (let i = 1; i <= numberOfCheckpoints; i++) {
+        const progressRatio = i / (numberOfCheckpoints + 1);
+        const checkpointLocation = this.getLocationAtProgress(route, progressRatio);
+        const checkpointTime = this.calculateCheckpointTime(
+          journey.plannedDepartureTime,
+          duration,
+          progressRatio
+        );
+        
+        checkpoints.push({
+          id: generateId(),
+          journeyId: journey.id,
+          type: 'automatic_milestone',
+          location: checkpointLocation,
+          name: `Journey Checkpoint ${i}`,
+          plannedArrivalTime: checkpointTime,
+          arrivalTimeWindow: this.getDefaultTimeWindow(journey.transportMode),
+          verificationMethod: 'automatic_location',
+          requiresManualConfirmation: false,
+          gracePeriodMinutes: this.getGracePeriod(journey.transportMode),
+          escalationContacts: journey.sharedWithContacts.map(c => c.contactId),
+          escalationLevel: 'standard',
+        });
+      }
+    }
+    
+    // Add transport change checkpoints
+    if (journey.transportMode === 'mixed_modal') {
+      const transportChanges = this.identifyTransportChanges(route);
+      for (const change of transportChanges) {
+        checkpoints.push(this.createTransportChangeCheckpoint(journey, change));
+      }
+    }
+    
+    // Add high-risk area checkpoints
+    const riskAreas = await this.identifyHighRiskAreas(route);
+    for (const area of riskAreas) {
+      checkpoints.push(this.createSafetyCheckpoint(journey, area));
+    }
+    
+    return checkpoints.sort((a, b) => 
+      new Date(a.plannedArrivalTime).getTime() - new Date(b.plannedArrivalTime).getTime()
+    );
+  }
+}
+```
+</Accordion>
+
+## Multi-Modal Transport Support
+
+### Transport Mode Intelligence
+
+<Steps>
+  <Step title="Mode Detection">
+    Automatic detection of transport mode changes during mixed-modal journeys
+  </Step>
+  <Step title="Schedule Integration">
+    Integration with public transport schedules for delay and disruption alerts
+  </Step>
+  <Step title="Rideshare Monitoring">
+    Special monitoring for Uber, Lyft, and taxi rides with driver verification
+  </Step>
+  <Step title="Connection Management">
+    Alerts for tight connections and alternative options when delays occur
+  </Step>
+</Steps>
+
+<CardGroup cols={3}>
+  <Card title="Public Transport" icon="bus">
+    Real-time schedule integration with delay notifications and alternative route suggestions
+  </Card>
+  <Card title="Rideshare Safety" icon="car">
+    Driver verification, route monitoring, and emergency features for ride-hailing services
+  </Card>
+  <Card title="Flight Integration" icon="plane">
+    Flight status monitoring with gate changes, delays, and connection management
+  </Card>
+</CardGroup>
+
+## Privacy and Sharing Controls
+
+### Granular Journey Privacy
+
+<Info>
+**Journey Privacy Balance:** Share enough information for safety while maintaining privacy. Different contacts can receive different levels of journey information.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Contact-Specific Sharing" icon="users">
+    Configure different sharing levels for different contacts based on relationship and trust
+  </Card>
+  <Card title="Temporal Privacy" icon="clock">
+    Time-limited sharing that automatically expires after journey completion
+  </Card>
+  <Card title="Information Filtering" icon="filter">
+    Share route progress without revealing specific destinations or waypoints
+  </Card>
+  <Card title="Emergency Overrides" icon="alert-triangle">
+    Emergency situations automatically share full journey details with all contacts
+  </Card>
+</CardGroup>
+
+<Accordion title="Journey Privacy Configuration">
+**Sharing Level Options:**
+- **Private:** No sharing except during emergencies
+- **Departure/Arrival Only:** Contacts notified when journey starts and ends
+- **Major Waypoints:** Share progress at significant milestones only
+- **Real-Time:** Continuous location sharing throughout journey
+- **Emergency Only:** Full sharing activated only during emergency situations
+
+**Contact-Specific Permissions:**
+```typescript
+interface ContactJourneyPermissions {
+  contactId: string;
+  
+  // Basic journey information
+  canSeeJourneyType: boolean;
+  canSeeTransportMode: boolean;
+  canSeeEstimatedArrival: boolean;
+  
+  // Location information
+  canSeeStartLocation: boolean;
+  canSeeDestination: boolean;
+  canSeeCurrentLocation: boolean;
+  canSeeRoute: boolean;
+  locationPrecision: 'exact' | 'approximate' | 'general_area';
+  
+  // Progress and status
+  canSeeProgress: boolean;
+  canSeeWaypoints: boolean;
+  canSeeDeviations: boolean;
+  canSeeDelays: boolean;
+  
+  // Communication and alerts
+  receiveProgressUpdates: boolean;
+  receiveDeviationAlerts: boolean;
+  receiveDelayNotifications: boolean;
+  receiveArrivalConfirmation: boolean;
+  canInitiateContact: boolean;
+  
+  // Emergency permissions
+  emergencyLocationAccess: boolean;
+  emergencyEscalationAuthorization: boolean;
+}
+
+export const JourneyPrivacySettings = ({ journey, onUpdate }) => {
+  const [privacySettings, setPrivacySettings] = useState(journey.privacySettings);
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Default Sharing Level</Text>
+        <SharingLevelSelector
+          value={privacySettings.defaultSharingLevel}
+          onChange={(level) => updatePrivacySettings({ defaultSharingLevel: level })}
+          options={[
+            { value: 'private', label: 'Private', description: 'No sharing except emergencies' },
+            { value: 'departure_arrival', label: 'Start/End Only', description: 'Share when journey starts and ends' },
+            { value: 'major_waypoints', label: 'Key Progress', description: 'Share major milestones' },
+            { value: 'real_time', label: 'Live Tracking', description: 'Continuous location sharing' },
+          ]}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Contact-Specific Settings</Text>
+        {journey.sharedWithContacts.map(contact => (
+          <ContactPrivacyCard
+            key={contact.contactId}
+            contact={contact}
+            permissions={privacySettings.contactPermissions[contact.contactId]}
+            onChange={(permissions) => updateContactPermissions(contact.contactId, permissions)}
+          />
+        ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Data Retention</Text>
+        <DataRetentionSettings
+          retentionPeriod={privacySettings.dataRetentionDays}
+          autoDeleteEnabled={privacySettings.autoDeleteEnabled}
+          onChange={(settings) => updatePrivacySettings(settings)}
+        />
+      </View>
+    </ScrollView>
+  );
+};
+```
+</Accordion>
+
+## Integration with Other Safety Features
+
+<CardGroup cols={4}>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Journey context enhances emergency alerts with route and destination information
+  </Card>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Journey monitoring uses advanced location tracking with route optimization
+  </Card>
+  <Card title="Check-ins" icon="clock" href="/features/check-ins">
+    Automatic check-ins at journey waypoints and destination arrival
+  </Card>
+  <Card title="Circle of Trust" icon="users" href="/features/circle-of-trust">
+    Journey progress shared with selected Circle of Trust members
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+## Implementation Guidelines
+
+<Warning>
+**Critical Journey Monitoring Requirements:**
+- Journey tracking must work reliably across different transport modes
+- Route deviation detection must balance sensitivity with false alarm prevention
+- Contact notifications must provide actionable information and clear next steps
+- Privacy controls must be granular and easily configurable by users
+- Battery optimization must not compromise safety during long journeys
+- Offline capabilities must maintain core safety features when connectivity is lost
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Set Up Location Sharing" icon="map" href="/features/location-tracking">
+    Configure location sharing preferences for journey monitoring
+  </Card>
+  <Card title="Configure Emergency Contacts" icon="users" href="/features/circle-of-trust">
+    Choose which contacts receive journey updates and deviation alerts
+  </Card>
+  <Card title="Emergency Procedures" icon="bell" href="/features/emergency-alerts">
+    Understand how to trigger emergency alerts during journeys
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Plan Your First Journey" icon="route" href="/quickstart/setup">
+    Set up journey monitoring for your next trip or daily commute
+  </Card>
+  <Card title="Configure Transport Modes" icon="settings" href="/features/location-tracking">
+    Learn how to optimize journey monitoring for different types of travel
+  </Card>
+</CardGroup>

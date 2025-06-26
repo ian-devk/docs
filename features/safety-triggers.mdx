@@ -1,59 +1,1298 @@
 ---
 title: "Safety Triggers"
-description: "Safety Triggers documentation for Core Features. Learn about implementation, configuration, and best practices."
+description: "Comprehensive safety trigger system for Shelther. Learn about configuring manual triggers, automatic detection, device sensors, voice commands, and custom safety protocols."
 ---
 
 # Safety Triggers
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Your Safety Activation System:** Safety triggers are the various ways you can activate Shelther's emergency and safety features. From simple button presses to AI-powered automatic detection, these triggers ensure help is always within reach.
 </Info>
 
-## Key Points
+## Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
-
-## Examples
-
-<CodeGroup>
-
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
-}
-```
-
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
-```
-
-</CodeGroup>
-
-## Next Steps
+Shelther's safety trigger system provides multiple redundant ways to activate emergency responses, request help, or signal distress. The system combines manual controls with intelligent automatic detection to ensure you can always get help, regardless of the situation.
 
 <CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+  <Card title="Manual Triggers" icon="hand">
+    Physical buttons, gestures, and voice commands you control directly
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Automatic Detection" icon="cpu">
+    AI-powered sensors that detect emergencies and trigger alerts automatically
+  </Card>
+  <Card title="Smart Sensitivity" icon="brain">
+    Adaptive sensitivity that learns your patterns to reduce false alarms
+  </Card>
+  <Card title="Redundant Systems" icon="shield">
+    Multiple trigger methods ensure help is always accessible
+  </Card>
+</CardGroup>
+
+## Manual Trigger Methods
+
+### Physical Button Triggers
+
+<Steps>
+  <Step title="Emergency SOS Button">
+    Large, prominent in-app button for immediate emergency activation
+  </Step>
+  <Step title="Hardware Button Sequence">
+    Physical device button combinations that work even when phone is locked
+  </Step>
+  <Step title="Widget Triggers">
+    Home screen widgets for quick access without opening the app
+  </Step>
+  <Step title="Lock Screen Shortcuts">
+    Emergency access directly from device lock screen
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Physical Trigger Configuration
+interface PhysicalTriggerConfig {
+  // SOS Button settings
+  sosButton: {
+    enabled: boolean;
+    confirmationRequired: boolean;
+    gracePeriodSeconds: number;
+    hapticFeedback: boolean;
+    visualFeedback: boolean;
+    audioConfirmation: boolean;
+  };
+  
+  // Hardware button sequences
+  hardwareButtons: {
+    volumeButtonSequence: {
+      enabled: boolean;
+      sequence: ButtonSequence;
+      holdDuration: number; // milliseconds
+      doublePressWindow: number; // milliseconds
+      bypassLockScreen: boolean;
+    };
+    powerButtonSequence: {
+      enabled: boolean;
+      sequence: ButtonSequence;
+      consecutivePresses: number;
+      timeWindow: number; // milliseconds
+    };
+  };
+  
+  // Widget configuration
+  widgets: {
+    homeScreenWidget: {
+      enabled: boolean;
+      widgetType: 'button' | 'slider' | 'countdown';
+      confirmationRequired: boolean;
+      customMessage: string;
+    };
+    lockScreenWidget: {
+      enabled: boolean;
+      requiresAuthentication: boolean;
+      emergencyBypass: boolean;
+    };
+  };
+}
+
+type ButtonSequence = 
+  | 'volume_up_down_power'
+  | 'power_five_times'
+  | 'volume_up_hold'
+  | 'volume_down_hold'
+  | 'custom_sequence';
+
+export const PhysicalTriggerSetup = () => {
+  const [triggerConfig, setTriggerConfig] = useState<PhysicalTriggerConfig>();
+  const [isTestingTrigger, setIsTestingTrigger] = useState(false);
+
+  const handleTriggerTest = async (triggerType: string) => {
+    setIsTestingTrigger(true);
+    try {
+      await SafetyTriggerService.testTrigger(triggerType, { isTest: true });
+      Alert.alert(
+        'Test Successful',
+        `${triggerType} trigger is working correctly. In a real emergency, this would alert your contacts.`
+      );
+    } catch (error) {
+      Alert.alert(
+        'Test Failed',
+        `${triggerType} trigger test failed. Please check your configuration.`
+      );
+    } finally {
+      setIsTestingTrigger(false);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Emergency SOS Button</Text>
+        <Text style={styles.description}>
+          The main emergency button in the app for immediate help activation
+        </Text>
+        
+        <ConfigToggle
+          label="Enable SOS Button"
+          value={triggerConfig?.sosButton.enabled}
+          onChange={(enabled) => updateConfig(['sosButton', 'enabled'], enabled)}
+        />
+        
+        {triggerConfig?.sosButton.enabled && (
+          <>
+            <ConfigSlider
+              label="Confirmation Delay"
+              value={triggerConfig.sosButton.gracePeriodSeconds}
+              min={0}
+              max={30}
+              step={5}
+              unit="seconds"
+              onChange={(value) => updateConfig(['sosButton', 'gracePeriodSeconds'], value)}
+              description="Time you have to cancel an accidental trigger"
+            />
+            
+            <ConfigToggle
+              label="Require Double-Tap"
+              value={triggerConfig.sosButton.confirmationRequired}
+              onChange={(value) => updateConfig(['sosButton', 'confirmationRequired'], value)}
+              description="Require two taps to prevent accidental activation"
+            />
+            
+            <TouchableOpacity 
+              style={styles.testButton}
+              onPress={() => handleTriggerTest('sos_button')}
+              disabled={isTestingTrigger}
+            >
+              <Text style={styles.testButtonText}>Test SOS Button</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Hardware Button Sequences</Text>
+        <Text style={styles.description}>
+          Physical button combinations that work even when your phone is locked
+        </Text>
+        
+        <ButtonSequenceConfig
+          title="Volume Button Emergency"
+          description="Press volume up + volume down + power button together"
+          config={triggerConfig?.hardwareButtons.volumeButtonSequence}
+          onChange={(config) => updateConfig(['hardwareButtons', 'volumeButtonSequence'], config)}
+          onTest={() => handleTriggerTest('volume_sequence')}
+        />
+        
+        <ButtonSequenceConfig
+          title="Power Button Emergency"
+          description="Press power button 5 times quickly"
+          config={triggerConfig?.hardwareButtons.powerButtonSequence}
+          onChange={(config) => updateConfig(['hardwareButtons', 'powerButtonSequence'], config)}
+          onTest={() => handleTriggerTest('power_sequence')}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Access Widgets</Text>
+        
+        <WidgetConfig
+          title="Home Screen Widget"
+          description="Add emergency button to your phone's home screen"
+          config={triggerConfig?.widgets.homeScreenWidget}
+          onChange={(config) => updateConfig(['widgets', 'homeScreenWidget'], config)}
+        />
+        
+        <WidgetConfig
+          title="Lock Screen Access"
+          description="Emergency access from lock screen"
+          config={triggerConfig?.widgets.lockScreenWidget}
+          onChange={(config) => updateConfig(['widgets', 'lockScreenWidget'], config)}
+        />
+      </View>
+    </ScrollView>
+  );
+};
+
+const ButtonSequenceConfig = ({ title, description, config, onChange, onTest }) => (
+  <View style={styles.triggerCard}>
+    <View style={styles.triggerHeader}>
+      <Text style={styles.triggerTitle}>{title}</Text>
+      <Switch
+        value={config?.enabled}
+        onValueChange={(enabled) => onChange({ ...config, enabled })}
+      />
+    </View>
+    <Text style={styles.triggerDescription}>{description}</Text>
+    
+    {config?.enabled && (
+      <>
+        <ConfigSlider
+          label="Hold Duration"
+          value={config.holdDuration}
+          min={1000}
+          max={5000}
+          step={500}
+          unit="ms"
+          onChange={(value) => onChange({ ...config, holdDuration: value })}
+        />
+        
+        <ConfigToggle
+          label="Bypass Lock Screen"
+          value={config.bypassLockScreen}
+          onChange={(value) => onChange({ ...config, bypassLockScreen: value })}
+          description="Works even when phone is locked"
+        />
+        
+        <TouchableOpacity style={styles.testButton} onPress={onTest}>
+          <Text style={styles.testButtonText}>Test This Trigger</Text>
+        </TouchableOpacity>
+      </>
+    )}
+  </View>
+);
+```
+
+```typescript Hardware Trigger Implementation
+export class HardwareTriggerManager {
+  private static triggerTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private static buttonPressSequence: ButtonPress[] = [];
+  
+  static initializeHardwareTriggers(config: PhysicalTriggerConfig): void {
+    if (config.hardwareButtons.volumeButtonSequence.enabled) {
+      this.setupVolumeButtonTrigger(config.hardwareButtons.volumeButtonSequence);
+    }
+    
+    if (config.hardwareButtons.powerButtonSequence.enabled) {
+      this.setupPowerButtonTrigger(config.hardwareButtons.powerButtonSequence);
+    }
+  }
+
+  private static setupVolumeButtonTrigger(config: VolumeButtonConfig): void {
+    // iOS implementation
+    if (Platform.OS === 'ios') {
+      VolumeButtonHandler.addEventListener('VolumeUp', () => 
+        this.handleButtonPress('volume_up')
+      );
+      VolumeButtonHandler.addEventListener('VolumeDown', () => 
+        this.handleButtonPress('volume_down')
+      );
+    }
+    
+    // Android implementation
+    if (Platform.OS === 'android') {
+      const eventEmitter = new NativeEventEmitter(NativeModules.HardwareButtonModule);
+      eventEmitter.addListener('VolumeButtonPress', (event) => {
+        this.handleButtonPress(event.button);
+      });
+    }
+  }
+
+  private static handleButtonPress(button: ButtonType): void {
+    const timestamp = Date.now();
+    
+    // Add to sequence
+    this.buttonPressSequence.push({ button, timestamp });
+    
+    // Clean old presses (outside time window)
+    this.buttonPressSequence = this.buttonPressSequence.filter(
+      press => timestamp - press.timestamp < 5000 // 5 second window
+    );
+    
+    // Check for trigger sequences
+    this.checkForTriggerSequences();
+  }
+
+  private static checkForTriggerSequences(): void {
+    const recent = this.buttonPressSequence.slice(-5); // Last 5 presses
+    
+    // Check volume + power sequence
+    if (this.isVolumeUpDownPowerSequence(recent)) {
+      this.triggerEmergencySequence('volume_up_down_power');
+    }
+    
+    // Check rapid power button presses
+    if (this.isRapidPowerButtonSequence(recent)) {
+      this.triggerEmergencySequence('power_five_times');
+    }
+  }
+
+  private static isVolumeUpDownPowerSequence(presses: ButtonPress[]): boolean {
+    if (presses.length < 3) return false;
+    
+    const last3 = presses.slice(-3);
+    const timeSpan = last3[2].timestamp - last3[0].timestamp;
+    
+    // Must occur within 2 seconds
+    if (timeSpan > 2000) return false;
+    
+    // Check for volume up, volume down, power pattern
+    const buttons = last3.map(p => p.button);
+    return buttons.includes('volume_up') && 
+           buttons.includes('volume_down') && 
+           buttons.includes('power');
+  }
+
+  private static isRapidPowerButtonSequence(presses: ButtonPress[]): boolean {
+    const powerPresses = presses.filter(p => p.button === 'power');
+    
+    if (powerPresses.length < 5) return false;
+    
+    const last5 = powerPresses.slice(-5);
+    const timeSpan = last5[4].timestamp - last5[0].timestamp;
+    
+    // Must occur within 3 seconds
+    return timeSpan <= 3000;
+  }
+
+  private static async triggerEmergencySequence(sequenceType: string): Promise<void> {
+    try {
+      // Provide immediate feedback
+      Vibration.vibrate([0, 100, 100, 100, 100, 100]);
+      
+      // Clear existing sequence to prevent duplicate triggers
+      this.buttonPressSequence = [];
+      
+      // Trigger emergency alert
+      await EmergencyService.triggerEmergencyAlert({
+        method: sequenceType,
+        source: 'hardware_buttons',
+        urgency: 'high',
+        bypassed_lockscreen: true,
+      });
+      
+    } catch (error) {
+      console.error('Hardware trigger failed:', error);
+      
+      // Fallback to local notification
+      LocalNotification.show({
+        title: 'Emergency Trigger Failed',
+        body: 'Hardware emergency trigger detected but alert failed. Please use manual emergency button.',
+        importance: 'high',
+      });
+    }
+  }
+}
+
+interface ButtonPress {
+  button: ButtonType;
+  timestamp: number;
+}
+
+type ButtonType = 'volume_up' | 'volume_down' | 'power' | 'home';
+```
+</CodeGroup>
+
+### Voice and Gesture Triggers
+
+<Accordion title="Voice Command Configuration">
+**Voice Activation Features:**
+- Customizable wake phrases for hands-free activation
+- Noise-robust detection that works in various environments
+- Multiple language support with accent tolerance
+- Background listening with privacy protection
+
+**Gesture Recognition:**
+- Shake patterns that won't trigger during normal movement
+- Drawing gestures on locked screen for discreet activation
+- Tapping patterns on phone case or surface
+- Orientation-based triggers (phone flipped, etc.)
+
+**Privacy and Battery Considerations:**
+- Local voice processing - no data sent to external servers
+- Battery-optimized always-listening mode
+- Configurable sensitivity to balance accuracy with battery life
+- Automatic disable during low battery situations
+
+**Implementation:**
+```typescript
+interface VoiceGestureTriggerConfig {
+  voiceActivation: {
+    enabled: boolean;
+    wakePhrases: string[];
+    sensitivity: 'low' | 'medium' | 'high';
+    backgroundListening: boolean;
+    languages: string[];
+    noiseReduction: boolean;
+    confirmationRequired: boolean;
+  };
+  
+  gestureActivation: {
+    shakePattern: {
+      enabled: boolean;
+      intensity: number; // 1-10
+      duration: number; // milliseconds
+      pattern: 'single_shake' | 'double_shake' | 'custom';
+    };
+    drawGesture: {
+      enabled: boolean;
+      pattern: 'circle' | 'sos' | 'custom';
+      screenLocked: boolean;
+    };
+    orientationTrigger: {
+      enabled: boolean;
+      trigger: 'flip_down' | 'shake_while_flat' | 'rapid_rotation';
+    };
+  };
+}
+
+export class VoiceGestureTriggerManager {
+  private voiceRecognition: VoiceRecognition;
+  private gestureDetector: GestureDetector;
+  
+  async initializeVoiceTriggers(config: VoiceActivationConfig): Promise<void> {
+    if (!config.enabled) return;
+    
+    this.voiceRecognition = new VoiceRecognition({
+      wakePhrases: config.wakePhrases,
+      sensitivity: config.sensitivity,
+      onPhrase: this.handleVoicePhrase.bind(this),
+      onError: this.handleVoiceError.bind(this),
+    });
+    
+    if (config.backgroundListening) {
+      await this.voiceRecognition.startBackgroundListening();
+    }
+  }
+  
+  private async handleVoicePhrase(phrase: string, confidence: number): Promise<void> {
+    if (confidence < 0.8) {
+      // Low confidence - ask for confirmation
+      await this.requestVoiceConfirmation(phrase);
+      return;
+    }
+    
+    // High confidence - proceed with emergency trigger
+    await this.triggerVoiceEmergency(phrase, confidence);
+  }
+  
+  async initializeGestureTriggers(config: GestureActivationConfig): Promise<void> {
+    this.gestureDetector = new GestureDetector();
+    
+    if (config.shakePattern.enabled) {
+      await this.setupShakeDetection(config.shakePattern);
+    }
+    
+    if (config.drawGesture.enabled) {
+      await this.setupDrawGestureDetection(config.drawGesture);
+    }
+    
+    if (config.orientationTrigger.enabled) {
+      await this.setupOrientationTrigger(config.orientationTrigger);
+    }
+  }
+  
+  private async setupShakeDetection(config: ShakePatternConfig): Promise<void> {
+    await this.gestureDetector.configureShakeDetection({
+      threshold: this.calculateShakeThreshold(config.intensity),
+      pattern: config.pattern,
+      duration: config.duration,
+      onShake: this.handleShakeGesture.bind(this),
+    });
+  }
+}
+```
+</Accordion>
+
+## Automatic Detection Systems
+
+### AI-Powered Emergency Detection
+
+<CardGroup cols={3}>
+  <Card title="Fall Detection" icon="trending-down">
+    Accelerometer and gyroscope data analysis to detect sudden falls or impacts
+  </Card>
+  <Card title="Panic Patterns" icon="activity">
+    Movement and behavior pattern analysis to identify distress situations
+  </Card>
+  <Card title="Audio Analysis" icon="mic">
+    Background audio monitoring for distress calls or threatening situations
+  </Card>
+</CardGroup>
+
+<Steps>
+  <Step title="Baseline Learning">
+    System learns your normal movement and behavior patterns for accurate anomaly detection
+  </Step>
+  <Step title="Context Awareness">
+    Detection algorithms consider location, time, activity, and environmental factors
+  </Step>
+  <Step title="Confidence Scoring">
+    AI assigns confidence scores to potential emergencies for appropriate response
+  </Step>
+  <Step title="Adaptive Sensitivity">
+    System adjusts sensitivity based on user feedback and false alarm patterns
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript AI Detection System
+interface AIDetectionConfig {
+  fallDetection: {
+    enabled: boolean;
+    sensitivity: 'conservative' | 'balanced' | 'aggressive';
+    minimumConfidence: number; // 0.0 to 1.0
+    gracePeriodSeconds: number;
+    disableInVehicle: boolean;
+    disableDuringSports: boolean;
+  };
+  
+  panicDetection: {
+    enabled: boolean;
+    movementAnalysis: boolean;
+    heartRateMonitoring: boolean;
+    breathingPatternAnalysis: boolean;
+    contextualFactors: boolean;
+    learningEnabled: boolean;
+  };
+  
+  audioAnalysis: {
+    enabled: boolean;
+    distressWords: string[];
+    volumeThresholds: AudioThresholds;
+    backgroundAnalysis: boolean;
+    privacyMode: boolean; // Only analyze locally
+  };
+  
+  adaptiveSensitivity: {
+    enabled: boolean;
+    learningPeriod: number; // days
+    falseAlarmThreshold: number;
+    autoAdjustment: boolean;
+  };
+}
+
+export class AIEmergencyDetector {
+  private fallDetector: FallDetectionEngine;
+  private panicDetector: PanicDetectionEngine;
+  private audioAnalyzer: AudioAnalysisEngine;
+  private adaptiveManager: AdaptiveSensitivityManager;
+
+  async initializeDetectionSystems(config: AIDetectionConfig): Promise<void> {
+    if (config.fallDetection.enabled) {
+      this.fallDetector = new FallDetectionEngine(config.fallDetection);
+      await this.fallDetector.initialize();
+    }
+    
+    if (config.panicDetection.enabled) {
+      this.panicDetector = new PanicDetectionEngine(config.panicDetection);
+      await this.panicDetector.initialize();
+    }
+    
+    if (config.audioAnalysis.enabled) {
+      this.audioAnalyzer = new AudioAnalysisEngine(config.audioAnalysis);
+      await this.audioAnalyzer.initialize();
+    }
+    
+    if (config.adaptiveSensitivity.enabled) {
+      this.adaptiveManager = new AdaptiveSensitivityManager(config.adaptiveSensitivity);
+      await this.adaptiveManager.loadUserProfile();
+    }
+  }
+
+  async processSensorData(sensorData: SensorDataPacket): Promise<DetectionResult[]> {
+    const results: DetectionResult[] = [];
+    
+    // Fall detection analysis
+    if (this.fallDetector && sensorData.accelerometer && sensorData.gyroscope) {
+      const fallResult = await this.fallDetector.analyzeFall({
+        accelerometer: sensorData.accelerometer,
+        gyroscope: sensorData.gyroscope,
+        timestamp: sensorData.timestamp,
+        context: sensorData.context,
+      });
+      
+      if (fallResult.detected) {
+        results.push({
+          type: 'fall_detected',
+          confidence: fallResult.confidence,
+          data: fallResult,
+          gracePeriod: this.fallDetector.getGracePeriod(),
+        });
+      }
+    }
+    
+    // Panic pattern analysis
+    if (this.panicDetector) {
+      const panicResult = await this.panicDetector.analyzePatterns(sensorData);
+      
+      if (panicResult.detected) {
+        results.push({
+          type: 'panic_detected',
+          confidence: panicResult.confidence,
+          data: panicResult,
+          gracePeriod: this.panicDetector.getGracePeriod(),
+        });
+      }
+    }
+    
+    // Apply adaptive sensitivity adjustments
+    if (this.adaptiveManager) {
+      results.forEach(result => {
+        result.confidence = this.adaptiveManager.adjustConfidence(result);
+      });
+    }
+    
+    return results.filter(result => 
+      result.confidence >= this.getMinimumConfidenceThreshold(result.type)
+    );
+  }
+
+  async handleDetectionResult(result: DetectionResult): Promise<void> {
+    const shouldTrigger = await this.evaluateTriggerCriteria(result);
+    
+    if (shouldTrigger) {
+      if (result.gracePeriod > 0) {
+        await this.startGracePeriod(result);
+      } else {
+        await this.triggerAutoEmergency(result);
+      }
+    } else {
+      // Log for learning but don't trigger
+      await this.logDetectionForLearning(result);
+    }
+  }
+
+  private async startGracePeriod(result: DetectionResult): Promise<void> {
+    const gracePeriodId = await this.createGracePeriodRecord(result);
+    
+    // Show user notification with countdown
+    await this.showGracePeriodNotification(gracePeriodId, result);
+    
+    // Schedule automatic trigger if not cancelled
+    setTimeout(async () => {
+      const isStillActive = await this.isGracePeriodActive(gracePeriodId);
+      if (isStillActive) {
+        await this.triggerAutoEmergency(result);
+      }
+    }, result.gracePeriod * 1000);
+  }
+
+  private async triggerAutoEmergency(result: DetectionResult): Promise<void> {
+    try {
+      await EmergencyService.triggerEmergencyAlert({
+        method: 'auto_detection',
+        detectionType: result.type,
+        confidence: result.confidence,
+        sensorData: result.data,
+        urgency: this.calculateUrgency(result),
+        autoDetected: true,
+      });
+      
+      // Record successful detection for learning
+      await this.recordSuccessfulDetection(result);
+      
+    } catch (error) {
+      console.error('Auto-detection emergency trigger failed:', error);
+      
+      // Record failure for system improvement
+      await this.recordDetectionFailure(result, error);
+    }
+  }
+}
+
+class FallDetectionEngine {
+  private config: FallDetectionConfig;
+  private recentData: AccelerometerData[] = [];
+  private userProfile: UserMovementProfile;
+
+  async analyzeFall(data: MotionData): Promise<FallDetectionResult> {
+    // Add to recent data buffer
+    this.recentData.push(data);
+    this.recentData = this.recentData.slice(-100); // Keep last 5 seconds at 20Hz
+    
+    // Stage 1: Impact detection
+    const impactDetected = this.detectImpact(data);
+    if (!impactDetected) {
+      return { detected: false, confidence: 0 };
+    }
+    
+    // Stage 2: Free fall detection
+    const freeFallDetected = this.detectFreeFall(this.recentData);
+    
+    // Stage 3: Post-impact stillness
+    const stillnessDetected = await this.detectPostImpactStillness();
+    
+    // Stage 4: Orientation analysis
+    const orientationChanged = this.detectOrientationChange(this.recentData);
+    
+    // Calculate confidence based on detected stages
+    let confidence = 0;
+    if (impactDetected) confidence += 0.3;
+    if (freeFallDetected) confidence += 0.3;
+    if (stillnessDetected) confidence += 0.2;
+    if (orientationChanged) confidence += 0.2;
+    
+    // Context adjustments
+    confidence = this.adjustForContext(confidence, data.context);
+    
+    return {
+      detected: confidence >= this.config.minimumConfidence,
+      confidence,
+      stages: {
+        impact: impactDetected,
+        freeFall: freeFallDetected,
+        stillness: stillnessDetected,
+        orientationChange: orientationChanged,
+      },
+      timestamp: data.timestamp,
+    };
+  }
+
+  private detectImpact(data: MotionData): boolean {
+    const magnitude = Math.sqrt(
+      data.accelerometer.x ** 2 + 
+      data.accelerometer.y ** 2 + 
+      data.accelerometer.z ** 2
+    );
+    
+    // Adjust threshold based on sensitivity setting
+    const thresholds = {
+      conservative: 4.0,  // 4G impact
+      balanced: 3.0,      // 3G impact
+      aggressive: 2.5,    // 2.5G impact
+    };
+    
+    return magnitude > thresholds[this.config.sensitivity];
+  }
+
+  private adjustForContext(confidence: number, context: MotionContext): number {
+    // Reduce confidence if user is in vehicle
+    if (context.inVehicle && this.config.disableInVehicle) {
+      return 0;
+    }
+    
+    // Reduce confidence during sports activities
+    if (context.activityType === 'sports' && this.config.disableDuringSports) {
+      confidence *= 0.3;
+    }
+    
+    // Consider location context
+    if (context.location?.type === 'home') {
+      confidence *= 1.1; // Slightly increase at home
+    } else if (context.location?.type === 'gym') {
+      confidence *= 0.7; // Reduce at gym
+    }
+    
+    return Math.min(confidence, 1.0);
+  }
+}
+```
+</CodeGroup>
+
+## Contextual Trigger Intelligence
+
+### Smart Sensitivity Adjustment
+
+<Note>
+**Adaptive Intelligence:** The trigger system learns from your daily patterns, false alarms, and feedback to optimize sensitivity and reduce unnecessary alerts while maintaining safety effectiveness.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Activity-Based Adjustment" icon="activity">
+    Trigger sensitivity adapts based on your current activity (walking, driving, exercising)
+  </Card>
+  <Card title="Location Awareness" icon="map-pin">
+    Different sensitivity levels for different locations (home, work, unfamiliar areas)
+  </Card>
+  <Card title="Time-Based Patterns" icon="clock">
+    Recognition of daily routines to adjust trigger thresholds appropriately
+  </Card>
+  <Card title="User Feedback Learning" icon="brain">
+    System learns from false alarms and user corrections to improve accuracy
+  </Card>
+</CardGroup>
+
+<Accordion title="Contextual Intelligence Implementation">
+**Activity Recognition:**
+- Automatic detection of walking, running, driving, stationary states
+- Sport and exercise activity recognition with appropriate trigger adjustments
+- Work vs leisure activity patterns for context-appropriate sensitivity
+- Sleep detection to disable non-critical triggers during rest periods
+
+**Location-Based Intelligence:**
+- Home zone detection for relaxed trigger sensitivity
+- High-risk area detection for enhanced trigger sensitivity
+- Workplace pattern recognition for professional environment adjustments
+- Travel detection for enhanced monitoring during unfamiliar locations
+
+**Temporal Pattern Learning:**
+- Daily routine recognition for predictable trigger adjustment
+- Time-of-day risk assessment for appropriate sensitivity levels
+- Weekend vs weekday different trigger profiles
+- Holiday and special event trigger modifications
+
+**User Feedback Integration:**
+```typescript
+interface ContextualIntelligence {
+  activityRecognition: {
+    currentActivity: ActivityType;
+    confidence: number;
+    duration: number; // minutes in current activity
+    patterns: ActivityPattern[];
+  };
+  
+  locationContext: {
+    currentLocation: LocationContext;
+    riskLevel: 'low' | 'medium' | 'high';
+    familiarity: 'familiar' | 'somewhat_familiar' | 'unfamiliar';
+    safetyRating: number; // 0-1
+  };
+  
+  temporalContext: {
+    timeOfDay: number; // 0-23
+    dayOfWeek: number; // 0-6
+    isWeekend: boolean;
+    isHoliday: boolean;
+    timeInCurrentLocation: number; // minutes
+  };
+  
+  userFeedback: {
+    recentFalseAlarms: FalseAlarmRecord[];
+    triggerEffectiveness: TriggerEffectivenessMetric[];
+    userCorrections: UserCorrectionRecord[];
+    satisfactionRatings: SatisfactionRating[];
+  };
+}
+
+export class ContextualTriggerManager {
+  async calculateOptimalSensitivity(
+    triggerType: TriggerType,
+    context: ContextualIntelligence
+  ): Promise<SensitivityAdjustment> {
+    
+    let baseSensitivity = this.getBaseSensitivity(triggerType);
+    
+    // Activity-based adjustments
+    baseSensitivity = this.adjustForActivity(baseSensitivity, context.activityRecognition);
+    
+    // Location-based adjustments
+    baseSensitivity = this.adjustForLocation(baseSensitivity, context.locationContext);
+    
+    // Temporal adjustments
+    baseSensitivity = this.adjustForTime(baseSensitivity, context.temporalContext);
+    
+    // User feedback adjustments
+    baseSensitivity = this.adjustForFeedback(baseSensitivity, context.userFeedback);
+    
+    return {
+      adjustedSensitivity: Math.max(0.1, Math.min(1.0, baseSensitivity)),
+      confidence: this.calculateAdjustmentConfidence(context),
+      reasoning: this.generateAdjustmentReasoning(context),
+      recommendations: this.generateUserRecommendations(context),
+    };
+  }
+  
+  private adjustForActivity(
+    sensitivity: number,
+    activity: ActivityRecognition
+  ): number {
+    const adjustments = {
+      stationary: 1.0,      // Normal sensitivity
+      walking: 0.9,         // Slightly reduced
+      running: 0.7,         // Reduced for exercise
+      cycling: 0.8,         // Moderate reduction
+      driving: 0.3,         // Significantly reduced
+      sports: 0.5,          // Reduced for sports
+      sleeping: 0.2,        // Minimal sensitivity
+    };
+    
+    const adjustment = adjustments[activity.currentActivity] || 1.0;
+    return sensitivity * adjustment;
+  }
+  
+  private adjustForLocation(
+    sensitivity: number,
+    location: LocationContext
+  ): number {
+    // Increase sensitivity in unfamiliar or high-risk areas
+    if (location.familiarity === 'unfamiliar') {
+      sensitivity *= 1.2;
+    }
+    
+    if (location.riskLevel === 'high') {
+      sensitivity *= 1.3;
+    } else if (location.riskLevel === 'low') {
+      sensitivity *= 0.8;
+    }
+    
+    return sensitivity;
+  }
+}
+```
+</Accordion>
+
+## False Alarm Prevention
+
+### Intelligent Validation System
+
+<Warning>
+**Balance is Critical:** The system must prevent false alarms that could lead to "cry wolf" situations while ensuring real emergencies are never missed.
+</Warning>
+
+<Steps>
+  <Step title="Multi-Factor Validation">
+    Combine multiple sensors and data sources to confirm emergency situations
+  </Step>
+  <Step title="Grace Period Management">
+    Configurable cancellation windows that adapt based on trigger confidence
+  </Step>
+  <Step title="Pattern Recognition">
+    Learn from false alarms to improve future detection accuracy
+  </Step>
+  <Step title="User Education">
+    Help users understand and configure triggers to match their lifestyle
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript False Alarm Prevention System
+interface FalseAlarmPreventionConfig {
+  multiFactorValidation: {
+    enabled: boolean;
+    requiredFactors: number; // Minimum factors required
+    factorTypes: ValidationFactor[];
+    confidenceThreshold: number;
+  };
+  
+  gracePeriodManagement: {
+    dynamicGracePeriods: boolean;
+    basePeriodSeconds: number;
+    confidenceAdjustment: boolean;
+    userActivityAdjustment: boolean;
+  };
+  
+  patternLearning: {
+    enabled: boolean;
+    falseAlarmThreshold: number;
+    learningPeriodDays: number;
+    autoSensitivityAdjustment: boolean;
+  };
+  
+  userGuidance: {
+    onboardingTesting: boolean;
+    regularCalibration: boolean;
+    feedbackPrompts: boolean;
+    educationalNotifications: boolean;
+  };
+}
+
+type ValidationFactor = 
+  | 'accelerometer_pattern'
+  | 'gyroscope_data'
+  | 'audio_analysis'
+  | 'heart_rate_change'
+  | 'location_context'
+  | 'user_activity'
+  | 'time_pattern';
+
+export class FalseAlarmPreventionSystem {
+  async validateTriggerEvent(
+    triggerEvent: TriggerEvent,
+    context: ValidationContext
+  ): Promise<ValidationResult> {
+    
+    const validationFactors = await this.gatherValidationFactors(triggerEvent, context);
+    const confidenceScore = await this.calculateConfidenceScore(validationFactors);
+    const shouldProceed = await this.evaluateProceedCriteria(confidenceScore, context);
+    
+    if (shouldProceed) {
+      const gracePeriod = this.calculateDynamicGracePeriod(confidenceScore, context);
+      
+      return {
+        approved: true,
+        confidence: confidenceScore,
+        gracePeriodSeconds: gracePeriod,
+        validationFactors,
+        reasoning: this.generateValidationReasoning(validationFactors),
+      };
+    } else {
+      // Log for learning but don't proceed
+      await this.logRejectedTrigger(triggerEvent, validationFactors);
+      
+      return {
+        approved: false,
+        confidence: confidenceScore,
+        rejection: this.generateRejectionReason(validationFactors),
+        suggestions: this.generateUserSuggestions(triggerEvent, context),
+      };
+    }
+  }
+
+  private async gatherValidationFactors(
+    triggerEvent: TriggerEvent,
+    context: ValidationContext
+  ): Promise<ValidationFactorData[]> {
+    
+    const factors: ValidationFactorData[] = [];
+    
+    // Accelerometer pattern analysis
+    if (triggerEvent.sensorData?.accelerometer) {
+      const pattern = await this.analyzeAccelerometerPattern(
+        triggerEvent.sensorData.accelerometer
+      );
+      factors.push({
+        type: 'accelerometer_pattern',
+        confidence: pattern.confidence,
+        data: pattern,
+      });
+    }
+    
+    // Audio analysis if available
+    if (triggerEvent.audioData) {
+      const audioAnalysis = await this.analyzeAudioForEmergency(triggerEvent.audioData);
+      factors.push({
+        type: 'audio_analysis',
+        confidence: audioAnalysis.confidence,
+        data: audioAnalysis,
+      });
+    }
+    
+    // Location context validation
+    const locationContext = await this.analyzeLocationContext(context.currentLocation);
+    factors.push({
+      type: 'location_context',
+      confidence: locationContext.confidence,
+      data: locationContext,
+    });
+    
+    // User activity validation
+    const activityAnalysis = await this.analyzeUserActivity(context.recentActivity);
+    factors.push({
+      type: 'user_activity',
+      confidence: activityAnalysis.confidence,
+      data: activityAnalysis,
+    });
+    
+    return factors;
+  }
+
+  private calculateDynamicGracePeriod(
+    confidence: number,
+    context: ValidationContext
+  ): number {
+    
+    let basePeriod = this.config.gracePeriodManagement.basePeriodSeconds;
+    
+    // Adjust based on confidence
+    if (this.config.gracePeriodManagement.confidenceAdjustment) {
+      if (confidence > 0.9) {
+        basePeriod *= 0.5; // High confidence = shorter grace period
+      } else if (confidence < 0.7) {
+        basePeriod *= 1.5; // Low confidence = longer grace period
+      }
+    }
+    
+    // Adjust based on user activity
+    if (this.config.gracePeriodManagement.userActivityAdjustment) {
+      if (context.recentActivity?.type === 'sports') {
+        basePeriod *= 2; // Longer grace period during exercise
+      } else if (context.recentActivity?.type === 'sleeping') {
+        basePeriod *= 0.3; // Shorter grace period during sleep
+      }
+    }
+    
+    return Math.max(5, Math.min(60, basePeriod)); // 5-60 second range
+  }
+
+  async processFalseAlarmFeedback(
+    triggerEventId: string,
+    userFeedback: FalseAlarmFeedback
+  ): Promise<void> {
+    
+    // Record the false alarm
+    await this.recordFalseAlarm(triggerEventId, userFeedback);
+    
+    // Analyze patterns
+    const falseAlarmPattern = await this.analyzeFalseAlarmPattern(userFeedback);
+    
+    // Adjust sensitivity if needed
+    if (this.shouldAdjustSensitivity(falseAlarmPattern)) {
+      await this.adjustTriggerSensitivity(userFeedback.triggerType, falseAlarmPattern);
+    }
+    
+    // Provide user guidance
+    const guidance = await this.generateUserGuidance(falseAlarmPattern);
+    if (guidance.shouldNotify) {
+      await this.sendUserGuidanceNotification(guidance);
+    }
+    
+    // Update learning models
+    await this.updateLearningModels(triggerEventId, userFeedback);
+  }
+
+  private async analyzeFalseAlarmPattern(
+    feedback: FalseAlarmFeedback
+  ): Promise<FalseAlarmPattern> {
+    
+    const recentFalseAlarms = await this.getRecentFalseAlarms(feedback.userId, 30); // 30 days
+    
+    return {
+      frequency: recentFalseAlarms.length,
+      commonTriggers: this.identifyCommonTriggers(recentFalseAlarms),
+      timePatterns: this.identifyTimePatterns(recentFalseAlarms),
+      locationPatterns: this.identifyLocationPatterns(recentFalseAlarms),
+      activityPatterns: this.identifyActivityPatterns(recentFalseAlarms),
+      recommendations: this.generatePatternRecommendations(recentFalseAlarms),
+    };
+  }
+}
+
+interface ValidationResult {
+  approved: boolean;
+  confidence: number;
+  gracePeriodSeconds?: number;
+  validationFactors?: ValidationFactorData[];
+  reasoning?: string;
+  rejection?: string;
+  suggestions?: UserSuggestion[];
+}
+
+interface FalseAlarmFeedback {
+  triggerEventId: string;
+  userId: string;
+  triggerType: TriggerType;
+  falseAlarmReason: FalseAlarmReason;
+  userExplanation: string;
+  contextAtTime: ContextSnapshot;
+  suggestedAdjustments: SuggestedAdjustment[];
+}
+
+type FalseAlarmReason = 
+  | 'accidental_activation'
+  | 'exercise_activity'
+  | 'phone_dropped'
+  | 'vehicle_movement'
+  | 'playing_with_device'
+  | 'sensitivity_too_high'
+  | 'misunderstood_gesture'
+  | 'other';
+```
+</CodeGroup>
+
+## Integration with Safety Features
+
+### Trigger Ecosystem Integration
+
+<CardGroup cols={4}>
+  <Card title="Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    All triggers ultimately activate the emergency alert system with appropriate context
+  </Card>
+  <Card title="Location Tracking" icon="map-pin" href="/features/location-tracking">
+    Triggers include high-accuracy location data for emergency response
+  </Card>
+  <Card title="Circle of Trust" icon="users" href="/features/circle-of-trust">
+    Trigger activation immediately notifies your configured emergency contacts
+  </Card>
+  <Card title="Check-ins" icon="clock" href="/features/check-ins">
+    Failed check-ins can automatically trigger emergency protocols
+  </Card>
+</CardGroup>
+
+### Advanced Trigger Scenarios
+
+<Accordion title="Complex Trigger Combinations">
+**Multi-Modal Triggers:**
+- Combine voice commands with gesture recognition for discreet activation
+- Location-based automatic trigger sensitivity adjustment
+- Time-based trigger profile switching (day vs night sensitivity)
+- Social context awareness (alone vs with others)
+
+**Emergency Escalation Triggers:**
+- Automatic escalation when initial triggers don't receive response
+- Contact-initiated triggers when they can't reach you
+- Medical emergency triggers integrated with health monitoring devices
+- Travel emergency triggers for journey monitoring situations
+
+**Situational Trigger Profiles:**
+```typescript
+interface SituationalTriggerProfile {
+  profileName: string;
+  activationConditions: ActivationCondition[];
+  triggerAdjustments: TriggerAdjustment[];
+  duration: ProfileDuration;
+  
+  // Examples:
+  // "Date Night" profile: Enhanced sensitivity, discreet triggers
+  // "Exercise" profile: Reduced sensitivity, fall detection disabled
+  // "Travel" profile: Enhanced monitoring, location-based adjustments
+  // "Work" profile: Professional-appropriate triggers only
+}
+
+type ActivationCondition = 
+  | 'manual_activation'
+  | 'location_based'
+  | 'time_based'
+  | 'calendar_event'
+  | 'contact_proximity';
+
+// Date night profile example
+const dateNightProfile: SituationalTriggerProfile = {
+  profileName: "Date Night",
+  activationConditions: [
+    { type: 'calendar_event', keywords: ['date', 'dinner', 'meet'] },
+    { type: 'time_based', timeRange: { start: '18:00', end: '02:00' } }
+  ],
+  triggerAdjustments: [
+    { triggerType: 'voice_activation', enabled: true, sensitivity: 'high' },
+    { triggerType: 'shake_gesture', enabled: true, discreet: true },
+    { triggerType: 'hardware_buttons', enabled: true, stealth: true }
+  ],
+  duration: { type: 'event_based', maxHours: 8 }
+};
+```
+</Accordion>
+
+## Privacy and Security
+
+### Trigger Data Protection
+
+<Info>
+**Sensitive Data Handling:** Trigger systems handle sensitive biometric and behavioral data. All processing is done locally when possible, with encrypted transmission and storage.
+</Info>
+
+<CardGroup cols={3}>
+  <Card title="Local Processing" icon="cpu">
+    Voice recognition and gesture analysis processed on-device for privacy
+  </Card>
+  <Card title="Encrypted Storage" icon="lock">
+    All trigger configuration and sensor data encrypted with user-specific keys
+  </Card>
+  <Card title="Minimal Data Collection" icon="minimize">
+    Only essential data collected for trigger functionality and learning
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+## Implementation Guidelines
+
+<Warning>
+**Critical Safety Trigger Requirements:**
+- Multiple redundant trigger methods must be available for reliability
+- Trigger sensitivity must be carefully balanced to prevent false alarms while ensuring real emergencies are detected
+- All trigger methods must work offline and in low-connectivity situations
+- Trigger configuration must be easily testable without activating real emergency alerts
+- User feedback and learning systems must continuously improve trigger accuracy
+- Privacy-preserving processing must be used for all biometric and behavioral data
+</Warning>
+
+<CardGroup cols={3}>
+  <Card title="Test Your Triggers" icon="test-tube" href="/development/testing-strategy">
+    Learn how to safely test all trigger methods without sending real emergency alerts
+  </Card>
+  <Card title="Configure Emergency Alerts" icon="bell" href="/features/emergency-alerts">
+    Set up what happens when safety triggers are activated
+  </Card>
+  <Card title="Privacy Settings" icon="shield" href="/features/circle-of-trust">
+    Configure privacy and data handling preferences for trigger systems
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Set Up Your Triggers" icon="settings" href="/quickstart/setup">
+    Configure and test your preferred safety trigger methods
+  </Card>
+  <Card title="Customize Sensitivity" icon="sliders" href="/features/emergency-alerts">
+    Learn how to adjust trigger sensitivity for your lifestyle and needs
+  </Card>
+</CardGroup>

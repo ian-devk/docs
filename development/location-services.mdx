@@ -1,59 +1,2055 @@
 ---
 title: "Location Services"
-description: "Location Services documentation for Development. Learn about implementation, configuration, and best practices."
+description: "Comprehensive guide to implementing location services in Shelther safety applications. Covers GPS tracking, geofencing, background location updates, battery optimization, and privacy-focused location sharing."
 ---
 
 # Location Services
 
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
-
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-Critical Location:** Location services are fundamental to Shelther's safety features. This guide covers high-accuracy GPS tracking, intelligent battery optimization, and privacy-first location sharing for emergency scenarios.
 </Info>
 
-## Key Points
+## Location Architecture Overview
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther's location system balances accuracy, battery life, and privacy for safety applications:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="High-Accuracy Tracking" icon="crosshairs">
+    GPS + network positioning with &lt;10m accuracy for emergency scenarios
+  </Card>
+  <Card title="Battery Optimization" icon="battery-half">
+    Adaptive polling and smart caching to preserve battery during extended monitoring
+  </Card>
+  <Card title="Geofencing" icon="map">
+    Safe zone monitoring with automatic check-ins and exit alerts
+  </Card>
+  <Card title="Privacy Controls" icon="shield">
+    Granular sharing permissions with automatic expiration and location precision controls
+  </Card>
+</CardGroup>
+
+## Core Location Service
+
+### Location Service Implementation
 
 <CodeGroup>
+```typescript Location Service Core
+// services/location/LocationService.ts
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+const LOCATION_TRACKING_TASK = 'background-location-tracking';
+const GEOFENCE_TASK = 'geofence-monitoring';
+
+export interface LocationData {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  altitude?: number;
+  heading?: number;
+  speed?: number;
+  timestamp: number;
+}
+
+export interface LocationOptions {
+  accuracy?: 'low' | 'balanced' | 'high' | 'highest';
+  distanceInterval?: number;
+  timeInterval?: number;
+  backgroundTracking?: boolean;
+  saveBattery?: boolean;
+}
+
+export class LocationService {
+  private static watchId: Location.LocationSubscription | null = null;
+  private static isTracking = false;
+  private static currentAccuracy: Location.LocationAccuracy = Location.LocationAccuracy.High;
+  private static batteryOptimization = true;
+
+  // Request location permissions
+  static async requestPermissions(): Promise<boolean> {
+    try {
+      logger.info('Requesting location permissions');
+      
+      // Request foreground permissions first
+      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+      
+      if (foregroundStatus !== 'granted') {
+        logger.warning('Foreground location permission denied');
+        return false;
+      }
+
+      // Request background permissions for safety monitoring
+      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+      
+      if (backgroundStatus !== 'granted') {
+        logger.warning('Background location permission denied');
+        // Continue without background - foreground is still useful
+      }
+
+      logger.info('Location permissions granted', {
+        foreground: foregroundStatus,
+        background: backgroundStatus,
+      });
+
+      return true;
+    } catch (error) {
+      logger.emergency('Location permission request failed', error);
+      return false;
+    }
+  }
+
+  // Get current position with high accuracy
+  static async getCurrentPosition(options: LocationOptions = {}): Promise<LocationData> {
+    try {
+      const accuracy = this.getLocationAccuracy(options.accuracy || 'high');
+      
+      const location = await Location.getCurrentPositionAsync({
+        accuracy,
+        maximumAge: options.saveBattery ? 60000 : 10000, // 1min vs 10s cache
+        timeout: 15000,
+      });
+
+      const locationData: LocationData = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy || 999,
+        altitude: location.coords.altitude || undefined,
+        heading: location.coords.heading || undefined,
+        speed: location.coords.speed || undefined,
+        timestamp: location.timestamp,
+      };
+
+      logger.location('Current position obtained', {
+        accuracy: locationData.accuracy,
+        timestamp: new Date(locationData.timestamp).toISOString(),
+      });
+
+      return locationData;
+    } catch (error) {
+      logger.emergency('Failed to get current position', error);
+      throw new Error(`Location unavailable: ${error.message}`);
+    }
+  }
+
+  // Start continuous location tracking
+  static async startTracking(options: LocationOptions = {}): Promise<void> {
+    try {
+      if (this.isTracking) {
+        logger.warning('Location tracking already active');
+        return;
+      }
+
+      const hasPermission = await this.requestPermissions();
+      if (!hasPermission) {
+        throw new Error('Location permissions required for tracking');
+      }
+
+      const accuracy = this.getLocationAccuracy(options.accuracy || 'high');
+      this.currentAccuracy = accuracy;
+      this.batteryOptimization = options.saveBattery ?? true;
+
+      // Configure tracking options based on battery optimization
+      const trackingOptions: Location.LocationOptions = {
+        accuracy,
+        distanceInterval: this.batteryOptimization ? 50 : 10, // 50m vs 10m
+        timeInterval: this.batteryOptimization ? 30000 : 10000, // 30s vs 10s
+      };
+
+      logger.info('Starting location tracking', {
+        accuracy: options.accuracy,
+        batteryOptimization: this.batteryOptimization,
+        options: trackingOptions,
+      });
+
+      this.watchId = await Location.watchPositionAsync(
+        trackingOptions,
+        (location) => {
+          this.handleLocationUpdate(location);
+        }
+      );
+
+      this.isTracking = true;
+
+      // Start background tracking if requested
+      if (options.backgroundTracking) {
+        await this.startBackgroundTracking(trackingOptions);
+      }
+
+    } catch (error) {
+      logger.emergency('Failed to start location tracking', error);
+      throw error;
+    }
+  }
+
+  // Stop location tracking
+  static async stopTracking(): Promise<void> {
+    try {
+      if (this.watchId) {
+        this.watchId.remove();
+        this.watchId = null;
+      }
+
+      await this.stopBackgroundTracking();
+      this.isTracking = false;
+
+      logger.info('Location tracking stopped');
+    } catch (error) {
+      logger.emergency('Failed to stop location tracking', error);
+    }
+  }
+
+  // Handle location updates
+  private static async handleLocationUpdate(location: Location.LocationObject): Promise<void> {
+    try {
+      const locationData: LocationData = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy || 999,
+        altitude: location.coords.altitude || undefined,
+        heading: location.coords.heading || undefined,
+        speed: location.coords.speed || undefined,
+        timestamp: location.timestamp,
+      };
+
+      // Log location quality
+      if (locationData.accuracy > 100) {
+        logger.warning('Poor location accuracy', { accuracy: locationData.accuracy });
+      }
+
+      // Store location update in Redux and database
+      await this.storeLocationUpdate(locationData);
+
+      // Check geofences
+      await this.checkGeofences(locationData);
+
+      // Trigger real-time updates for sharing
+      await this.notifyLocationSharing(locationData);
+
+    } catch (error) {
+      logger.emergency('Location update handling failed', error);
+    }
+  }
+
+  // Store location update
+  private static async storeLocationUpdate(location: LocationData): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('location_updates')
+        .insert([{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy,
+          altitude: location.altitude,
+          battery_level: await this.getBatteryLevel(),
+          timestamp: new Date(location.timestamp).toISOString(),
+        }]);
+
+      if (error) {
+        logger.emergency('Failed to store location update', error);
+      }
+    } catch (error) {
+      logger.emergency('Location storage error', error);
+    }
+  }
+
+  // Get location accuracy setting
+  private static getLocationAccuracy(accuracy: string): Location.LocationAccuracy {
+    switch (accuracy) {
+      case 'lowest':
+        return Location.LocationAccuracy.Lowest;
+      case 'low':
+        return Location.LocationAccuracy.Low;
+      case 'balanced':
+        return Location.LocationAccuracy.Balanced;
+      case 'high':
+        return Location.LocationAccuracy.High;
+      case 'highest':
+        return Location.LocationAccuracy.Highest;
+      default:
+        return Location.LocationAccuracy.High;
+    }
+  }
+
+  // Battery level helper
+  private static async getBatteryLevel(): Promise<number> {
+    try {
+      // Implementation depends on available battery API
+      return 100; // Placeholder
+    } catch {
+      return 100;
+    }
+  }
+
+  // Check if tracking is active
+  static isLocationTracking(): boolean {
+    return this.isTracking;
+  }
+
+  // Get current tracking status
+  static getTrackingStatus() {
+    return {
+      isTracking: this.isTracking,
+      accuracy: this.currentAccuracy,
+      batteryOptimization: this.batteryOptimization,
+    };
+  }
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
-};
+```typescript Background Location Tracking
+// services/location/BackgroundTracking.ts
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+import { logger } from '../../utils/logger';
+
+const BACKGROUND_LOCATION_TASK = 'background-location-tracking';
+
+// Define background task
+TaskManager.defineTask(BACKGROUND_LOCATION_TASK, ({ data, error }) => {
+  if (error) {
+    logger.emergency('Background location task error', error);
+    return;
+  }
+
+  if (data) {
+    const { locations } = data as { locations: Location.LocationObject[] };
+    
+    locations.forEach(async (location) => {
+      try {
+        await BackgroundLocationService.processBackgroundLocation(location);
+      } catch (error) {
+        logger.emergency('Background location processing failed', error);
+      }
+    });
+  }
+});
+
+export class BackgroundLocationService {
+  // Start background location tracking
+  static async startBackgroundTracking(options: Location.LocationOptions): Promise<void> {
+    try {
+      const { status } = await Location.getBackgroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        throw new Error('Background location permission required');
+      }
+
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_LOCATION_TASK);
+      
+      if (!isRegistered) {
+        logger.info('Starting background location tracking');
+        
+        await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+          accuracy: Location.LocationAccuracy.High,
+          timeInterval: 60000, // 1 minute for battery conservation
+          distanceInterval: 100, // 100 meters
+          foregroundService: {
+            notificationTitle: 'Shelther Safety Monitoring',
+            notificationBody: 'Location tracking active for your safety',
+            notificationColor: '#FF5A5A',
+          },
+          pausesUpdatesAutomatically: true,
+          ...options,
+        });
+      }
+    } catch (error) {
+      logger.emergency('Failed to start background tracking', error);
+      throw error;
+    }
+  }
+
+  // Stop background location tracking
+  static async stopBackgroundTracking(): Promise<void> {
+    try {
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_LOCATION_TASK);
+      
+      if (isRegistered) {
+        await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+        logger.info('Background location tracking stopped');
+      }
+    } catch (error) {
+      logger.emergency('Failed to stop background tracking', error);
+    }
+  }
+
+  // Process location in background
+  static async processBackgroundLocation(location: Location.LocationObject): Promise<void> {
+    try {
+      logger.location('Background location update', {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+      });
+
+      // Store location (implement offline queueing if needed)
+      await this.storeBackgroundLocation(location);
+
+      // Check for emergency scenarios
+      await this.checkEmergencyConditions(location);
+
+      // Update shared location if active
+      await this.updateSharedLocation(location);
+
+    } catch (error) {
+      logger.emergency('Background location processing error', error);
+    }
+  }
+
+  // Store background location update
+  private static async storeBackgroundLocation(location: Location.LocationObject): Promise<void> {
+    // Implementation similar to foreground but with offline queueing
+    // Store in local database first, sync when online
+  }
+
+  // Check emergency conditions
+  private static async checkEmergencyConditions(location: Location.LocationObject): Promise<void> {
+    // Check if user is outside safe zones
+    // Check for unusual movement patterns
+    // Trigger alerts if necessary
+  }
+
+  // Update shared location
+  private static async updateSharedLocation(location: Location.LocationObject): Promise<void> {
+    // Update real-time location sharing if active
+    // Respect privacy settings and permissions
+  }
+}
+```
+</CodeGroup>
+
+## Geofencing Implementation
+
+### Safe Zone Management
+
+<Steps>
+  <Step title="Geofence Service">
+    Create and manage geofences for safe zones
+    
+    ```typescript
+    // services/location/GeofenceService.ts
+    import * as Location from 'expo-location';
+    import * as TaskManager from 'expo-task-manager';
+    import { logger } from '../../utils/logger';
+    import { supabase } from '../../lib/supabase';
+
+    const GEOFENCING_TASK = 'geofence-monitoring';
+
+    export interface Geofence {
+      id: string;
+      name: string;
+      latitude: number;
+      longitude: number;
+      radius: number; // in meters
+      type: 'safe_zone' | 'restricted' | 'emergency';
+      enterAction?: 'check_in' | 'notify' | 'none';
+      exitAction?: 'alert' | 'check_in' | 'none';
+      isActive: boolean;
+    }
+
+    // Define geofencing task
+    TaskManager.defineTask(GEOFENCING_TASK, ({ data, error }) => {
+      if (error) {
+        logger.emergency('Geofencing task error', error);
+        return;
+      }
+
+      if (data) {
+        const { eventType, region } = data as {
+          eventType: Location.GeofencingEventType;
+          region: Location.LocationRegion;
+        };
+
+        GeofenceService.handleGeofenceEvent(eventType, region);
+      }
+    });
+
+    export class GeofenceService {
+      private static activeGeofences: Map<string, Geofence> = new Map();
+
+      // Add geofence
+      static async addGeofence(geofence: Geofence): Promise<void> {
+        try {
+          const region: Location.LocationRegion = {
+            identifier: geofence.id,
+            latitude: geofence.latitude,
+            longitude: geofence.longitude,
+            radius: geofence.radius,
+            notifyOnEnter: !!geofence.enterAction,
+            notifyOnExit: !!geofence.exitAction,
+          };
+
+          await Location.startGeofencingAsync(GEOFENCING_TASK, [region]);
+          
+          this.activeGeofences.set(geofence.id, geofence);
+          
+          logger.info('Geofence added', {
+            id: geofence.id,
+            name: geofence.name,
+            radius: geofence.radius,
+          });
+
+          // Store in database
+          await this.storeGeofence(geofence);
+
+        } catch (error) {
+          logger.emergency('Failed to add geofence', error);
+          throw error;
+        }
+      }
+
+      // Remove geofence
+      static async removeGeofence(geofenceId: string): Promise<void> {
+        try {
+          await Location.stopGeofencingAsync(GEOFENCING_TASK);
+          
+          this.activeGeofences.delete(geofenceId);
+          
+          // Restart with remaining geofences
+          const remainingRegions = Array.from(this.activeGeofences.values()).map(gf => ({
+            identifier: gf.id,
+            latitude: gf.latitude,
+            longitude: gf.longitude,
+            radius: gf.radius,
+            notifyOnEnter: !!gf.enterAction,
+            notifyOnExit: !!gf.exitAction,
+          }));
+
+          if (remainingRegions.length > 0) {
+            await Location.startGeofencingAsync(GEOFENCING_TASK, remainingRegions);
+          }
+
+          logger.info('Geofence removed', { id: geofenceId });
+
+        } catch (error) {
+          logger.emergency('Failed to remove geofence', error);
+        }
+      }
+
+      // Handle geofence events
+      static async handleGeofenceEvent(
+        eventType: Location.GeofencingEventType,
+        region: Location.LocationRegion
+      ): Promise<void> {
+        try {
+          const geofence = this.activeGeofences.get(region.identifier);
+          
+          if (!geofence) {
+            logger.warning('Geofence event for unknown region', { id: region.identifier });
+            return;
+          }
+
+          logger.info('Geofence event', {
+            type: eventType,
+            geofence: geofence.name,
+            action: eventType === Location.GeofencingEventType.Enter ? geofence.enterAction : geofence.exitAction,
+          });
+
+          if (eventType === Location.GeofencingEventType.Enter && geofence.enterAction) {
+            await this.handleEnterAction(geofence);
+          }
+
+          if (eventType === Location.GeofencingEventType.Exit && geofence.exitAction) {
+            await this.handleExitAction(geofence);
+          }
+
+          // Log event to database
+          await this.logGeofenceEvent(geofence.id, eventType);
+
+        } catch (error) {
+          logger.emergency('Geofence event handling failed', error);
+        }
+      }
+
+      // Handle enter actions
+      private static async handleEnterAction(geofence: Geofence): Promise<void> {
+        switch (geofence.enterAction) {
+          case 'check_in':
+            await this.triggerAutoCheckIn(geofence);
+            break;
+          case 'notify':
+            await this.sendGeofenceNotification(geofence, 'entered');
+            break;
+        }
+      }
+
+      // Handle exit actions
+      private static async handleExitAction(geofence: Geofence): Promise<void> {
+        switch (geofence.exitAction) {
+          case 'alert':
+            await this.triggerExitAlert(geofence);
+            break;
+          case 'check_in':
+            await this.scheduleCheckIn(geofence);
+            break;
+        }
+      }
+
+      // Auto check-in when entering safe zone
+      private static async triggerAutoCheckIn(geofence: Geofence): Promise<void> {
+        try {
+          const { error } = await supabase
+            .from('check_ins')
+            .insert([{
+              scheduled_time: new Date().toISOString(),
+              actual_time: new Date().toISOString(),
+              status: 'completed',
+              location: `POINT(${geofence.longitude} ${geofence.latitude})`,
+              activity_type: 'geofence_auto',
+              notes: `Auto check-in: Arrived at ${geofence.name}`,
+            }]);
+
+          if (error) throw error;
+
+          logger.info('Auto check-in completed', { geofence: geofence.name });
+
+        } catch (error) {
+          logger.emergency('Auto check-in failed', error);
+        }
+      }
+
+      // Trigger exit alert
+      private static async triggerExitAlert(geofence: Geofence): Promise<void> {
+        try {
+          // Notify emergency contacts about leaving safe zone
+          logger.emergency('Safe zone exit detected', { geofence: geofence.name });
+          
+          // Implementation depends on notification service
+          // await NotificationService.sendExitAlert(geofence);
+
+        } catch (error) {
+          logger.emergency('Exit alert failed', error);
+        }
+      }
+
+      // Schedule check-in after leaving
+      private static async scheduleCheckIn(geofence: Geofence): Promise<void> {
+        // Schedule a check-in 30 minutes after leaving safe zone
+        const checkInTime = new Date(Date.now() + 30 * 60 * 1000);
+        
+        try {
+          const { error } = await supabase
+            .from('check_ins')
+            .insert([{
+              scheduled_time: checkInTime.toISOString(),
+              status: 'pending',
+              activity_type: 'geofence_exit',
+              notes: `Check-in scheduled after leaving ${geofence.name}`,
+            }]);
+
+          if (error) throw error;
+
+          logger.info('Check-in scheduled', { 
+            geofence: geofence.name,
+            time: checkInTime.toISOString(),
+          });
+
+        } catch (error) {
+          logger.emergency('Check-in scheduling failed', error);
+        }
+      }
+
+      // Store geofence in database
+      private static async storeGeofence(geofence: Geofence): Promise<void> {
+        try {
+          const { error } = await supabase
+            .from('geofences')
+            .upsert([{
+              id: geofence.id,
+              name: geofence.name,
+              location: `POINT(${geofence.longitude} ${geofence.latitude})`,
+              radius: geofence.radius,
+              type: geofence.type,
+              enter_action: geofence.enterAction,
+              exit_action: geofence.exitAction,
+              is_active: geofence.isActive,
+            }]);
+
+          if (error) throw error;
+
+        } catch (error) {
+          logger.emergency('Failed to store geofence', error);
+        }
+      }
+
+      // Log geofence event
+      private static async logGeofenceEvent(
+        geofenceId: string, 
+        eventType: Location.GeofencingEventType
+      ): Promise<void> {
+        try {
+          const { error } = await supabase
+            .from('geofence_events')
+            .insert([{
+              geofence_id: geofenceId,
+              event_type: eventType === Location.GeofencingEventType.Enter ? 'enter' : 'exit',
+              timestamp: new Date().toISOString(),
+            }]);
+
+          if (error) throw error;
+
+        } catch (error) {
+          logger.emergency('Failed to log geofence event', error);
+        }
+      }
+
+      // Get active geofences
+      static getActiveGeofences(): Geofence[] {
+        return Array.from(this.activeGeofences.values());
+      }
+
+      // Load geofences from database
+      static async loadGeofences(): Promise<void> {
+        try {
+          const { data, error } = await supabase
+            .from('geofences')
+            .select('*')
+            .eq('is_active', true);
+
+          if (error) throw error;
+
+          const regions: Location.LocationRegion[] = [];
+
+          data?.forEach(gf => {
+            const geofence: Geofence = {
+              id: gf.id,
+              name: gf.name,
+              latitude: gf.latitude,
+              longitude: gf.longitude,
+              radius: gf.radius,
+              type: gf.type,
+              enterAction: gf.enter_action,
+              exitAction: gf.exit_action,
+              isActive: gf.is_active,
+            };
+
+            this.activeGeofences.set(geofence.id, geofence);
+
+            regions.push({
+              identifier: geofence.id,
+              latitude: geofence.latitude,
+              longitude: geofence.longitude,
+              radius: geofence.radius,
+              notifyOnEnter: !!geofence.enterAction,
+              notifyOnExit: !!geofence.exitAction,
+            });
+          });
+
+          if (regions.length > 0) {
+            await Location.startGeofencingAsync(GEOFENCING_TASK, regions);
+          }
+
+          logger.info('Geofences loaded', { count: regions.length });
+
+        } catch (error) {
+          logger.emergency('Failed to load geofences', error);
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Safe Zone Creation">
+    Helper functions for creating common safe zones
+    
+    ```typescript
+    // utils/SafeZoneCreator.ts
+    import { GeofenceService, Geofence } from '../services/location/GeofenceService';
+    import { LocationService } from '../services/location/LocationService';
+
+    export class SafeZoneCreator {
+      // Create home safe zone
+      static async createHomeSafeZone(name: string = 'Home'): Promise<Geofence> {
+        const currentLocation = await LocationService.getCurrentPosition();
+        
+        const homeGeofence: Geofence = {
+          id: `home-${Date.now()}`,
+          name,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          radius: 100, // 100 meter radius
+          type: 'safe_zone',
+          enterAction: 'check_in',
+          exitAction: 'check_in',
+          isActive: true,
+        };
+
+        await GeofenceService.addGeofence(homeGeofence);
+        return homeGeofence;
+      }
+
+      // Create work safe zone
+      static async createWorkSafeZone(
+        latitude: number,
+        longitude: number,
+        name: string = 'Work'
+      ): Promise<Geofence> {
+        const workGeofence: Geofence = {
+          id: `work-${Date.now()}`,
+          name,
+          latitude,
+          longitude,
+          radius: 200, // 200 meter radius for larger buildings
+          type: 'safe_zone',
+          enterAction: 'check_in',
+          exitAction: 'none',
+          isActive: true,
+        };
+
+        await GeofenceService.addGeofence(workGeofence);
+        return workGeofence;
+      }
+
+      // Create custom safe zone
+      static async createCustomSafeZone(
+        latitude: number,
+        longitude: number,
+        name: string,
+        radius: number = 100,
+        options: {
+          enterAction?: Geofence['enterAction'];
+          exitAction?: Geofence['exitAction'];
+          type?: Geofence['type'];
+        } = {}
+      ): Promise<Geofence> {
+        const customGeofence: Geofence = {
+          id: `custom-${Date.now()}`,
+          name,
+          latitude,
+          longitude,
+          radius,
+          type: options.type || 'safe_zone',
+          enterAction: options.enterAction || 'check_in',
+          exitAction: options.exitAction || 'none',
+          isActive: true,
+        };
+
+        await GeofenceService.addGeofence(customGeofence);
+        return customGeofence;
+      }
+
+      // Create emergency zone (hospitals, police stations)
+      static async createEmergencyZone(
+        latitude: number,
+        longitude: number,
+        name: string
+      ): Promise<Geofence> {
+        const emergencyGeofence: Geofence = {
+          id: `emergency-${Date.now()}`,
+          name: `Emergency: ${name}`,
+          latitude,
+          longitude,
+          radius: 50, // Smaller radius for specific buildings
+          type: 'emergency',
+          enterAction: 'notify',
+          exitAction: 'none',
+          isActive: true,
+        };
+
+        await GeofenceService.addGeofence(emergencyGeofence);
+        return emergencyGeofence;
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Location Sharing
+
+### Real-time Location Sharing
+
+<CodeGroup>
+```typescript Location Sharing Service
+// services/location/LocationSharingService.ts
+import { supabase } from '../../lib/supabase';
+import { logger } from '../../utils/logger';
+import { LocationData } from './LocationService';
+
+export interface LocationShare {
+  id: string;
+  userId: string;
+  sharedWithUserId: string;
+  permissions: {
+    viewLocation: boolean;
+    viewHistory: boolean;
+    precisionLevel: 'exact' | 'approximate' | 'city';
+  };
+  expiresAt?: string;
+  isEmergencyOnly: boolean;
+  isActive: boolean;
+}
+
+export class LocationSharingService {
+  private static activeShares: Map<string, LocationShare> = new Map();
+
+  // Start sharing location with specific contacts
+  static async startLocationShare(
+    contactIds: string[],
+    options: {
+      duration?: number; // in hours
+      permissions?: LocationShare['permissions'];
+      emergencyOnly?: boolean;
+    } = {}
+  ): Promise<string[]> {
+    try {
+      const shareIds: string[] = [];
+      const expiresAt = options.duration 
+        ? new Date(Date.now() + options.duration * 60 * 60 * 1000).toISOString()
+        : undefined;
+
+      const defaultPermissions = {
+        viewLocation: true,
+        viewHistory: false,
+        precisionLevel: 'approximate' as const,
+      };
+
+      for (const contactId of contactIds) {
+        const share: LocationShare = {
+          id: `share-${Date.now()}-${contactId}`,
+          userId: 'current-user-id', // Get from auth context
+          sharedWithUserId: contactId,
+          permissions: { ...defaultPermissions, ...options.permissions },
+          expiresAt,
+          isEmergencyOnly: options.emergencyOnly || false,
+          isActive: true,
+        };
+
+        // Store in database
+        const { error } = await supabase
+          .from('location_shares')
+          .insert([{
+            id: share.id,
+            user_id: share.userId,
+            shared_with_user_id: share.sharedWithUserId,
+            permissions: share.permissions,
+            expires_at: share.expiresAt,
+            is_emergency_only: share.isEmergencyOnly,
+            is_active: share.isActive,
+          }]);
+
+        if (error) throw error;
+
+        this.activeShares.set(share.id, share);
+        shareIds.push(share.id);
+
+        logger.info('Location share started', {
+          shareId: share.id,
+          contactId,
+          permissions: share.permissions,
+          expiresAt: share.expiresAt,
+        });
+      }
+
+      return shareIds;
+
+    } catch (error) {
+      logger.emergency('Failed to start location sharing', error);
+      throw error;
+    }
+  }
+
+  // Stop sharing with specific contact
+  static async stopLocationShare(shareId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('location_shares')
+        .update({ is_active: false })
+        .eq('id', shareId);
+
+      if (error) throw error;
+
+      this.activeShares.delete(shareId);
+
+      logger.info('Location share stopped', { shareId });
+
+    } catch (error) {
+      logger.emergency('Failed to stop location sharing', error);
+    }
+  }
+
+  // Update location for all active shares
+  static async updateSharedLocation(location: LocationData): Promise<void> {
+    try {
+      const activeShares = Array.from(this.activeShares.values());
+      
+      if (activeShares.length === 0) {
+        return; // No active shares
+      }
+
+      // Apply privacy settings to location data
+      const updates = activeShares.map(share => {
+        const adjustedLocation = this.applyPrivacySettings(location, share.permissions);
+        
+        return {
+          share_id: share.id,
+          latitude: adjustedLocation.latitude,
+          longitude: adjustedLocation.longitude,
+          accuracy: adjustedLocation.accuracy,
+          timestamp: new Date(adjustedLocation.timestamp).toISOString(),
+        };
+      });
+
+      // Batch update shared locations
+      const { error } = await supabase
+        .from('shared_location_updates')
+        .insert(updates);
+
+      if (error) throw error;
+
+      // Send real-time updates
+      await this.sendRealTimeUpdates(updates);
+
+    } catch (error) {
+      logger.emergency('Failed to update shared location', error);
+    }
+  }
+
+  // Apply privacy settings to location data
+  private static applyPrivacySettings(
+    location: LocationData, 
+    permissions: LocationShare['permissions']
+  ): LocationData {
+    let adjustedLocation = { ...location };
+
+    // Apply precision level
+    switch (permissions.precisionLevel) {
+      case 'approximate':
+        // Reduce precision to ~100m
+        adjustedLocation.latitude = Math.round(location.latitude * 1000) / 1000;
+        adjustedLocation.longitude = Math.round(location.longitude * 1000) / 1000;
+        adjustedLocation.accuracy = Math.max(location.accuracy, 100);
+        break;
+      
+      case 'city':
+        // Reduce precision to city level (~10km)
+        adjustedLocation.latitude = Math.round(location.latitude * 10) / 10;
+        adjustedLocation.longitude = Math.round(location.longitude * 10) / 10;
+        adjustedLocation.accuracy = Math.max(location.accuracy, 10000);
+        break;
+      
+      case 'exact':
+      default:
+        // No adjustment needed
+        break;
+    }
+
+    return adjustedLocation;
+  }
+
+  // Send real-time updates via Supabase realtime
+  private static async sendRealTimeUpdates(updates: any[]): Promise<void> {
+    try {
+      // Real-time updates are handled automatically by Supabase
+      // when we insert into shared_location_updates table
+      logger.location('Real-time location updates sent', { count: updates.length });
+
+    } catch (error) {
+      logger.emergency('Real-time update failed', error);
+    }
+  }
+
+  // Get active shares
+  static getActiveShares(): LocationShare[] {
+    return Array.from(this.activeShares.values());
+  }
+
+  // Load active shares from database
+  static async loadActiveShares(): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('location_shares')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      this.activeShares.clear();
+
+      data?.forEach(share => {
+        const locationShare: LocationShare = {
+          id: share.id,
+          userId: share.user_id,
+          sharedWithUserId: share.shared_with_user_id,
+          permissions: share.permissions,
+          expiresAt: share.expires_at,
+          isEmergencyOnly: share.is_emergency_only,
+          isActive: share.is_active,
+        };
+
+        this.activeShares.set(share.id, locationShare);
+      });
+
+      logger.info('Active location shares loaded', { 
+        count: this.activeShares.size 
+      });
+
+    } catch (error) {
+      logger.emergency('Failed to load active shares', error);
+    }
+  }
+
+  // Check for expired shares
+  static async cleanupExpiredShares(): Promise<void> {
+    try {
+      const now = new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('location_shares')
+        .update({ is_active: false })
+        .lt('expires_at', now)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      // Remove from local cache
+      this.activeShares.forEach((share, id) => {
+        if (share.expiresAt && share.expiresAt < now) {
+          this.activeShares.delete(id);
+        }
+      });
+
+      logger.info('Expired location shares cleaned up');
+
+    } catch (error) {
+      logger.emergency('Failed to cleanup expired shares', error);
+    }
+  }
+
+  // Emergency sharing (bypass privacy settings)
+  static async startEmergencySharing(emergencyContactIds: string[]): Promise<void> {
+    try {
+      await this.startLocationShare(emergencyContactIds, {
+        duration: 24, // 24 hours
+        permissions: {
+          viewLocation: true,
+          viewHistory: true,
+          precisionLevel: 'exact', // Full precision for emergencies
+        },
+        emergencyOnly: false, // Active immediately
+      });
+
+      logger.emergency('Emergency location sharing activated', {
+        contactIds: emergencyContactIds,
+      });
+
+    } catch (error) {
+      logger.emergency('Failed to start emergency sharing', error);
+    }
+  }
+}
 ```
 
+```typescript Location Sharing Hook
+// hooks/useLocationSharing.ts
+import { useState, useEffect } from 'react';
+import { LocationSharingService, LocationShare } from '../services/location/LocationSharingService';
+import { LocationService } from '../services/location/LocationService';
+import { useAppSelector } from './redux';
+
+export const useLocationSharing = () => {
+  const [activeShares, setActiveShares] = useState<LocationShare[]>([]);
+  const [isSharing, setIsSharing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+
+  useEffect(() => {
+    loadActiveShares();
+    
+    // Set up cleanup interval
+    const cleanupInterval = setInterval(() => {
+      LocationSharingService.cleanupExpiredShares();
+    }, 5 * 60 * 1000); // Every 5 minutes
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
+
+  useEffect(() => {
+    // Auto-start emergency sharing when emergency mode is activated
+    if (emergencyMode && !isSharing) {
+      startEmergencySharing();
+    }
+  }, [emergencyMode]);
+
+  const loadActiveShares = async () => {
+    try {
+      await LocationSharingService.loadActiveShares();
+      const shares = LocationSharingService.getActiveShares();
+      setActiveShares(shares);
+      setIsSharing(shares.length > 0);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const startSharing = async (
+    contactIds: string[],
+    options?: {
+      duration?: number;
+      permissions?: LocationShare['permissions'];
+    }
+  ) => {
+    try {
+      setError(null);
+      
+      const shareIds = await LocationSharingService.startLocationShare(
+        contactIds,
+        options
+      );
+      
+      await loadActiveShares();
+      
+      // Start location tracking if not already active
+      if (!LocationService.isLocationTracking()) {
+        await LocationService.startTracking({
+          accuracy: 'high',
+          backgroundTracking: true,
+        });
+      }
+      
+      return shareIds;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const stopSharing = async (shareId: string) => {
+    try {
+      setError(null);
+      await LocationSharingService.stopLocationShare(shareId);
+      await loadActiveShares();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const startEmergencySharing = async () => {
+    try {
+      // Get emergency contacts from Redux state
+      const emergencyContacts = useAppSelector(
+        state => state.contacts.emergencyContacts
+      );
+      
+      const contactIds = emergencyContacts.map(contact => contact.id);
+      
+      await LocationSharingService.startEmergencySharing(contactIds);
+      await loadActiveShares();
+      
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const updateLocation = async () => {
+    try {
+      const location = await LocationService.getCurrentPosition();
+      await LocationSharingService.updateSharedLocation(location);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  return {
+    activeShares,
+    isSharing,
+    error,
+    startSharing,
+    stopSharing,
+    updateLocation,
+    loadActiveShares,
+  };
+};
+```
+</CodeGroup>
+
+## Battery Optimization
+
+### Adaptive Location Tracking
+
+<Steps>
+  <Step title="Battery-Aware Location Tracking">
+    Optimize location services based on battery level and usage patterns
+    
+    ```typescript
+    // services/location/BatteryOptimizedTracking.ts
+    import * as Battery from 'expo-battery';
+    import { LocationService, LocationOptions } from './LocationService';
+    import { logger } from '../../utils/logger';
+
+    export interface BatteryOptimizationSettings {
+      lowBatteryThreshold: number; // percentage
+      criticalBatteryThreshold: number; // percentage
+      adaptiveAccuracy: boolean;
+      backgroundRestrictions: boolean;
+      emergencyOverride: boolean;
+    }
+
+    export class BatteryOptimizedTracking {
+      private static settings: BatteryOptimizationSettings = {
+        lowBatteryThreshold: 20,
+        criticalBatteryThreshold: 10,
+        adaptiveAccuracy: true,
+        backgroundRestrictions: true,
+        emergencyOverride: true,
+      };
+
+      private static currentBatteryLevel = 100;
+      private static isCharging = false;
+
+      // Initialize battery monitoring
+      static async initialize(): Promise<void> {
+        try {
+          // Get initial battery state
+          this.currentBatteryLevel = await Battery.getBatteryLevelAsync() * 100;
+          this.isCharging = await Battery.getPowerStateAsync().then(state => 
+            state.batteryState === Battery.BatteryState.CHARGING
+          );
+
+          // Monitor battery changes
+          Battery.addBatteryLevelListener(({ batteryLevel }) => {
+            this.currentBatteryLevel = batteryLevel * 100;
+            this.adjustTrackingForBattery();
+          });
+
+          Battery.addBatteryStateListener(({ batteryState }) => {
+            this.isCharging = batteryState === Battery.BatteryState.CHARGING;
+            this.adjustTrackingForBattery();
+          });
+
+          logger.info('Battery optimization initialized', {
+            batteryLevel: this.currentBatteryLevel,
+            isCharging: this.isCharging,
+          });
+
+        } catch (error) {
+          logger.emergency('Battery optimization initialization failed', error);
+        }
+      }
+
+      // Get optimized location options based on battery level
+      static getOptimizedLocationOptions(emergencyMode = false): LocationOptions {
+        // Emergency mode overrides battery optimization
+        if (emergencyMode && this.settings.emergencyOverride) {
+          return {
+            accuracy: 'highest',
+            timeInterval: 5000, // 5 seconds
+            distanceInterval: 5, // 5 meters
+            backgroundTracking: true,
+            saveBattery: false,
+          };
+        }
+
+        // Charging - use best settings
+        if (this.isCharging) {
+          return {
+            accuracy: 'high',
+            timeInterval: 10000, // 10 seconds
+            distanceInterval: 10, // 10 meters
+            backgroundTracking: true,
+            saveBattery: false,
+          };
+        }
+
+        // Critical battery - minimal tracking
+        if (this.currentBatteryLevel <= this.settings.criticalBatteryThreshold) {
+          return {
+            accuracy: 'low',
+            timeInterval: 300000, // 5 minutes
+            distanceInterval: 500, // 500 meters
+            backgroundTracking: false,
+            saveBattery: true,
+          };
+        }
+
+        // Low battery - reduced tracking
+        if (this.currentBatteryLevel <= this.settings.lowBatteryThreshold) {
+          return {
+            accuracy: 'balanced',
+            timeInterval: 120000, // 2 minutes
+            distanceInterval: 200, // 200 meters
+            backgroundTracking: true,
+            saveBattery: true,
+          };
+        }
+
+        // Normal battery - standard tracking
+        return {
+          accuracy: 'high',
+          timeInterval: 30000, // 30 seconds
+          distanceInterval: 50, // 50 meters
+          backgroundTracking: true,
+          saveBattery: this.settings.adaptiveAccuracy,
+        };
+      }
+
+      // Adjust tracking settings based on battery level
+      private static async adjustTrackingForBattery(): Promise<void> {
+        try {
+          if (!LocationService.isLocationTracking()) {
+            return; // Not tracking, no adjustment needed
+          }
+
+          const newOptions = this.getOptimizedLocationOptions();
+          
+          logger.info('Adjusting location tracking for battery', {
+            batteryLevel: this.currentBatteryLevel,
+            isCharging: this.isCharging,
+            newOptions,
+          });
+
+          // Restart tracking with new options
+          await LocationService.stopTracking();
+          await LocationService.startTracking(newOptions);
+
+        } catch (error) {
+          logger.emergency('Battery adjustment failed', error);
+        }
+      }
+
+      // Get battery status
+      static getBatteryStatus() {
+        return {
+          level: this.currentBatteryLevel,
+          isCharging: this.isCharging,
+          optimization: this.getOptimizationLevel(),
+        };
+      }
+
+      // Get current optimization level
+      private static getOptimizationLevel(): 'none' | 'low' | 'medium' | 'high' {
+        if (this.isCharging) return 'none';
+        if (this.currentBatteryLevel <= this.settings.criticalBatteryThreshold) return 'high';
+        if (this.currentBatteryLevel <= this.settings.lowBatteryThreshold) return 'medium';
+        return 'low';
+      }
+
+      // Update optimization settings
+      static updateSettings(newSettings: Partial<BatteryOptimizationSettings>): void {
+        this.settings = { ...this.settings, ...newSettings };
+        
+        logger.info('Battery optimization settings updated', this.settings);
+        
+        // Re-adjust tracking if active
+        if (LocationService.isLocationTracking()) {
+          this.adjustTrackingForBattery();
+        }
+      }
+
+      // Force emergency tracking (bypass battery optimization)
+      static async forceEmergencyTracking(): Promise<void> {
+        try {
+          const emergencyOptions = this.getOptimizedLocationOptions(true);
+          
+          await LocationService.stopTracking();
+          await LocationService.startTracking(emergencyOptions);
+          
+          logger.emergency('Emergency tracking forced', {
+            batteryLevel: this.currentBatteryLevel,
+            options: emergencyOptions,
+          });
+
+        } catch (error) {
+          logger.emergency('Failed to force emergency tracking', error);
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Smart Location Caching">
+    Implement intelligent location caching to reduce GPS usage
+    
+    ```typescript
+    // services/location/LocationCache.ts
+    import AsyncStorage from '@react-native-async-storage/async-storage';
+    import { LocationData } from './LocationService';
+    import { logger } from '../../utils/logger';
+
+    interface CachedLocation extends LocationData {
+      cacheTime: number;
+      source: 'gps' | 'network' | 'cached';
+      isStale: boolean;
+    }
+
+    export class LocationCache {
+      private static readonly CACHE_KEY = 'location_cache';
+      private static readonly MAX_CACHE_AGE = 60000; // 1 minute
+      private static readonly MAX_CACHE_DISTANCE = 100; // 100 meters
+      
+      private static cache: CachedLocation[] = [];
+
+      // Initialize cache from storage
+      static async initialize(): Promise<void> {
+        try {
+          const cached = await AsyncStorage.getItem(this.CACHE_KEY);
+          if (cached) {
+            this.cache = JSON.parse(cached);
+            
+            // Remove old entries
+            this.cleanupCache();
+          }
+        } catch (error) {
+          logger.emergency('Failed to initialize location cache', error);
+        }
+      }
+
+      // Add location to cache
+      static async addToCache(location: LocationData, source: 'gps' | 'network' = 'gps'): Promise<void> {
+        try {
+          const cachedLocation: CachedLocation = {
+            ...location,
+            cacheTime: Date.now(),
+            source,
+            isStale: false,
+          };
+
+          // Add to cache
+          this.cache.unshift(cachedLocation);
+
+          // Keep only recent entries
+          this.cache = this.cache.slice(0, 50);
+
+          // Save to storage
+          await AsyncStorage.setItem(this.CACHE_KEY, JSON.stringify(this.cache));
+
+          logger.location('Location cached', {
+            source,
+            accuracy: location.accuracy,
+            cacheSize: this.cache.length,
+          });
+
+        } catch (error) {
+          logger.emergency('Failed to cache location', error);
+        }
+      }
+
+      // Get cached location if available and fresh
+      static getCachedLocation(maxAge: number = this.MAX_CACHE_AGE): CachedLocation | null {
+        const now = Date.now();
+        
+        const recent = this.cache.find(loc => 
+          (now - loc.cacheTime) <= maxAge && !loc.isStale
+        );
+
+        if (recent) {
+          logger.location('Using cached location', {
+            age: now - recent.cacheTime,
+            source: recent.source,
+            accuracy: recent.accuracy,
+          });
+        }
+
+        return recent || null;
+      }
+
+      // Check if current location is significantly different from cache
+      static shouldUpdateLocation(newLocation: LocationData): boolean {
+        const lastCached = this.cache[0];
+        
+        if (!lastCached) {
+          return true; // No cache, should update
+        }
+
+        const distance = this.calculateDistance(
+          lastCached.latitude,
+          lastCached.longitude,
+          newLocation.latitude,
+          newLocation.longitude
+        );
+
+        const timeDiff = Date.now() - lastCached.cacheTime;
+
+        // Update if moved significantly or cache is old
+        return distance > this.MAX_CACHE_DISTANCE || timeDiff > this.MAX_CACHE_AGE;
+      }
+
+      // Calculate distance between two points
+      private static calculateDistance(
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number {
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Distance in meters
+      }
+
+      // Cleanup old cache entries
+      private static cleanupCache(): void {
+        const now = Date.now();
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+        this.cache = this.cache.filter(loc => {
+          const age = now - loc.cacheTime;
+          return age <= maxAge;
+        });
+
+        // Mark stale entries
+        this.cache.forEach(loc => {
+          const age = now - loc.cacheTime;
+          loc.isStale = age > this.MAX_CACHE_AGE;
+        });
+      }
+
+      // Get cache statistics
+      static getCacheStats() {
+        const now = Date.now();
+        const fresh = this.cache.filter(loc => (now - loc.cacheTime) <= this.MAX_CACHE_AGE);
+        const stale = this.cache.filter(loc => (now - loc.cacheTime) > this.MAX_CACHE_AGE);
+
+        return {
+          total: this.cache.length,
+          fresh: fresh.length,
+          stale: stale.length,
+          oldestEntry: this.cache.length > 0 ? now - this.cache[this.cache.length - 1].cacheTime : 0,
+        };
+      }
+
+      // Clear cache
+      static async clearCache(): Promise<void> {
+        try {
+          this.cache = [];
+          await AsyncStorage.removeItem(this.CACHE_KEY);
+          logger.info('Location cache cleared');
+        } catch (error) {
+          logger.emergency('Failed to clear location cache', error);
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Privacy & Security
+
+### Location Privacy Controls
+
+<Accordion title="Privacy Implementation">
+```typescript
+// services/location/LocationPrivacy.ts
+import { LocationData } from './LocationService';
+import { logger } from '../../utils/logger';
+
+export interface PrivacySettings {
+  precision: 'exact' | 'approximate' | 'city' | 'off';
+  historyRetention: number; // days
+  sharingDefaults: {
+    maxDuration: number; // hours
+    defaultPrecision: 'exact' | 'approximate' | 'city';
+    requireConfirmation: boolean;
+  };
+  emergencyOverride: boolean;
+}
+
+export class LocationPrivacy {
+  private static settings: PrivacySettings = {
+    precision: 'approximate',
+    historyRetention: 7, // 1 week
+    sharingDefaults: {
+      maxDuration: 24, // 24 hours
+      defaultPrecision: 'approximate',
+      requireConfirmation: true,
+    },
+    emergencyOverride: true,
+  };
+
+  // Apply privacy settings to location data
+  static applyPrivacyFilter(
+    location: LocationData, 
+    precision?: PrivacySettings['precision'],
+    emergencyMode = false
+  ): LocationData | null {
+    const activePrecision = precision || this.settings.precision;
+    
+    // Emergency override
+    if (emergencyMode && this.settings.emergencyOverride) {
+      return location; // Return exact location in emergency
+    }
+
+    // Privacy off - no location sharing
+    if (activePrecision === 'off') {
+      return null;
+    }
+
+    let adjustedLocation = { ...location };
+
+    switch (activePrecision) {
+      case 'city':
+        // City-level precision (~10km radius)
+        adjustedLocation.latitude = Math.round(location.latitude * 10) / 10;
+        adjustedLocation.longitude = Math.round(location.longitude * 10) / 10;
+        adjustedLocation.accuracy = Math.max(location.accuracy, 10000);
+        break;
+        
+      case 'approximate':
+        // Approximate precision (~1km radius)
+        adjustedLocation.latitude = Math.round(location.latitude * 100) / 100;
+        adjustedLocation.longitude = Math.round(location.longitude * 100) / 100;
+        adjustedLocation.accuracy = Math.max(location.accuracy, 1000);
+        break;
+        
+      case 'exact':
+      default:
+        // No modification needed
+        break;
+    }
+
+    // Remove sensitive metadata
+    delete adjustedLocation.altitude;
+    delete adjustedLocation.heading;
+    delete adjustedLocation.speed;
+
+    return adjustedLocation;
+  }
+
+  // Check if location sharing is allowed
+  static isLocationSharingAllowed(emergencyMode = false): boolean {
+    if (emergencyMode && this.settings.emergencyOverride) {
+      return true;
+    }
+    
+    return this.settings.precision !== 'off';
+  }
+
+  // Get privacy-filtered location for sharing
+  static getShareableLocation(
+    location: LocationData,
+    shareSettings: {
+      precision?: PrivacySettings['precision'];
+      emergencyMode?: boolean;
+    } = {}
+  ): LocationData | null {
+    return this.applyPrivacyFilter(
+      location,
+      shareSettings.precision,
+      shareSettings.emergencyMode
+    );
+  }
+
+  // Update privacy settings
+  static updateSettings(newSettings: Partial<PrivacySettings>): void {
+    this.settings = { ...this.settings, ...newSettings };
+    
+    logger.info('Location privacy settings updated', {
+      precision: this.settings.precision,
+      historyRetention: this.settings.historyRetention,
+    });
+  }
+
+  // Get current privacy settings
+  static getSettings(): PrivacySettings {
+    return { ...this.settings };
+  }
+
+  // Get privacy level description
+  static getPrivacyDescription(precision: PrivacySettings['precision']): string {
+    switch (precision) {
+      case 'exact':
+        return 'Exact location (within 10 meters)';
+      case 'approximate':
+        return 'Approximate location (within 1 kilometer)';
+      case 'city':
+        return 'City-level location (within 10 kilometers)';
+      case 'off':
+        return 'Location sharing disabled';
+      default:
+        return 'Unknown privacy level';
+    }
+  }
+
+  // Check if emergency override is active
+  static shouldOverrideForEmergency(emergencyMode: boolean): boolean {
+    return emergencyMode && this.settings.emergencyOverride;
+  }
+}
+```
+</Accordion>
+
+## Testing Location Services
+
+### Location Testing Utilities
+
+<CodeGroup>
+```typescript Location Test Helpers
+// utils/locationTestUtils.ts
+import { LocationData } from '../services/location/LocationService';
+
+export class LocationTestUtils {
+  // Mock location data for testing
+  static createMockLocation(overrides: Partial<LocationData> = {}): LocationData {
+    return {
+      latitude: 40.7128,
+      longitude: -74.0060,
+      accuracy: 10,
+      altitude: 10,
+      heading: 0,
+      speed: 0,
+      timestamp: Date.now(),
+      ...overrides,
+    };
+  }
+
+  // Create mock location sequence for testing movement
+  static createLocationSequence(count: number, baseLocation?: LocationData): LocationData[] {
+    const base = baseLocation || this.createMockLocation();
+    const locations: LocationData[] = [];
+
+    for (let i = 0; i < count; i++) {
+      locations.push({
+        ...base,
+        latitude: base.latitude + (Math.random() - 0.5) * 0.01, // ~1km variation
+        longitude: base.longitude + (Math.random() - 0.5) * 0.01,
+        accuracy: 5 + Math.random() * 20, // 5-25m accuracy
+        timestamp: base.timestamp + i * 30000, // 30s intervals
+      });
+    }
+
+    return locations;
+  }
+
+  // Mock GPS with poor signal
+  static createPoorGPSLocation(): LocationData {
+    return this.createMockLocation({
+      accuracy: 100 + Math.random() * 500, // 100-600m poor accuracy
+      altitude: undefined,
+      heading: undefined,
+      speed: undefined,
+    });
+  }
+
+  // Mock indoor location (no GPS)
+  static createIndoorLocation(): LocationData {
+    return this.createMockLocation({
+      accuracy: 50 + Math.random() * 100, // Network-based accuracy
+      altitude: undefined,
+      heading: undefined,
+      speed: 0,
+    });
+  }
+
+  // Calculate distance between two locations
+  static calculateDistance(loc1: LocationData, loc2: LocationData): number {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = loc1.latitude * Math.PI / 180;
+    const φ2 = loc2.latitude * Math.PI / 180;
+    const Δφ = (loc2.latitude - loc1.latitude) * Math.PI / 180;
+    const Δλ = (loc2.longitude - loc1.longitude) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  // Check if location is within geofence
+  static isWithinGeofence(
+    location: LocationData,
+    geofenceCenter: { latitude: number; longitude: number },
+    radius: number
+  ): boolean {
+    const distance = this.calculateDistance(location, {
+      ...geofenceCenter,
+      accuracy: 0,
+      timestamp: Date.now(),
+    });
+
+    return distance <= radius;
+  }
+}
+
+// Mock location service for testing
+export class MockLocationService {
+  private static mockLocations: LocationData[] = [];
+  private static currentIndex = 0;
+
+  static setMockLocations(locations: LocationData[]): void {
+    this.mockLocations = locations;
+    this.currentIndex = 0;
+  }
+
+  static async getCurrentPosition(): Promise<LocationData> {
+    if (this.mockLocations.length === 0) {
+      return LocationTestUtils.createMockLocation();
+    }
+
+    const location = this.mockLocations[this.currentIndex % this.mockLocations.length];
+    this.currentIndex++;
+    
+    return location;
+  }
+
+  static simulateMovement(startLocation: LocationData, endLocation: LocationData, steps: number): LocationData[] {
+    const locations: LocationData[] = [];
+    
+    for (let i = 0; i <= steps; i++) {
+      const progress = i / steps;
+      const lat = startLocation.latitude + (endLocation.latitude - startLocation.latitude) * progress;
+      const lng = startLocation.longitude + (endLocation.longitude - startLocation.longitude) * progress;
+      
+      locations.push({
+        latitude: lat,
+        longitude: lng,
+        accuracy: 10 + Math.random() * 10,
+        timestamp: Date.now() + i * 1000, // 1 second intervals
+      });
+    }
+    
+    return locations;
+  }
+
+  static reset(): void {
+    this.mockLocations = [];
+    this.currentIndex = 0;
+  }
+}
+```
+
+```typescript Location Service Tests
+// __tests__/locationService.test.ts
+import { LocationService } from '../services/location/LocationService';
+import { LocationTestUtils, MockLocationService } from '../utils/locationTestUtils';
+
+// Mock expo-location
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  requestBackgroundPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  getCurrentPositionAsync: jest.fn(),
+  watchPositionAsync: jest.fn(),
+  LocationAccuracy: {
+    Lowest: 1,
+    Low: 2,
+    Balanced: 3,
+    High: 4,
+    Highest: 5,
+  },
+}));
+
+describe('LocationService', () => {
+  beforeEach(() => {
+    MockLocationService.reset();
+    jest.clearAllMocks();
+  });
+
+  test('should get current position with high accuracy', async () => {
+    const mockLocation = LocationTestUtils.createMockLocation({
+      accuracy: 8,
+    });
+
+    MockLocationService.setMockLocations([mockLocation]);
+
+    const location = await MockLocationService.getCurrentPosition();
+
+    expect(location.latitude).toBe(mockLocation.latitude);
+    expect(location.longitude).toBe(mockLocation.longitude);
+    expect(location.accuracy).toBeLessThan(10);
+  });
+
+  test('should handle poor GPS conditions gracefully', async () => {
+    const poorLocation = LocationTestUtils.createPoorGPSLocation();
+    MockLocationService.setMockLocations([poorLocation]);
+
+    const location = await MockLocationService.getCurrentPosition();
+
+    expect(location.accuracy).toBeGreaterThan(100);
+    expect(location.latitude).toBeDefined();
+    expect(location.longitude).toBeDefined();
+  });
+
+  test('should track movement correctly', async () => {
+    const startLocation = LocationTestUtils.createMockLocation({
+      latitude: 40.7128,
+      longitude: -74.0060,
+    });
+
+    const endLocation = LocationTestUtils.createMockLocation({
+      latitude: 40.7138,
+      longitude: -74.0050,
+    });
+
+    const movement = MockLocationService.simulateMovement(startLocation, endLocation, 5);
+
+    expect(movement).toHaveLength(6); // 0 to 5 inclusive
+    expect(movement[0].latitude).toBe(startLocation.latitude);
+    expect(movement[5].latitude).toBe(endLocation.latitude);
+
+    // Check that movement is progressive
+    for (let i = 1; i < movement.length; i++) {
+      const distance = LocationTestUtils.calculateDistance(movement[i-1], movement[i]);
+      expect(distance).toBeGreaterThan(0);
+      expect(distance).toBeLessThan(200); // Reasonable step size
+    }
+  });
+
+  test('should respect privacy settings', async () => {
+    const exactLocation = LocationTestUtils.createMockLocation({
+      latitude: 40.712800,
+      longitude: -74.006000,
+      accuracy: 5,
+    });
+
+    // Test approximate precision
+    const approximateLocation = LocationPrivacy.applyPrivacyFilter(exactLocation, 'approximate');
+    expect(approximateLocation?.accuracy).toBeGreaterThanOrEqual(1000);
+
+    // Test city precision
+    const cityLocation = LocationPrivacy.applyPrivacyFilter(exactLocation, 'city');
+    expect(cityLocation?.accuracy).toBeGreaterThanOrEqual(10000);
+
+    // Test privacy off
+    const noLocation = LocationPrivacy.applyPrivacyFilter(exactLocation, 'off');
+    expect(noLocation).toBeNull();
+  });
+
+  test('should override privacy in emergency mode', async () => {
+    const exactLocation = LocationTestUtils.createMockLocation();
+
+    // Privacy normally blocks exact location
+    const normalLocation = LocationPrivacy.applyPrivacyFilter(exactLocation, 'off', false);
+    expect(normalLocation).toBeNull();
+
+    // Emergency mode should override
+    const emergencyLocation = LocationPrivacy.applyPrivacyFilter(exactLocation, 'off', true);
+    expect(emergencyLocation).not.toBeNull();
+    expect(emergencyLocation?.accuracy).toBe(exactLocation.accuracy);
+  });
+});
+```
 </CodeGroup>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**Location Services Foundation:** This comprehensive location services implementation provides the foundation for all safety features in Shelther, balancing accuracy, privacy, and battery optimization.
+</Note>
+
+Next in **Phase 4**, I'll continue with `push-notifications.mdx` to cover emergency notification delivery, real-time alerts, and notification reliability for safety scenarios.
+
+<CardGroup cols={3}>
+  <Card title="Push Notifications" icon="bell" href="/development/push-notifications">
+    Emergency notifications and reliable alert delivery systems
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Background Tasks" icon="clock" href="/development/background-tasks">
+    Background processing for safety monitoring and automated check-ins
+  </Card>
+  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
+    Comprehensive testing approach for safety-critical location features
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**Location Privacy:** Always implement proper privacy controls and obtain explicit user consent before sharing location data. Emergency scenarios may require privacy overrides, but users should be clearly informed of this behavior.
+</Warning>

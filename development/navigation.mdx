@@ -1,59 +1,1504 @@
 ---
-title: "Navigation"
-description: "Navigation documentation for Development. Learn about implementation, configuration, and best practices."
+title: "Navigation & Routing"
+description: "Complete guide to implementing navigation in Shelther safety applications using Expo Router. Includes emergency route handling, deep linking, accessibility, and performance optimization for critical safety scenarios."
 ---
 
-# Navigation
-
-## Overview
-
-This page is automatically generated from the Mintlify docs.json structure.
+# Navigation & Routing
 
 <Info>
-Add your content here following Mintlify's MDX guidelines.
+**Safety-First Navigation:** Shelther's navigation system prioritizes emergency access, quick route changes, and accessibility. Every navigation decision considers emergency scenarios where users need immediate access to safety features.
 </Info>
 
-## Key Points
+## Navigation Architecture
 
-- Add comprehensive content for this section
-- Include code examples where relevant
-- Add proper cross-references to related pages
+Shelther uses Expo Router for type-safe, file-based routing optimized for safety applications:
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="File-Based Routing" icon="folder">
+    Intuitive file system routing with automatic type generation and route safety
+  </Card>
+  <Card title="Emergency Routes" icon="alert-triangle">
+    Priority routing system for emergency scenarios with bypass mechanisms
+  </Card>
+  <Card title="Deep Linking" icon="link">
+    Universal links for emergency contact sharing and rapid app access
+  </Card>
+  <Card title="Accessibility Navigation" icon="universal-access">
+    Screen reader optimized navigation with voice control support
+  </Card>
+</CardGroup>
+
+## File Structure & Route Organization
+
+### App Directory Structure
 
 <CodeGroup>
+```bash Route Structure
+app/
+├── _layout.tsx                 # Root layout with emergency providers
+├── index.tsx                   # Home/Dashboard screen
+├── (auth)/                     # Authentication flow
+│   ├── _layout.tsx
+│   ├── login.tsx
+│   ├── register.tsx
+│   └── forgot-password.tsx
+├── (emergency)/                # Emergency flow (priority routes)
+│   ├── _layout.tsx
+│   ├── alert.tsx              # Emergency alert screen
+│   ├── countdown.tsx          # Emergency countdown
+│   └── active-alert.tsx       # Active emergency management
+├── (main)/                     # Main app navigation
+│   ├── _layout.tsx            # Tab navigation
+│   ├── dashboard/
+│   │   ├── index.tsx
+│   │   └── quick-actions.tsx
+│   ├── safety/
+│   │   ├── index.tsx
+│   │   ├── check-ins.tsx
+│   │   ├── location-sharing.tsx
+│   │   └── venue-safety.tsx
+│   ├── contacts/
+│   │   ├── index.tsx
+│   │   ├── add.tsx
+│   │   ├── [id].tsx
+│   │   └── emergency-contacts.tsx
+│   └── profile/
+│       ├── index.tsx
+│       ├── settings.tsx
+│       └── privacy.tsx
+├── onboarding/                 # First-time user flow
+│   ├── _layout.tsx
+│   ├── welcome.tsx
+│   ├── permissions.tsx
+│   ├── emergency-setup.tsx
+│   └── safety-tutorial.tsx
+└── modal/                      # Modal screens
+    ├── emergency-modal.tsx
+    ├── contact-picker.tsx
+    └── location-details.tsx
+```
 
-```typescript TypeScript
-// Add relevant code examples
-interface ExampleInterface {
-  id: string;
-  name: string;
+```typescript Route Types
+// types/navigation.ts
+export type RootStackParamList = {
+  index: undefined;
+  '(auth)': undefined;
+  '(emergency)': undefined;
+  '(main)': undefined;
+  onboarding: undefined;
+  modal: {
+    emergency?: boolean;
+    contactId?: string;
+    alertId?: string;
+  };
+};
+
+export type AuthStackParamList = {
+  login: undefined;
+  register: undefined;
+  'forgot-password': { email?: string };
+};
+
+export type EmergencyStackParamList = {
+  alert: { 
+    type?: 'manual' | 'automated' | 'duress';
+    location?: { latitude: number; longitude: number };
+  };
+  countdown: { 
+    duration: number;
+    type: string;
+  };
+  'active-alert': { 
+    alertId: string;
+  };
+};
+
+export type MainTabParamList = {
+  'dashboard/index': undefined;
+  'safety/index': undefined;
+  'contacts/index': undefined;
+  'profile/index': undefined;
+};
+```
+</CodeGroup>
+
+## Root Layout Configuration
+
+### Emergency-Aware Root Layout
+
+<Steps>
+  <Step title="Root Layout Setup">
+    Configure the root layout with emergency state management
+    
+    ```typescript
+    // app/_layout.tsx
+    import { useEffect } from 'react';
+    import { Stack, useRouter, useSegments } from 'expo-router';
+    import { StatusBar } from 'expo-status-bar';
+    import { SafeAreaProvider } from 'react-native-safe-area-context';
+    import { GestureHandlerRootView } from 'react-native-gesture-handler';
+    
+    import { ThemeProvider } from '../src/contexts/ThemeContext';
+    import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+    import { EmergencyProvider, useEmergency } from '../src/contexts/EmergencyContext';
+    import { useAppSelector } from '../src/hooks/redux';
+    import { EmergencyOverlay } from '../src/components/EmergencyOverlay';
+    import { logger } from '../src/utils/logger';
+
+    function RootLayoutNav() {
+      const { isAuthenticated, isLoading } = useAuth();
+      const { isEmergencyActive } = useEmergency();
+      const router = useRouter();
+      const segments = useSegments();
+      
+      // Emergency state from Redux
+      const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+      const activeAlerts = useAppSelector(state => 
+        state.emergency.alerts.filter(alert => alert.status === 'active')
+      );
+
+      useEffect(() => {
+        if (isLoading) return;
+
+        const inAuthGroup = segments[0] === '(auth)';
+        const inEmergencyGroup = segments[0] === '(emergency)';
+        const inOnboarding = segments[0] === 'onboarding';
+
+        // Handle emergency routing priority
+        if (emergencyMode && !inEmergencyGroup) {
+          logger.emergency('Emergency mode active, redirecting to emergency flow');
+          router.replace('/(emergency)/alert');
+          return;
+        }
+
+        // Handle authentication routing
+        if (!isAuthenticated && !inAuthGroup && !inOnboarding) {
+          router.replace('/(auth)/login');
+          return;
+        }
+
+        if (isAuthenticated && inAuthGroup) {
+          router.replace('/(main)/dashboard');
+          return;
+        }
+      }, [isAuthenticated, isLoading, segments, emergencyMode]);
+
+      return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <StatusBar 
+            style={emergencyMode ? 'light' : 'auto'} 
+            backgroundColor={emergencyMode ? '#FF1744' : undefined}
+          />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              gestureEnabled: !emergencyMode, // Disable gestures in emergency
+              animation: emergencyMode ? 'none' : 'default', // No animations in emergency
+            }}
+          >
+            <Stack.Screen 
+              name="index" 
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="(auth)" 
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="(emergency)" 
+              options={{ 
+                headerShown: false,
+                presentation: 'fullScreenModal',
+                gestureEnabled: false,
+              }} 
+            />
+            <Stack.Screen 
+              name="(main)" 
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="onboarding" 
+              options={{ 
+                headerShown: false,
+                gestureEnabled: false,
+              }} 
+            />
+            <Stack.Screen 
+              name="modal" 
+              options={{ 
+                presentation: 'modal',
+                gestureEnabled: !emergencyMode,
+              }} 
+            />
+          </Stack>
+          
+          {/* Emergency overlay for critical alerts */}
+          {activeAlerts.length > 0 && <EmergencyOverlay alerts={activeAlerts} />}
+        </GestureHandlerRootView>
+      );
+    }
+
+    export default function RootLayout() {
+      return (
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <EmergencyProvider>
+                <RootLayoutNav />
+              </EmergencyProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      );
+    }
+    ```
+  </Step>
+  <Step title="Emergency Route Protection">
+    Implement route guards for emergency scenarios
+    
+    ```typescript
+    // hooks/useRouteProtection.ts
+    import { useEffect } from 'react';
+    import { useRouter, useSegments } from 'expo-router';
+    import { useAppSelector } from './redux';
+    import { useAuth } from '../contexts/AuthContext';
+    import { logger } from '../utils/logger';
+
+    export const useRouteProtection = () => {
+      const router = useRouter();
+      const segments = useSegments();
+      const { isAuthenticated } = useAuth();
+      
+      const emergencyState = useAppSelector(state => state.emergency);
+      const isEmergencyActive = emergencyState.alerts.some(alert => alert.status === 'active');
+      const isCountdownActive = emergencyState.countdownActive;
+
+      useEffect(() => {
+        const currentRoute = segments.join('/');
+        
+        // Emergency route protection
+        if (isEmergencyActive || isCountdownActive) {
+          const allowedEmergencyRoutes = [
+            '(emergency)/alert',
+            '(emergency)/countdown',
+            '(emergency)/active-alert',
+          ];
+          
+          const isOnAllowedRoute = allowedEmergencyRoutes.some(route => 
+            currentRoute.includes(route)
+          );
+          
+          if (!isOnAllowedRoute) {
+            logger.emergency('Redirecting to emergency route', { 
+              from: currentRoute,
+              reason: isCountdownActive ? 'countdown_active' : 'emergency_active'
+            });
+            
+            if (isCountdownActive) {
+              router.replace('/(emergency)/countdown');
+            } else {
+              router.replace('/(emergency)/active-alert');
+            }
+          }
+        }
+
+        // Authentication protection
+        if (!isAuthenticated && !currentRoute.includes('(auth)')) {
+          router.replace('/(auth)/login');
+        }
+      }, [segments, isAuthenticated, isEmergencyActive, isCountdownActive]);
+
+      return {
+        canNavigateAway: !isEmergencyActive && !isCountdownActive,
+        currentRoute: segments.join('/'),
+      };
+    };
+    ```
+  </Step>
+</Steps>
+
+## Main App Navigation
+
+### Tab Navigation Layout
+
+<CodeGroup>
+```typescript Main Tab Layout
+// app/(main)/_layout.tsx
+import { Tabs } from 'expo-router';
+import { useTheme } from '../../src/contexts/ThemeContext';
+import { useAppSelector } from '../../src/hooks/redux';
+import { TabBarIcon } from '../../src/components/TabBarIcon';
+import { EmergencyButton } from '../../src/components/EmergencyButton';
+
+export default function MainTabLayout() {
+  const { theme } = useTheme();
+  const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+  
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.text.secondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.text.secondary,
+          height: 88, // Extra height for emergency button
+          paddingBottom: 8,
+          ...(emergencyMode && {
+            backgroundColor: theme.colors.emergency,
+          }),
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        // Disable tab bar during emergency
+        tabBarStyle: emergencyMode ? { display: 'none' } : undefined,
+      }}
+    >
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: 'Dashboard',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="home" color={color} focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Dashboard tab',
+        }}
+      />
+      
+      <Tabs.Screen
+        name="safety"
+        options={{
+          title: 'Safety',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="shield" color={color} focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Safety features tab',
+        }}
+      />
+      
+      {/* Emergency button in center */}
+      <Tabs.Screen
+        name="emergency"
+        options={{
+          title: '',
+          tabBarIcon: () => (
+            <EmergencyButton 
+              size="small" 
+              style={{ 
+                position: 'absolute', 
+                top: -20,
+                zIndex: 10,
+              }} 
+            />
+          ),
+          tabBarButton: (props) => (
+            <EmergencyButton 
+              {...props}
+              size="small"
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Emergency SOS button"
+              accessibilityHint="Tap to trigger emergency alert"
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault(); // Don't navigate, just trigger emergency
+          },
+        }}
+      />
+      
+      <Tabs.Screen
+        name="contacts"
+        options={{
+          title: 'Contacts',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="users" color={color} focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Emergency contacts tab',
+        }}
+      />
+      
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="user" color={color} focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Profile and settings tab',
+        }}
+      />
+    </Tabs>
+  );
 }
 ```
 
-```javascript JavaScript
-// JavaScript example
-const example = {
-  id: '1',
-  name: 'Example'
+```typescript Custom Tab Bar Component
+// components/CustomTabBar.tsx
+import React from 'react';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAppSelector } from '../hooks/redux';
+import { EmergencyButton } from './EmergencyButton';
+
+export const CustomTabBar: React.FC<BottomTabBarProps> = ({
+  state,
+  descriptors,
+  navigation,
+}) => {
+  const { theme } = useTheme();
+  const emergencyMode = useAppSelector(state => state.emergency.emergencyMode);
+  
+  if (emergencyMode) {
+    // Hide tab bar during emergency
+    return null;
+  }
+
+  return (
+    <View style={{
+      flexDirection: 'row',
+      backgroundColor: theme.colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.text.secondary,
+      paddingBottom: 8,
+      paddingTop: 8,
+      height: 88,
+    }}>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const label = options.tabBarLabel ?? options.title ?? route.name;
+        const isFocused = state.index === index;
+
+        // Special handling for emergency button
+        if (route.name === 'emergency') {
+          return (
+            <View key={route.key} style={{ flex: 1, alignItems: 'center' }}>
+              <EmergencyButton size="small" />
+            </View>
+          );
+        }
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            onPress={onPress}
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: 8,
+            }}
+          >
+            {options.tabBarIcon?.({
+              focused: isFocused,
+              color: isFocused ? theme.colors.primary : theme.colors.text.secondary,
+              size: 24,
+            })}
+            <Text style={{
+              color: isFocused ? theme.colors.primary : theme.colors.text.secondary,
+              fontSize: 12,
+              fontWeight: isFocused ? '600' : '400',
+              marginTop: 4,
+            }}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+```
+</CodeGroup>
+
+## Emergency Navigation Flow
+
+### Emergency Route Handling
+
+<Steps>
+  <Step title="Emergency Alert Screen">
+    Priority screen for emergency alert management
+    
+    ```typescript
+    // app/(emergency)/alert.tsx
+    import React, { useEffect, useState } from 'react';
+    import { View, Text, TouchableOpacity, BackHandler } from 'react-native';
+    import { useRouter, useLocalSearchParams } from 'expo-router';
+    import { useTheme } from '../../src/contexts/ThemeContext';
+    import { useAppDispatch, useAppSelector } from '../../src/hooks/redux';
+    import { triggerEmergencyAlert, startCountdown } from '../../src/store/slices/emergencySlice';
+    import { EmergencyButton } from '../../src/components/EmergencyButton';
+    import { logger } from '../../src/utils/logger';
+
+    export default function EmergencyAlertScreen() {
+      const router = useRouter();
+      const { type, location } = useLocalSearchParams<{
+        type?: 'manual' | 'automated' | 'duress';
+        location?: string;
+      }>();
+      
+      const { theme } = useTheme();
+      const dispatch = useAppDispatch();
+      const countdownActive = useAppSelector(state => state.emergency.countdownActive);
+      const countdownTimeLeft = useAppSelector(state => state.emergency.countdownTimeLeft);
+      
+      const [alertType, setAlertType] = useState(type || 'manual');
+
+      // Prevent back navigation during emergency
+      useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+          logger.emergency('Back button pressed during emergency alert');
+          return true; // Prevent default behavior
+        });
+
+        return () => backHandler.remove();
+      }, []);
+
+      const handleEmergencyTrigger = async () => {
+        try {
+          logger.emergency('Emergency alert triggered', { type: alertType });
+          
+          await dispatch(triggerEmergencyAlert({
+            type: alertType,
+            location: location ? JSON.parse(location) : undefined,
+          })).unwrap();
+          
+          router.replace('/(emergency)/active-alert');
+        } catch (error) {
+          logger.emergency('Emergency alert failed', error);
+        }
+      };
+
+      const handleCountdownStart = () => {
+        dispatch(startCountdown(5)); // 5 second countdown
+        router.push('/(emergency)/countdown');
+      };
+
+      const handleCancel = () => {
+        logger.emergency('Emergency alert cancelled by user');
+        router.back();
+      };
+
+      if (countdownActive) {
+        router.replace('/(emergency)/countdown');
+        return null;
+      }
+
+      return (
+        <View style={{
+          flex: 1,
+          backgroundColor: theme.colors.emergency,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: theme.spacing.lg,
+        }}>
+          <Text style={{
+            fontSize: theme.typography.h1.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.inverse,
+            textAlign: 'center',
+            marginBottom: theme.spacing.xl,
+          }}>
+            Emergency Alert
+          </Text>
+
+          <Text style={{
+            fontSize: theme.typography.body.fontSize,
+            color: theme.colors.text.inverse,
+            textAlign: 'center',
+            marginBottom: theme.spacing.xl,
+            opacity: 0.9,
+          }}>
+            This will immediately notify your emergency contacts and trigger safety protocols.
+          </Text>
+
+          {/* Emergency type selection */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            width: '100%',
+            marginBottom: theme.spacing.xl,
+          }}>
+            {[
+              { value: 'manual', label: 'Manual', icon: '🚨' },
+              { value: 'duress', label: 'Duress', icon: '⚠️' },
+              { value: 'automated', label: 'Auto', icon: '🤖' },
+            ].map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                onPress={() => setAlertType(option.value as any)}
+                style={{
+                  backgroundColor: alertType === option.value 
+                    ? theme.colors.text.inverse 
+                    : 'transparent',
+                  borderWidth: 2,
+                  borderColor: theme.colors.text.inverse,
+                  borderRadius: theme.borderRadius.md,
+                  padding: theme.spacing.md,
+                  alignItems: 'center',
+                  minWidth: 80,
+                }}
+              >
+                <Text style={{ fontSize: 24, marginBottom: 4 }}>
+                  {option.icon}
+                </Text>
+                <Text style={{
+                  color: alertType === option.value 
+                    ? theme.colors.primary 
+                    : theme.colors.text.inverse,
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                }}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Emergency buttons */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            width: '100%',
+            alignItems: 'center',
+          }}>
+            <TouchableOpacity
+              onPress={handleCountdownStart}
+              style={{
+                backgroundColor: theme.colors.warning,
+                borderRadius: 60,
+                width: 120,
+                height: 120,
+                justifyContent: 'center',
+                alignItems: 'center',
+                ...theme.shadows.lg,
+              }}
+            >
+              <Text style={{
+                color: theme.colors.text.inverse,
+                fontSize: 16,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}>
+                5 SEC{'\n'}DELAY
+              </Text>
+            </TouchableOpacity>
+
+            <EmergencyButton
+              onPress={handleEmergencyTrigger}
+              countdown={false}
+              size="large"
+            />
+          </View>
+
+          {/* Cancel button */}
+          <TouchableOpacity
+            onPress={handleCancel}
+            style={{
+              marginTop: theme.spacing.xl,
+              padding: theme.spacing.md,
+              borderWidth: 2,
+              borderColor: theme.colors.text.inverse,
+              borderRadius: theme.borderRadius.md,
+            }}
+          >
+            <Text style={{
+              color: theme.colors.text.inverse,
+              fontSize: theme.typography.body.fontSize,
+              fontWeight: 'bold',
+            }}>
+              Cancel Emergency
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    ```
+  </Step>
+  <Step title="Emergency Countdown Screen">
+    Countdown screen with cancellation option
+    
+    ```typescript
+    // app/(emergency)/countdown.tsx
+    import React, { useEffect } from 'react';
+    import { View, Text, TouchableOpacity, Vibration } from 'react-native';
+    import { useRouter } from 'expo-router';
+    import { Circle } from 'react-native-svg';
+    import Animated, { 
+      useSharedValue, 
+      useAnimatedProps, 
+      withTiming,
+      runOnJS,
+    } from 'react-native-reanimated';
+    import { useTheme } from '../../src/contexts/ThemeContext';
+    import { useAppDispatch, useAppSelector } from '../../src/hooks/redux';
+    import { 
+      decrementCountdown, 
+      cancelCountdown,
+      triggerEmergencyAlert 
+    } from '../../src/store/slices/emergencySlice';
+
+    const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+    export default function CountdownScreen() {
+      const router = useRouter();
+      const { theme } = useTheme();
+      const dispatch = useAppDispatch();
+      
+      const countdownTimeLeft = useAppSelector(state => state.emergency.countdownTimeLeft);
+      const countdownActive = useAppSelector(state => state.emergency.countdownActive);
+      
+      const progress = useSharedValue(1);
+      const circumference = 2 * Math.PI * 50; // radius = 50
+
+      useEffect(() => {
+        if (!countdownActive) {
+          router.replace('/(main)/dashboard');
+          return;
+        }
+
+        const timer = setInterval(() => {
+          if (countdownTimeLeft > 0) {
+            dispatch(decrementCountdown());
+            
+            // Vibration feedback
+            Vibration.vibrate(200);
+            
+            // Update progress animation
+            progress.value = withTiming(countdownTimeLeft / 5, { duration: 1000 });
+          } else {
+            // Trigger emergency
+            dispatch(triggerEmergencyAlert({ type: 'manual' }));
+            router.replace('/(emergency)/active-alert');
+          }
+        }, 1000);
+
+        return () => clearInterval(timer);
+      }, [countdownTimeLeft, countdownActive]);
+
+      const animatedProps = useAnimatedProps(() => {
+        const strokeDashoffset = circumference * (1 - progress.value);
+        return {
+          strokeDashoffset,
+        };
+      });
+
+      const handleCancel = () => {
+        dispatch(cancelCountdown());
+        router.back();
+      };
+
+      if (!countdownActive) {
+        return null;
+      }
+
+      return (
+        <View style={{
+          flex: 1,
+          backgroundColor: theme.colors.emergency,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: theme.spacing.lg,
+        }}>
+          <Text style={{
+            fontSize: theme.typography.h1.fontSize,
+            fontWeight: 'bold',
+            color: theme.colors.text.inverse,
+            marginBottom: theme.spacing.xl,
+          }}>
+            Emergency Alert in...
+          </Text>
+
+          {/* Countdown Circle */}
+          <View style={{
+            width: 200,
+            height: 200,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: theme.spacing.xl,
+          }}>
+            <Svg width={200} height={200} style={{ position: 'absolute' }}>
+              <Circle
+                cx={100}
+                cy={100}
+                r={50}
+                stroke={theme.colors.text.inverse}
+                strokeWidth={8}
+                fill="transparent"
+                opacity={0.3}
+              />
+              <AnimatedCircle
+                cx={100}
+                cy={100}
+                r={50}
+                stroke={theme.colors.text.inverse}
+                strokeWidth={8}
+                fill="transparent"
+                strokeDasharray={`${circumference} ${circumference}`}
+                animatedProps={animatedProps}
+                strokeLinecap="round"
+                transform="rotate(-90 100 100)"
+              />
+            </Svg>
+            <Text style={{
+              fontSize: 72,
+              fontWeight: 'bold',
+              color: theme.colors.text.inverse,
+            }}>
+              {countdownTimeLeft}
+            </Text>
+          </View>
+
+          <Text style={{
+            fontSize: theme.typography.body.fontSize,
+            color: theme.colors.text.inverse,
+            textAlign: 'center',
+            marginBottom: theme.spacing.xl,
+            opacity: 0.9,
+          }}>
+            Emergency contacts will be notified automatically.{'\n'}
+            Tap below to cancel.
+          </Text>
+
+          <TouchableOpacity
+            onPress={handleCancel}
+            style={{
+              backgroundColor: theme.colors.text.inverse,
+              borderRadius: theme.borderRadius.lg,
+              paddingHorizontal: theme.spacing.xl,
+              paddingVertical: theme.spacing.lg,
+              ...theme.shadows.lg,
+            }}
+          >
+            <Text style={{
+              color: theme.colors.emergency,
+              fontSize: theme.typography.h2.fontSize,
+              fontWeight: 'bold',
+            }}>
+              CANCEL
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+## Deep Linking Configuration
+
+### Universal Links Setup
+
+<CodeGroup>
+```typescript Deep Link Configuration
+// app.config.ts
+export default {
+  expo: {
+    scheme: 'shelther',
+    web: {
+      bundler: 'metro',
+    },
+    // Universal Links configuration
+    associatedDomains: [
+      'applinks:shelther.app',
+      'applinks:app.shelther.com',
+    ],
+    ios: {
+      associatedDomains: [
+        'applinks:shelther.app',
+        'applinks:app.shelther.com',
+      ],
+    },
+    android: {
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
+            {
+              scheme: 'https',
+              host: 'shelther.app',
+            },
+            {
+              scheme: 'https',
+              host: 'app.shelther.com',
+            },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+        {
+          action: 'VIEW',
+          data: [
+            {
+              scheme: 'shelther',
+            },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
+    },
+  },
 };
 ```
 
+```typescript Deep Link Handler
+// hooks/useDeepLinking.ts
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
+import { useAppDispatch } from './redux';
+import { triggerEmergencyAlert } from '../store/slices/emergencySlice';
+import { logger } from '../utils/logger';
+
+interface DeepLinkParams {
+  emergency?: 'true';
+  alertId?: string;
+  contactId?: string;
+  shareLocation?: 'true';
+  checkIn?: string;
+}
+
+export const useDeepLinking = () => {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleDeepLink = async (url: string) => {
+    try {
+      const { hostname, path, queryParams } = Linking.parse(url) as {
+        hostname?: string;
+        path?: string;
+        queryParams?: DeepLinkParams;
+      };
+
+      logger.info('Deep link received', { hostname, path, queryParams });
+
+      // Emergency deep link
+      if (queryParams?.emergency === 'true') {
+        logger.emergency('Emergency deep link triggered');
+        
+        // Trigger emergency alert immediately
+        await dispatch(triggerEmergencyAlert({
+          type: 'manual',
+          source: 'deep_link',
+        }));
+        
+        router.push('/(emergency)/active-alert');
+        return;
+      }
+
+      // Share location deep link
+      if (queryParams?.shareLocation === 'true' && queryParams?.contactId) {
+        router.push({
+          pathname: '/(main)/safety/location-sharing',
+          params: { contactId: queryParams.contactId },
+        });
+        return;
+      }
+
+      // Check-in deep link
+      if (queryParams?.checkIn) {
+        router.push({
+          pathname: '/(main)/safety/check-ins',
+          params: { checkInId: queryParams.checkIn },
+        });
+        return;
+      }
+
+      // Alert details deep link
+      if (queryParams?.alertId) {
+        router.push({
+          pathname: '/modal/alert-details',
+          params: { alertId: queryParams.alertId },
+        });
+        return;
+      }
+
+      // Contact profile deep link
+      if (queryParams?.contactId) {
+        router.push({
+          pathname: '/(main)/contacts/[id]',
+          params: { id: queryParams.contactId },
+        });
+        return;
+      }
+
+      // Default route handling
+      if (path) {
+        router.push(path);
+      }
+    } catch (error) {
+      logger.emergency('Deep link handling failed', error);
+    }
+  };
+
+  useEffect(() => {
+    // Handle initial URL if app was opened via deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+
+    // Listen for incoming links while app is running
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Generate deep links
+  const generateEmergencyLink = () => {
+    return Linking.createURL('', { queryParams: { emergency: 'true' } });
+  };
+
+  const generateLocationShareLink = (contactId: string) => {
+    return Linking.createURL('', { 
+      queryParams: { shareLocation: 'true', contactId } 
+    });
+  };
+
+  const generateCheckInLink = (checkInId: string) => {
+    return Linking.createURL('', { 
+      queryParams: { checkIn: checkInId } 
+    });
+  };
+
+  return {
+    generateEmergencyLink,
+    generateLocationShareLink,
+    generateCheckInLink,
+  };
+};
+```
+</CodeGroup>
+
+## Accessibility Navigation
+
+### Screen Reader Navigation
+
+<Steps>
+  <Step title="Accessibility Navigation Setup">
+    Configure navigation for screen readers and voice control
+    
+    ```typescript
+    // hooks/useAccessibleNavigation.ts
+    import { useEffect, useRef } from 'react';
+    import { AccessibilityInfo, findNodeHandle } from 'react-native';
+    import { useFocusEffect, useRouter } from 'expo-router';
+    import { logger } from '../utils/logger';
+
+    export const useAccessibleNavigation = (
+      screenTitle: string,
+      focusElementRef?: React.RefObject<any>
+    ) => {
+      const router = useRouter();
+      const announcementMade = useRef(false);
+
+      // Announce screen change to screen readers
+      useFocusEffect(() => {
+        if (!announcementMade.current) {
+          const announcement = `${screenTitle} screen`;
+          AccessibilityInfo.announceForAccessibility(announcement);
+          announcementMade.current = true;
+          
+          logger.info('Accessibility announcement', { announcement });
+        }
+
+        // Focus specific element if provided
+        if (focusElementRef?.current) {
+          const reactTag = findNodeHandle(focusElementRef.current);
+          if (reactTag) {
+            AccessibilityInfo.setAccessibilityFocus(reactTag);
+          }
+        }
+
+        return () => {
+          announcementMade.current = false;
+        };
+      });
+
+      // Emergency navigation shortcuts
+      const announceEmergencyRoute = () => {
+        AccessibilityInfo.announceForAccessibility(
+          'Emergency route activated. Emergency alert screen loaded.'
+        );
+      };
+
+      const announceNavigationChange = (destination: string) => {
+        AccessibilityInfo.announceForAccessibility(
+          `Navigating to ${destination}`
+        );
+      };
+
+      return {
+        announceEmergencyRoute,
+        announceNavigationChange,
+      };
+    };
+
+    // Voice command navigation
+    export const useVoiceNavigation = () => {
+      const router = useRouter();
+
+      const processVoiceCommand = (command: string) => {
+        const normalizedCommand = command.toLowerCase().trim();
+
+        // Emergency commands
+        if (normalizedCommand.includes('emergency') || normalizedCommand.includes('help')) {
+          AccessibilityInfo.announceForAccessibility('Activating emergency mode');
+          router.push('/(emergency)/alert');
+          return true;
+        }
+
+        // Navigation commands
+        const navigationCommands = {
+          'go home': '/(main)/dashboard',
+          'dashboard': '/(main)/dashboard',
+          'safety': '/(main)/safety',
+          'contacts': '/(main)/contacts',
+          'profile': '/(main)/profile',
+          'settings': '/(main)/profile/settings',
+        };
+
+        const route = navigationCommands[normalizedCommand];
+        if (route) {
+          AccessibilityInfo.announceForAccessibility(`Navigating to ${normalizedCommand}`);
+          router.push(route);
+          return true;
+        }
+
+        return false;
+      };
+
+      return { processVoiceCommand };
+    };
+    ```
+  </Step>
+  <Step title="Accessibility-Enhanced Screens">
+    Implement accessibility features in key screens
+    
+    ```typescript
+    // app/(main)/dashboard/index.tsx
+    import React, { useRef } from 'react';
+    import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+    import { useAccessibleNavigation } from '../../../src/hooks/useAccessibleNavigation';
+    import { EmergencyButton } from '../../../src/components/EmergencyButton';
+    import { QuickActions } from '../../../src/components/QuickActions';
+
+    export default function DashboardScreen() {
+      const headerRef = useRef(null);
+      const { announceNavigationChange } = useAccessibleNavigation(
+        'Safety Dashboard',
+        headerRef
+      );
+
+      return (
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentInsetAdjustmentBehavior="automatic"
+          accessibilityLabel="Safety dashboard screen"
+        >
+          <View style={{ padding: 16 }}>
+            <Text 
+              ref={headerRef}
+              style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}
+              accessible={true}
+              accessibilityRole="header"
+              accessibilityLabel="Safety Dashboard"
+            >
+              Welcome to Shelther
+            </Text>
+
+            {/* Emergency Section */}
+            <View 
+              style={{ marginBottom: 24 }}
+              accessible={true}
+              accessibilityRole="group"
+              accessibilityLabel="Emergency controls"
+            >
+              <Text 
+                style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}
+                accessibilityRole="header"
+              >
+                Emergency Controls
+              </Text>
+              
+              <EmergencyButton 
+                onPress={() => announceNavigationChange('emergency alert')}
+                accessibilityHint="Activates emergency alert to notify your emergency contacts"
+              />
+            </View>
+
+            {/* Quick Actions */}
+            <View
+              accessible={true}
+              accessibilityRole="group"
+              accessibilityLabel="Quick safety actions"
+            >
+              <Text 
+                style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}
+                accessibilityRole="header"
+              >
+                Quick Actions
+              </Text>
+              
+              <QuickActions 
+                onActionPress={(action) => {
+                  announceNavigationChange(action.label);
+                  // Handle action
+                }}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+## Navigation Performance
+
+### Performance Optimization
+
+<Accordion title="Navigation Performance Strategies">
+```typescript
+// hooks/useNavigationPerformance.ts
+import { useEffect } from 'react';
+import { useRouter, useSegments } from 'expo-router';
+import { InteractionManager } from 'react-native';
+import { logger } from '../utils/logger';
+
+export const useNavigationPerformance = () => {
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Preload critical screens
+  const preloadEmergencyScreens = () => {
+    InteractionManager.runAfterInteractions(() => {
+      // Preload emergency routes for faster access
+      import('../../app/(emergency)/alert');
+      import('../../app/(emergency)/countdown');
+      import('../../app/(emergency)/active-alert');
+      
+      logger.info('Emergency screens preloaded');
+    });
+  };
+
+  // Optimize navigation animations for emergency
+  const optimizeForEmergency = () => {
+    // Disable animations during emergency for faster response
+    const emergencyRoutes = ['(emergency)', 'modal/emergency'];
+    const currentRoute = segments.join('/');
+    
+    return emergencyRoutes.some(route => currentRoute.includes(route));
+  };
+
+  // Navigation performance monitoring
+  const measureNavigationTime = (from: string, to: string) => {
+    const startTime = performance.now();
+    
+    return () => {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      logger.info('Navigation performance', {
+        from,
+        to,
+        duration: `${duration.toFixed(2)}ms`,
+      });
+      
+      // Log slow navigation
+      if (duration > 1000) {
+        logger.warning('Slow navigation detected', { from, to, duration });
+      }
+    };
+  };
+
+  useEffect(() => {
+    preloadEmergencyScreens();
+  }, []);
+
+  return {
+    optimizeForEmergency,
+    measureNavigationTime,
+    preloadEmergencyScreens,
+  };
+};
+
+// Screen transition optimizations
+export const navigationOptions = {
+  emergency: {
+    animation: 'none', // No animation for emergency routes
+    gestureEnabled: false,
+    headerShown: false,
+  },
+  modal: {
+    presentation: 'modal' as const,
+    animation: 'slide_from_bottom' as const,
+  },
+  standard: {
+    animation: 'slide_from_right' as const,
+    gestureEnabled: true,
+  },
+};
+```
+</Accordion>
+
+## Navigation Testing
+
+### Testing Navigation Flows
+
+<CodeGroup>
+```typescript Navigation Test Utilities
+// utils/navigationTestUtils.tsx
+import React from 'react';
+import { render } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+const Stack = createStackNavigator();
+
+export const renderWithNavigation = (
+  component: React.ReactElement,
+  initialRoute = 'TestScreen'
+) => {
+  const NavigationTestWrapper = () => (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen name="TestScreen" component={() => component} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+
+  return render(<NavigationTestWrapper />);
+};
+
+// Mock navigation for testing
+export const mockRouter = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  back: jest.fn(),
+  canGoBack: jest.fn(() => true),
+  navigate: jest.fn(),
+};
+
+export const mockUseRouter = () => mockRouter;
+
+// Emergency navigation test helpers
+export const mockEmergencyNavigation = {
+  triggerEmergencyRoute: jest.fn(),
+  exitEmergencyMode: jest.fn(),
+  isEmergencyRoute: jest.fn(() => false),
+};
+```
+
+```typescript Navigation Tests
+// __tests__/navigation.test.tsx
+import React from 'react';
+import { fireEvent, waitFor } from '@testing-library/react-native';
+import { renderWithNavigation, mockRouter } from '../utils/navigationTestUtils';
+import { EmergencyButton } from '../components/EmergencyButton';
+
+// Mock expo-router
+jest.mock('expo-router', () => ({
+  useRouter: () => mockRouter,
+  useSegments: () => ['(main)', 'dashboard'],
+  useLocalSearchParams: () => ({}),
+}));
+
+describe('Navigation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should navigate to emergency screen when emergency button pressed', async () => {
+    const { getByTestId } = renderWithNavigation(
+      <EmergencyButton testID="emergency-button" />
+    );
+
+    const emergencyButton = getByTestId('emergency-button');
+    fireEvent.press(emergencyButton);
+
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalledWith('/(emergency)/alert');
+    });
+  });
+
+  test('should prevent back navigation during emergency', async () => {
+    const { getByTestId } = renderWithNavigation(
+      <EmergencyButton testID="emergency-button" />,
+      '(emergency)/alert'
+    );
+
+    // Simulate back button press
+    fireEvent(getByTestId('emergency-button'), 'hardwareBackPress');
+
+    await waitFor(() => {
+      expect(mockRouter.back).not.toHaveBeenCalled();
+    });
+  });
+
+  test('should handle deep links correctly', async () => {
+    const deepLinkUrl = 'shelther://emergency?emergency=true';
+    
+    // Test deep link handling
+    const { result } = renderHook(() => useDeepLinking());
+    
+    await act(async () => {
+      await result.current.handleDeepLink(deepLinkUrl);
+    });
+
+    expect(mockRouter.push).toHaveBeenCalledWith('/(emergency)/active-alert');
+  });
+});
+```
 </CodeGroup>
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Related Topic" icon="link" href="/related-page">
-    Description of related topic
+<Note>
+**Navigation Scalability:** This navigation setup scales efficiently as the app grows while maintaining emergency route priority and accessibility standards.
+</Note>
+
+Next in **Phase 4**, I'll continue with `location-services.mdx` to cover GPS tracking, geofencing, background location updates, and location sharing implementation.
+
+<CardGroup cols={3}>
+  <Card title="Location Services" icon="map-pin" href="/development/location-services">
+    GPS tracking, geofencing, and real-time location sharing
   </Card>
-  <Card title="Implementation Guide" icon="code" href="/implementation">
-    Step-by-step implementation guide
+  <Card title="Push Notifications" icon="bell" href="/development/push-notifications">
+    Emergency notifications and real-time alert delivery systems
+  </Card>
+  <Card title="Background Tasks" icon="clock" href="/development/background-tasks">
+    Background processing for safety monitoring and check-ins
   </Card>
 </CardGroup>
 
 ---
 
-<Note>
-This page was generated automatically. Update the content to match your documentation requirements.
-</Note>
+<Warning>
+**Emergency Navigation:** Always test emergency navigation flows thoroughly. Emergency routes should be accessible even when the app is in background or locked state.
+</Warning>
