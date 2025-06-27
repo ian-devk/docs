@@ -1,108 +1,279 @@
 ---
-title: "Supabase Setup & Configuration"
-description: "Complete guide to setting up Supabase backend for Shelther safety applications. Includes database schema, Row Level Security, real-time subscriptions, and authentication configuration."
+title: "Supabase Database Setup"
+description: "Configure Supabase PostgreSQL database for Shelther's Express.js backend. Includes schema design, connection setup, and Railway integration for production-ready safety applications."
 ---
 
-# Supabase Setup & Configuration
+# Supabase Database Setup
 
 <Info>
-**Safety-First Backend:** Supabase provides the reliable, real-time backend infrastructure essential for Shelther's emergency features. This guide covers the complete setup process optimized for safety-critical applications.
+**Database-First Architecture:** In Shelther's architecture, Supabase serves as the PostgreSQL database layer while Express.js on Railway handles all business logic, API endpoints, and external service integrations.
 </Info>
 
-## Overview
+## Architecture Overview
 
-Supabase serves as Shelther's Backend-as-a-Service platform, providing:
+Shelther's data architecture separates concerns for maximum reliability:
 
-<CardGroup cols={2}>
-  <Card title="PostgreSQL Database" icon="database">
-    ACID-compliant database with PostGIS for location queries and advanced indexing
+<CardGroup cols={3}>
+  <Card title="Supabase PostgreSQL" icon="database">
+    Primary database with ACID compliance, spatial queries, and real-time subscriptions
   </Card>
-  <Card title="Real-time Subscriptions" icon="bolt">
-    WebSocket-based real-time updates for emergency alerts and location sharing
+  <Card title="Express.js Backend" icon="server">
+    Business logic, API endpoints, authentication middleware, and emergency processing
   </Card>
-  <Card title="Authentication System" icon="key">
-    JWT-based auth with MFA support and emergency bypass mechanisms
-  </Card>
-  <Card title="Edge Functions" icon="server">
-    Serverless functions for emergency processing and third-party integrations
+  <Card title="Railway Hosting" icon="cloud">
+    Always-warm Express.js server with zero-downtime deployments and health monitoring
   </Card>
 </CardGroup>
 
-## Prerequisites
+```mermaid
+graph TB
+    subgraph "Client Tier"
+        A1[React Native App]
+        A2[Mobile Widgets]
+        A3[Background Tasks]
+    end
+    
+    subgraph "Application Tier"
+        B1[Express.js Server]
+        B2[Railway Platform]
+        B3[API Routes]
+        B4[Middleware Stack]
+    end
+    
+    subgraph "Database Tier"
+        C1[Supabase PostgreSQL]
+        C2[Real-time Engine]
+        C3[Connection Pooling]
+    end
+    
+    subgraph "External Services"
+        D1[Twilio SMS]
+        D2[Email Service]
+        D3[Push Notifications]
+    end
+    
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    B1 --> B2
+    B3 --> C1
+    B4 --> C1
+    C2 --> B1
+    B1 --> D1
+    B1 --> D2
+    B1 --> D3
+    
+    style C1 fill:#e1f5fe
+    style B1 fill:#f3e5f5
+    style B2 fill:#e8f5e8
+```
 
-Before starting, ensure you have:
-
-- [Supabase CLI](https://supabase.com/docs/guides/cli) installed
-- Node.js 18+ for local development
-- PostgreSQL knowledge for advanced configuration
-- Basic understanding of Row Level Security (RLS)
-
-## Project Initialization
+## Database Project Setup
 
 ### Create Supabase Project
 
 <Steps>
-  <Step title="Create Project">
-    Sign up at [supabase.com](https://supabase.com) and create a new project
+  <Step title="Create Database Project">
+    Create a new Supabase project focused on database functionality
     
     ```bash
-    # Initialize Supabase project locally
+    # Initialize project locally
     npx supabase init
     
-    # Link to your cloud project
+    # Link to your Supabase project
     npx supabase link --project-ref YOUR_PROJECT_ID
     ```
   </Step>
-  <Step title="Environment Configuration">
-    Set up environment variables in your `.env` file
+  <Step title="Configure Environment Variables">
+    Set up database connection for Express.js backend
     
     ```bash
-    # .env
-    EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-    EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+    # .env (Express.js backend)
+    DATABASE_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
+    SUPABASE_URL="https://[project-ref].supabase.co"
+    SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+    SUPABASE_JWT_SECRET="your-jwt-secret"
     ```
   </Step>
-  <Step title="Database Setup">
-    Configure the database with safety-optimized settings
+  <Step title="Database Connection Setup">
+    Configure PostgreSQL connection in Express.js
   </Step>
 </Steps>
 
-## Database Schema
+## Express.js Database Integration
+
+### Database Connection Configuration
+
+<CodeGroup>
+```typescript Database Connection Pool
+// src/config/database.ts
+import { Pool } from 'pg';
+import { logger } from '../utils/logger';
+
+const databaseConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  pool: {
+    min: 2,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  },
+};
+
+export const pool = new Pool(databaseConfig);
+
+// Test database connection
+pool.on('connect', () => {
+  logger.info('Database connection established');
+});
+
+pool.on('error', (err) => {
+  logger.error('Database connection error:', err);
+});
+
+// Health check function
+export const checkDatabaseHealth = async (): Promise<boolean> => {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT NOW()');
+    client.release();
+    return true;
+  } catch (error) {
+    logger.error('Database health check failed:', error);
+    return false;
+  }
+};
+```
+
+```typescript Supabase Client (Server-side)
+// src/config/supabase.ts
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '../types/database';
+
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false, // Server handles auth differently
+    persistSession: false,
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'shelther-express-server',
+    },
+  },
+});
+
+// Real-time client for server-side subscriptions
+export const realtimeClient = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
+```
+</CodeGroup>
+
+## Database Schema Design
 
 ### Core Safety Tables
 
 <CodeGroup>
-```sql Users & Profiles
--- Core user management
+```sql Users and Authentication
+-- Users table (managed by Express.js)
 CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR UNIQUE NOT NULL,
   phone_number VARCHAR,
-  full_name VARCHAR,
+  full_name VARCHAR NOT NULL,
+  password_hash VARCHAR NOT NULL,
+  email_verified BOOLEAN DEFAULT FALSE,
+  phone_verified BOOLEAN DEFAULT FALSE,
+  mfa_enabled BOOLEAN DEFAULT FALSE,
+  mfa_secret VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_login TIMESTAMP WITH TIME ZONE,
+  
+  -- Constraints
+  CONSTRAINT users_email_check CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+  CONSTRAINT users_phone_check CHECK (phone_number ~ '^\+?[1-9]\d{1,14}$')
 );
 
--- User safety profiles and preferences
-CREATE TABLE user_profiles (
+-- User sessions (managed by Express.js)
+CREATE TABLE user_sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  emergency_contacts JSONB DEFAULT '[]'::jsonb,
-  safety_preferences JSONB DEFAULT '{}'::jsonb,
-  privacy_settings JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  session_token VARCHAR NOT NULL UNIQUE,
+  refresh_token VARCHAR NOT NULL UNIQUE,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  device_info JSONB,
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for performance
-CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
+-- Indexes for authentication performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_phone ON users(phone_number);
+CREATE INDEX idx_sessions_token ON user_sessions(session_token);
+CREATE INDEX idx_sessions_user_id ON user_sessions(user_id);
 ```
 
-```sql Location & Emergency
--- Location tracking with high precision
+```sql Emergency Contacts System
+-- Emergency contacts with verification
+CREATE TABLE emergency_contacts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  contact_name VARCHAR NOT NULL,
+  contact_phone VARCHAR NOT NULL,
+  contact_email VARCHAR,
+  relationship VARCHAR NOT NULL,
+  priority_level INTEGER DEFAULT 1 CHECK (priority_level BETWEEN 1 AND 3),
+  verification_status VARCHAR DEFAULT 'pending' CHECK (
+    verification_status IN ('pending', 'verified', 'declined')
+  ),
+  verification_code VARCHAR(6),
+  verification_expires_at TIMESTAMP WITH TIME ZONE,
+  notification_preferences JSONB DEFAULT '{
+    "sms": true,
+    "email": true,
+    "call": false
+  }'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Prevent duplicate contacts
+  UNIQUE(user_id, contact_phone)
+);
+
+-- Contact verification attempts tracking
+CREATE TABLE contact_verification_attempts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contact_id UUID REFERENCES emergency_contacts(id) ON DELETE CASCADE,
+  verification_code VARCHAR(6) NOT NULL,
+  attempt_count INTEGER DEFAULT 1,
+  last_attempt_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  success BOOLEAN DEFAULT FALSE,
+  ip_address INET,
+  
+  -- Index for rate limiting
+  INDEX idx_verification_attempts_contact (contact_id, last_attempt_at)
+);
+```
+</CodeGroup>
+
+### Location and Emergency Data
+
+<CodeGroup>
+```sql Location Tracking
+-- Location updates with optimized storage
 CREATE TABLE location_updates (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -110,941 +281,707 @@ CREATE TABLE location_updates (
   longitude DECIMAL(11, 8) NOT NULL,
   accuracy REAL,
   altitude REAL,
-  battery_level INTEGER,
+  speed REAL,
+  heading REAL,
+  battery_level INTEGER CHECK (battery_level BETWEEN 0 AND 100),
   is_emergency BOOLEAN DEFAULT FALSE,
-  location_source VARCHAR DEFAULT 'gps',
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  location_source VARCHAR DEFAULT 'gps' CHECK (
+    location_source IN ('gps', 'network', 'passive', 'fused')
+  ),
+  session_id UUID,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '7 days'),
+  
+  -- Spatial column for PostGIS queries
+  geolocation GEOGRAPHY(POINT, 4326) GENERATED ALWAYS AS (
+    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+  ) STORED
 );
 
--- Emergency alerts and incidents
+-- High-performance indexes for location queries
+CREATE INDEX idx_location_user_time ON location_updates(user_id, timestamp DESC);
+CREATE INDEX idx_location_emergency ON location_updates(user_id, is_emergency) WHERE is_emergency = TRUE;
+CREATE INDEX idx_location_geospatial ON location_updates USING GIST(geolocation);
+CREATE INDEX idx_location_session ON location_updates(session_id, timestamp DESC);
+
+-- Automatic cleanup of old location data
+CREATE INDEX idx_location_cleanup ON location_updates(expires_at) WHERE expires_at < NOW();
+```
+
+```sql Emergency Alerts
+-- Emergency alerts with comprehensive tracking
 CREATE TABLE emergency_alerts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  alert_type VARCHAR NOT NULL CHECK (alert_type IN ('manual', 'automated', 'duress', 'check_in_missed')),
-  status VARCHAR NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'acknowledged', 'resolved', 'cancelled')),
-  location POINT,
+  alert_type VARCHAR NOT NULL CHECK (
+    alert_type IN ('manual', 'duress', 'check_in_missed', 'panic_button', 'fall_detection')
+  ),
+  trigger_method VARCHAR CHECK (
+    trigger_method IN ('button', 'shake', 'voice', 'widget', 'auto', 'wearable')
+  ),
+  status VARCHAR DEFAULT 'active' CHECK (
+    status IN ('active', 'acknowledged', 'resolved', 'false_alarm', 'cancelled')
+  ),
+  location_id UUID REFERENCES location_updates(id),
   message TEXT,
   evidence_files JSONB DEFAULT '[]'::jsonb,
   contacts_notified JSONB DEFAULT '[]'::jsonb,
+  response_log JSONB DEFAULT '[]'::jsonb,
+  escalation_level INTEGER DEFAULT 1 CHECK (escalation_level BETWEEN 1 AND 5),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  resolved_at TIMESTAMP WITH TIME ZONE
+  acknowledged_at TIMESTAMP WITH TIME ZONE,
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Performance indexes
+  INDEX idx_emergency_alerts_user_status (user_id, status),
+  INDEX idx_emergency_alerts_active (user_id, created_at DESC) WHERE status = 'active',
+  INDEX idx_emergency_alerts_recent (created_at DESC) WHERE created_at > NOW() - INTERVAL '24 hours'
 );
 
--- Performance indexes
-CREATE INDEX idx_location_updates_user_timestamp ON location_updates(user_id, timestamp DESC);
-CREATE INDEX idx_emergency_alerts_user_id ON emergency_alerts(user_id);
-CREATE INDEX idx_emergency_alerts_status ON emergency_alerts(status);
-CREATE INDEX idx_emergency_alerts_created_at ON emergency_alerts(created_at DESC);
+-- Emergency response tracking
+CREATE TABLE emergency_responses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  alert_id UUID REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+  contact_id UUID REFERENCES emergency_contacts(id),
+  response_type VARCHAR NOT NULL CHECK (
+    response_type IN ('sms_sent', 'email_sent', 'call_made', 'acknowledged', 'location_requested')
+  ),
+  response_status VARCHAR DEFAULT 'pending' CHECK (
+    response_status IN ('pending', 'delivered', 'failed', 'acknowledged')
+  ),
+  response_data JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  INDEX idx_emergency_responses_alert (alert_id, created_at DESC)
+);
 ```
 </CodeGroup>
 
-### Safety Features Tables
+### Check-in and Monitoring System
 
-<Accordion title="Check-ins and Scheduling">
-```sql
--- Scheduled check-ins for safety monitoring
+<CodeGroup>
+```sql Check-in System
+-- Scheduled check-ins with flexible configurations
 CREATE TABLE check_ins (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,
   actual_time TIMESTAMP WITH TIME ZONE,
-  status VARCHAR NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'missed', 'cancelled')),
-  location POINT,
-  activity_type VARCHAR,
+  status VARCHAR DEFAULT 'pending' CHECK (
+    status IN ('pending', 'completed', 'missed', 'cancelled', 'overdue')
+  ),
+  location_id UUID REFERENCES location_updates(id),
+  activity_type VARCHAR CHECK (
+    activity_type IN ('date', 'social', 'travel', 'work', 'exercise', 'other')
+  ),
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  reminder_sent BOOLEAN DEFAULT FALSE,
+  grace_period_minutes INTEGER DEFAULT 15 CHECK (grace_period_minutes BETWEEN 5 AND 60),
+  escalation_enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Index for time-based monitoring
+  INDEX idx_checkin_monitoring (status, scheduled_time) WHERE status IN ('pending', 'overdue')
 );
 
--- Index for time-based queries
-CREATE INDEX idx_check_ins_user_scheduled ON check_ins(user_id, scheduled_time);
-CREATE INDEX idx_check_ins_status_scheduled ON check_ins(status, scheduled_time);
+-- Check-in templates for recurring activities  
+CREATE TABLE check_in_templates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  template_name VARCHAR NOT NULL,
+  activity_type VARCHAR NOT NULL,
+  default_interval_minutes INTEGER NOT NULL,
+  default_grace_period INTEGER DEFAULT 15,
+  notification_preferences JSONB DEFAULT '{}'::jsonb,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(user_id, template_name)
+);
 ```
-</Accordion>
 
-<Accordion title="Location Sharing & Permissions">
-```sql
--- Location sharing with granular permissions
+```sql Location Sharing
+-- Temporary location sharing with permissions
 CREATE TABLE location_shares (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  shared_with_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  permissions JSONB NOT NULL DEFAULT '{"view_location": true, "view_history": false}'::jsonb,
+  shared_with_contact_id UUID REFERENCES emergency_contacts(id) ON DELETE CASCADE,
+  share_type VARCHAR DEFAULT 'emergency' CHECK (
+    share_type IN ('emergency', 'planned', 'check_in', 'continuous')
+  ),
+  permissions JSONB DEFAULT '{
+    "view_current": true,
+    "view_history": false,
+    "duration_hours": 24
+  }'::jsonb,
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   expires_at TIMESTAMP WITH TIME ZONE,
-  is_emergency_only BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, shared_with_user_id)
+  is_active BOOLEAN DEFAULT TRUE,
+  
+  -- Prevent duplicate shares
+  UNIQUE(user_id, shared_with_contact_id, share_type),
+  
+  -- Cleanup index
+  INDEX idx_location_shares_cleanup (expires_at) WHERE expires_at < NOW()
 );
-
--- Emergency contact verification
-CREATE TABLE contact_verifications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  contact_phone VARCHAR NOT NULL,
-  contact_email VARCHAR,
-  verification_code VARCHAR(6),
-  verified_at TIMESTAMP WITH TIME ZONE,
-  expires_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-</Accordion>
-
-<Accordion title="Community Safety Features">
-```sql
--- Venue safety ratings and community features
-CREATE TABLE venues (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR NOT NULL,
-  address TEXT,
-  location POINT NOT NULL,
-  venue_type VARCHAR,
-  safety_rating DECIMAL(3,2) CHECK (safety_rating >= 0 AND safety_rating <= 5),
-  verified BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Community safety reports
-CREATE TABLE venue_reports (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  venue_id UUID REFERENCES venues(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  report_type VARCHAR NOT NULL CHECK (report_type IN ('safety_concern', 'positive_experience', 'incident')),
-  description TEXT,
-  is_anonymous BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Spatial index for venue queries
-CREATE INDEX idx_venues_location ON venues USING GIST(location);
-CREATE INDEX idx_venue_reports_venue_id ON venue_reports(venue_id);
-```
-</Accordion>
-
-## Database Extensions & Configuration
-
-<Steps>
-  <Step title="Enable Extensions">
-    Install required PostgreSQL extensions for enhanced functionality
-    
-    ```sql
-    -- PostGIS for location queries
-    CREATE EXTENSION IF NOT EXISTS "postgis";
-    
-    -- UUID generation
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    
-    -- Full-text search
-    CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-    
-    -- Case-insensitive text
-    CREATE EXTENSION IF NOT EXISTS "citext";
-    ```
-  </Step>
-  <Step title="Custom Functions">
-    Create safety-specific database functions
-    
-    ```sql
-    -- Calculate distance between two points
-    CREATE OR REPLACE FUNCTION calculate_distance(
-      lat1 DOUBLE PRECISION,
-      lon1 DOUBLE PRECISION,
-      lat2 DOUBLE PRECISION,
-      lon2 DOUBLE PRECISION
-    ) RETURNS DOUBLE PRECISION AS $$
-    BEGIN
-      RETURN ST_Distance(
-        ST_MakePoint(lon1, lat1)::geography,
-        ST_MakePoint(lon2, lat2)::geography
-      );
-    END;
-    $$ LANGUAGE plpgsql;
-    
-    -- Check if user is in emergency state
-    CREATE OR REPLACE FUNCTION is_user_in_emergency(user_uuid UUID)
-    RETURNS BOOLEAN AS $$
-    BEGIN
-      RETURN EXISTS(
-        SELECT 1 FROM emergency_alerts 
-        WHERE user_id = user_uuid 
-        AND status = 'active'
-      );
-    END;
-    $$ LANGUAGE plpgsql;
-    ```
-  </Step>
-</Steps>
-
-## Row Level Security (RLS)
-
-<Warning>
-**Critical Security:** RLS policies are essential for protecting user data. Never disable RLS on tables containing personal information.
-</Warning>
-
-### Enable RLS on All Tables
-
-<CodeGroup>
-```sql Enable RLS
--- Enable RLS on all user data tables
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE location_updates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE emergency_alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE check_ins ENABLE ROW LEVEL SECURITY;
-ALTER TABLE location_shares ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contact_verifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE venue_reports ENABLE ROW LEVEL SECURITY;
-```
-
-```sql User Data Policies
--- Users can only access their own profile
-CREATE POLICY "Users can view own profile" ON users
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON users
-  FOR UPDATE USING (auth.uid() = id);
-
--- User profiles access control
-CREATE POLICY "Users can manage their profile" ON user_profiles
-  FOR ALL USING (auth.uid() = user_id);
-
--- Location data access with emergency sharing
-CREATE POLICY "Users can access their location data" ON location_updates
-  FOR ALL USING (
-    auth.uid() = user_id OR
-    EXISTS (
-      SELECT 1 FROM location_shares ls
-      WHERE ls.user_id = location_updates.user_id
-      AND ls.shared_with_user_id = auth.uid()
-      AND (ls.expires_at IS NULL OR ls.expires_at > NOW())
-    )
-  );
 ```
 </CodeGroup>
 
-### Emergency Override Policies
+## Database Functions and Triggers
 
-<Accordion title="Emergency Access Policies">
-```sql
--- Emergency alerts can be viewed by authorized contacts
-CREATE POLICY "Emergency contacts can view alerts" ON emergency_alerts
-  FOR SELECT USING (
-    auth.uid() = user_id OR
-    EXISTS (
-      SELECT 1 FROM user_profiles up,
-      jsonb_array_elements(up.emergency_contacts) AS contact
-      WHERE up.user_id = emergency_alerts.user_id
-      AND contact->>'user_id' = auth.uid()::text
-    )
-  );
-
--- Service role can access emergency data
-CREATE POLICY "Service role emergency access" ON emergency_alerts
-  FOR ALL USING (
-    auth.jwt() ->> 'role' = 'service_role' OR
-    emergency_alerts.status = 'active'
-  );
-```
-</Accordion>
-
-## Real-time Subscriptions
-
-### Configure Real-time Features
-
-<Steps>
-  <Step title="Enable Real-time">
-    Enable real-time subscriptions on safety-critical tables
-    
-    ```sql
-    -- Enable real-time on emergency tables
-    ALTER PUBLICATION supabase_realtime ADD TABLE emergency_alerts;
-    ALTER PUBLICATION supabase_realtime ADD TABLE location_updates;
-    ALTER PUBLICATION supabase_realtime ADD TABLE check_ins;
-    ALTER PUBLICATION supabase_realtime ADD TABLE location_shares;
-    ```
-  </Step>
-  <Step title="Real-time Policies">
-    Configure who can subscribe to real-time updates
-    
-    ```sql
-    -- Real-time policies for emergency alerts
-    CREATE POLICY "Real-time emergency alerts" ON emergency_alerts
-      FOR SELECT USING (
-        auth.uid() = user_id OR
-        EXISTS (
-          SELECT 1 FROM location_shares ls
-          WHERE ls.user_id = emergency_alerts.user_id
-          AND ls.shared_with_user_id = auth.uid()
-        )
-      );
-    ```
-  </Step>
-</Steps>
-
-### Client-Side Real-time Setup
+### Safety-Critical Functions
 
 <CodeGroup>
-```typescript Real-time Hook
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-export const useEmergencyAlerts = (userId: string) => {
-  const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Initial fetch
-    const fetchAlerts = async () => {
-      const { data, error } = await supabase
-        .from('emergency_alerts')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (data) setAlerts(data);
-      setLoading(false);
-    };
-
-    fetchAlerts();
-
-    // Real-time subscription
-    const subscription = supabase
-      .channel('emergency-alerts')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'emergency_alerts',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setAlerts(prev => [payload.new as EmergencyAlert, ...prev]);
-        } else if (payload.eventType === 'UPDATE') {
-          setAlerts(prev => 
-            prev.map(alert => 
-              alert.id === payload.new.id ? payload.new as EmergencyAlert : alert
-            )
-          );
-        }
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [userId]);
-
-  return { alerts, loading };
-};
-```
-
-```typescript Location Sharing
-export const useLocationSharing = () => {
-  const startSharing = async (userId: string, contactIds: string[]) => {
-    try {
-      // Create location share records
-      const shares = contactIds.map(contactId => ({
-        user_id: userId,
-        shared_with_user_id: contactId,
-        permissions: { view_location: true, view_history: false },
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
-      }));
-
-      const { error } = await supabase
-        .from('location_shares')
-        .upsert(shares);
-
-      if (error) throw error;
-
-      // Start real-time location updates
-      const subscription = supabase
-        .channel('location-sharing')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'location_updates',
-          filter: `user_id=eq.${userId}`
-        }, (payload) => {
-          // Handle real-time location updates
-          console.log('Location update:', payload.new);
-        })
-        .subscribe();
-
-      return subscription;
-    } catch (error) {
-      console.error('Error starting location sharing:', error);
-    }
-  };
-
-  return { startSharing };
-};
-```
-</CodeGroup>
-
-## Authentication Configuration
-
-### Configure Auth Settings
-
-<Steps>
-  <Step title="Auth Providers">
-    Enable authentication providers in Supabase dashboard
-    
-    **Email/Password:**
-    - Enable email confirmations for security
-    - Configure password requirements
-    - Set up email templates for safety branding
-    
-    **Social Providers:**
-    - Google OAuth for easy onboarding
-    - Apple Sign-In for iOS users
-    - Configure redirect URLs for mobile apps
-  </Step>
-  <Step title="Security Settings">
-    Configure advanced security options
-    
-    ```sql
-    -- Enable MFA for enhanced security
-    INSERT INTO auth.config (parameter, value) VALUES 
-    ('SECURITY_MFA_ENABLED', 'true');
-    
-    -- Set session timeout (4 hours for safety)
-    INSERT INTO auth.config (parameter, value) VALUES 
-    ('JWT_EXPIRY', '14400');
-    ```
-  </Step>
-</Steps>
-
-### Auth Hooks for Safety Features
-
-<CodeGroup>
-```sql Auth Triggers
--- Create user profile on signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+```sql Emergency Detection Functions
+-- Check if user has active emergency
+CREATE OR REPLACE FUNCTION is_user_in_emergency(user_uuid UUID)
+RETURNS BOOLEAN AS $$
 BEGIN
-  INSERT INTO users (id, email, full_name)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email)
+  RETURN EXISTS(
+    SELECT 1 FROM emergency_alerts 
+    WHERE user_id = user_uuid 
+    AND status = 'active'
+    AND created_at > NOW() - INTERVAL '4 hours'
   );
-  
-  INSERT INTO user_profiles (user_id, safety_preferences)
-  VALUES (
-    NEW.id,
-    '{
-      "emergency_timeout": 300,
-      "location_precision": "high",
-      "auto_check_in": false,
-      "emergency_bypass_enabled": true
-    }'::jsonb
-  );
-  
-  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger on user creation
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+-- Get overdue check-ins for monitoring
+CREATE OR REPLACE FUNCTION get_overdue_check_ins()
+RETURNS TABLE(
+  check_in_id UUID,
+  user_id UUID,
+  scheduled_time TIMESTAMP WITH TIME ZONE,
+  grace_period_minutes INTEGER,
+  minutes_overdue INTEGER
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    c.id,
+    c.user_id,
+    c.scheduled_time,
+    c.grace_period_minutes,
+    EXTRACT(EPOCH FROM (NOW() - c.scheduled_time))::INTEGER / 60 as minutes_overdue
+  FROM check_ins c
+  WHERE c.status = 'pending'
+    AND c.scheduled_time + INTERVAL '1 minute' * c.grace_period_minutes < NOW()
+    AND c.escalation_enabled = TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Calculate distance between two locations
+CREATE OR REPLACE FUNCTION calculate_distance_meters(
+  lat1 DOUBLE PRECISION,
+  lon1 DOUBLE PRECISION,
+  lat2 DOUBLE PRECISION,
+  lon2 DOUBLE PRECISION
+) RETURNS DOUBLE PRECISION AS $$
+BEGIN
+  RETURN ST_Distance(
+    ST_SetSRID(ST_MakePoint(lon1, lat1), 4326)::geography,
+    ST_SetSRID(ST_MakePoint(lon2, lat2), 4326)::geography
+  );
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 ```
 
-```typescript Client Auth Setup
-import { supabase } from './supabase';
+```sql Automated Triggers
+-- Update timestamps automatically
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-export const authService = {
-  signUp: async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
+-- Apply to relevant tables
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-    if (error) throw error;
-    return data;
-  },
+CREATE TRIGGER update_emergency_contacts_updated_at
+  BEFORE UPDATE ON emergency_contacts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-  signIn: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+CREATE TRIGGER update_check_ins_updated_at
+  BEFORE UPDATE ON check_ins
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-    if (error) throw error;
-    return data;
-  },
+-- Automatic cleanup trigger for expired location data
+CREATE OR REPLACE FUNCTION cleanup_expired_locations()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM location_updates 
+  WHERE expires_at < NOW() - INTERVAL '1 day';
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
-  signOut: async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  },
-
-  // Emergency bypass for critical situations
-  emergencyBypass: async (phone: string, verificationCode: string) => {
-    const { data, error } = await supabase.functions.invoke('emergency-auth', {
-      body: { phone, verificationCode }
-    });
-
-    if (error) throw error;
-    return data;
-  }
-};
+-- Schedule cleanup trigger
+CREATE TRIGGER trigger_cleanup_locations
+  AFTER INSERT ON location_updates
+  FOR EACH STATEMENT EXECUTE FUNCTION cleanup_expired_locations();
 ```
 </CodeGroup>
 
-## Edge Functions
+## Express.js Database Integration
 
-### Emergency Processing Function
+### Database Service Layer
 
 <CodeGroup>
-```typescript Emergency Handler
-// supabase/functions/emergency-alert/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+```typescript User Service
+// src/services/UserService.ts
+import { pool } from '../config/database';
+import { logger } from '../utils/logger';
+import bcrypt from 'bcrypt';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { userId, alertType, location, evidence } = await req.json();
-
-    // Create emergency alert
-    const { data: alert, error: alertError } = await supabase
-      .from('emergency_alerts')
-      .insert([{
-        user_id: userId,
-        alert_type: alertType,
-        location: `POINT(${location.longitude} ${location.latitude})`,
-        evidence_files: evidence || []
-      }])
-      .select()
-      .single();
-
-    if (alertError) throw alertError;
-
-    // Get emergency contacts
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('emergency_contacts')
-      .eq('user_id', userId)
-      .single();
-
-    // Send notifications to emergency contacts
-    const contacts = profile?.emergency_contacts || [];
-    const notificationPromises = contacts.map(async (contact: any) => {
-      // Send SMS via Twilio or similar service
-      return fetch('https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa('YOUR_ACCOUNT_SID:YOUR_AUTH_TOKEN')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          To: contact.phone,
-          From: '+1234567890',
-          Body: `EMERGENCY ALERT: ${contact.name} needs help. Location: ${location.latitude}, ${location.longitude}. Alert ID: ${alert.id}`
-        })
+export class UserService {
+  async createUser(userData: CreateUserData): Promise<User> {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Hash password
+      const passwordHash = await bcrypt.hash(userData.password, 12);
+      
+      // Create user
+      const userQuery = `
+        INSERT INTO users (email, phone_number, full_name, password_hash)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, email, phone_number, full_name, created_at
+      `;
+      
+      const result = await client.query(userQuery, [
+        userData.email,
+        userData.phoneNumber,
+        userData.fullName,
+        passwordHash
+      ]);
+      
+      await client.query('COMMIT');
+      
+      logger.info('User created successfully', {
+        userId: result.rows[0].id,
+        email: userData.email
       });
-    });
-
-    await Promise.all(notificationPromises);
-
-    return new Response(
-      JSON.stringify({ success: true, alertId: alert.id }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+      
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error('User creation failed', { error, userData });
+      throw error;
+    } finally {
+      client.release();
+    }
   }
-});
+  
+  async authenticateUser(email: string, password: string): Promise<User | null> {
+    const query = `
+      SELECT id, email, full_name, password_hash, mfa_enabled
+      FROM users 
+      WHERE email = $1 AND email_verified = TRUE
+    `;
+    
+    const result = await pool.query(query, [email]);
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const user = result.rows[0];
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return null;
+    }
+    
+    // Update last login
+    await pool.query(
+      'UPDATE users SET last_login = NOW() WHERE id = $1',
+      [user.id]
+    );
+    
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.full_name,
+      mfaEnabled: user.mfa_enabled
+    };
+  }
+}
 ```
 
-```typescript Location Processor
-// supabase/functions/process-location/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+```typescript Emergency Service
+// src/services/EmergencyService.ts
+import { pool } from '../config/database';
+import { realtimeClient } from '../config/supabase';
+import { NotificationService } from './NotificationService';
 
-serve(async (req) => {
-  try {
-    const { userId, location, batteryLevel } = await req.json();
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Store location update
-    const { error } = await supabase
-      .from('location_updates')
-      .insert([{
-        user_id: userId,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: location.accuracy,
-        battery_level: batteryLevel,
-        timestamp: new Date().toISOString()
-      }]);
-
-    if (error) throw error;
-
-    // Check for missed check-ins
-    const { data: missedCheckIns } = await supabase
-      .from('check_ins')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'pending')
-      .lt('scheduled_time', new Date().toISOString());
-
-    // Auto-trigger emergency if check-ins are significantly overdue
-    for (const checkIn of missedCheckIns || []) {
-      const overdueMinutes = (Date.now() - new Date(checkIn.scheduled_time).getTime()) / (1000 * 60);
+export class EmergencyService {
+  constructor(private notificationService: NotificationService) {}
+  
+  async triggerEmergencyAlert(alertData: EmergencyAlertData): Promise<EmergencyAlert> {
+    const client = await pool.connect();
+    const startTime = Date.now();
+    
+    try {
+      await client.query('BEGIN');
       
-      if (overdueMinutes > 30) { // 30 minutes overdue
-        await supabase.functions.invoke('emergency-alert', {
-          body: {
-            userId,
-            alertType: 'check_in_missed',
-            location,
-            checkInId: checkIn.id
-          }
+      // Store location if provided
+      let locationId = null;
+      if (alertData.location) {
+        const locationQuery = `
+          INSERT INTO location_updates (
+            user_id, latitude, longitude, accuracy, is_emergency, timestamp
+          ) VALUES ($1, $2, $3, $4, TRUE, NOW())
+          RETURNING id
+        `;
+        
+        const locationResult = await client.query(locationQuery, [
+          alertData.userId,
+          alertData.location.latitude,
+          alertData.location.longitude,
+          alertData.location.accuracy || null
+        ]);
+        
+        locationId = locationResult.rows[0].id;
+      }
+      
+      // Create emergency alert
+      const alertQuery = `
+        INSERT INTO emergency_alerts (
+          user_id, alert_type, trigger_method, location_id, message, status
+        ) VALUES ($1, $2, $3, $4, $5, 'active')
+        RETURNING *
+      `;
+      
+      const alertResult = await client.query(alertQuery, [
+        alertData.userId,
+        alertData.alertType,
+        alertData.triggerMethod,
+        locationId,
+        alertData.message
+      ]);
+      
+      const alert = alertResult.rows[0];
+      
+      // Get emergency contacts
+      const contactsQuery = `
+        SELECT * FROM emergency_contacts 
+        WHERE user_id = $1 AND verification_status = 'verified'
+        ORDER BY priority_level, created_at
+      `;
+      
+      const contactsResult = await client.query(contactsQuery, [alertData.userId]);
+      const contacts = contactsResult.rows;
+      
+      await client.query('COMMIT');
+      
+      // Send notifications asynchronously (don't block the response)
+      this.notifyEmergencyContacts(alert, contacts).catch(error => {
+        logger.error('Emergency notification failed', { alertId: alert.id, error });
+      });
+      
+      // Trigger real-time update
+      realtimeClient.channel('emergency-alerts').send({
+        type: 'broadcast',
+        event: 'emergency_triggered',
+        payload: { alert, userId: alertData.userId }
+      });
+      
+      logger.info('Emergency alert created', {
+        alertId: alert.id,
+        userId: alertData.userId,
+        alertType: alertData.alertType,
+        processingTime: Date.now() - startTime
+      });
+      
+      return alert;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error('Emergency alert creation failed', {
+        userId: alertData.userId,
+        error,
+        processingTime: Date.now() - startTime
+      });
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  
+  private async notifyEmergencyContacts(alert: EmergencyAlert, contacts: EmergencyContact[]): Promise<void> {
+    const notificationPromises = contacts.map(async (contact) => {
+      try {
+        // Send notifications based on preferences
+        const responses = [];
+        
+        if (contact.notification_preferences.sms) {
+          responses.push(await this.notificationService.sendEmergencySMS(contact, alert));
+        }
+        
+        if (contact.notification_preferences.email) {
+          responses.push(await this.notificationService.sendEmergencyEmail(contact, alert));
+        }
+        
+        // Log notification attempts
+        for (const response of responses) {
+          await pool.query(`
+            INSERT INTO emergency_responses (
+              alert_id, contact_id, response_type, response_status, response_data
+            ) VALUES ($1, $2, $3, $4, $5)
+          `, [
+            alert.id,
+            contact.id,
+            response.type,
+            response.success ? 'delivered' : 'failed',
+            JSON.stringify(response.data)
+          ]);
+        }
+      } catch (error) {
+        logger.error('Contact notification failed', {
+          alertId: alert.id,
+          contactId: contact.id,
+          error
         });
       }
-    }
-
-    return new Response(JSON.stringify({ success: true }));
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400 }
-    );
+    });
+    
+    await Promise.allSettled(notificationPromises);
   }
-});
+}
 ```
 </CodeGroup>
 
-## Performance Optimization
+## Real-time Integration
 
-### Database Performance
-
-<Accordion title="Query Optimization">
-**Essential Indexes:**
-```sql
--- Location-based queries (critical for safety)
-CREATE INDEX idx_location_updates_spatial 
-  ON location_updates USING GIST(ST_MakePoint(longitude, latitude));
-
--- Time-series queries for recent data
-CREATE INDEX idx_location_updates_recent 
-  ON location_updates(user_id, timestamp DESC) 
-  WHERE timestamp > (NOW() - INTERVAL '24 hours');
-
--- Emergency alert performance
-CREATE INDEX idx_emergency_alerts_active 
-  ON emergency_alerts(user_id, status) 
-  WHERE status = 'active';
-
--- Partial indexes for performance
-CREATE INDEX idx_check_ins_pending 
-  ON check_ins(user_id, scheduled_time) 
-  WHERE status = 'pending';
-```
-
-**Connection Pooling:**
-```typescript
-// Configure connection pooling for high-load scenarios
-const supabaseOptions = {
-  db: {
-    schema: 'public',
-  },
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 5, // Balance between real-time and performance
-    },
-  },
-  global: {
-    headers: {
-      'x-client-info': 'shelther-mobile@1.0.0',
-    },
-  },
-};
-```
-</Accordion>
-
-### Real-time Optimization
-
-<Steps>
-  <Step title="Channel Management">
-    Optimize real-time channels for battery and performance
-    
-    ```typescript
-    // Efficient channel subscription
-    const subscribeToEmergencyUpdates = (userId: string) => {
-      return supabase
-        .channel(`emergency-${userId}`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'emergency_alerts',
-          filter: `user_id=eq.${userId}`
-        }, handleEmergencyUpdate)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'location_updates',
-          filter: `user_id=eq.${userId}`
-        }, handleLocationUpdate)
-        .subscribe();
-    };
-    ```
-  </Step>
-  <Step title="Selective Subscriptions">
-    Subscribe only to necessary data to reduce battery usage
-    
-    ```typescript
-    // Subscribe only during active sharing
-    const manageLocationSubscriptions = (isSharing: boolean, sharedUsers: string[]) => {
-      if (isSharing) {
-        return sharedUsers.map(userId => 
-          supabase
-            .channel(`location-${userId}`)
-            .on('postgres_changes', {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'location_updates',
-              filter: `user_id=eq.${userId}`,
-            }, updateLocationData)
-            .subscribe()
-        );
-      }
-      return [];
-    };
-    ```
-  </Step>
-</Steps>
-
-## Local Development Setup
-
-### Development Workflow
+### Server-Side Real-time Setup
 
 <CodeGroup>
-```bash Local Supabase
-# Start local Supabase development
-npx supabase start
+```typescript Real-time Service
+// src/services/RealtimeService.ts
+import { realtimeClient } from '../config/supabase';
+import { logger } from '../utils/logger';
 
-# Reset database to clean state
-npx supabase db reset
-
-# Generate TypeScript types
-npx supabase gen types typescript --local > types/supabase.ts
-
-# Create new migration
-npx supabase migration new add_safety_features
-```
-
-```typescript Environment Setup
-// lib/supabase.ts - Development configuration
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/supabase';
-
-const supabaseUrl = __DEV__ 
-  ? 'http://localhost:54321' 
-  : process.env.EXPO_PUBLIC_SUPABASE_URL!;
-
-const supabaseKey = __DEV__
-  ? 'your-local-anon-key'
-  : process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
-  auth: {
-    ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export class RealtimeService {
+  private subscriptions = new Map<string, any>();
+  
+  async initializeServerSubscriptions(): Promise<void> {
+    // Monitor for missed check-ins
+    const checkInSubscription = realtimeClient
+      .channel('missed-checkins')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'check_ins',
+        filter: 'status=eq.overdue'
+      }, this.handleMissedCheckIn)
+      .subscribe();
+    
+    this.subscriptions.set('check-ins', checkInSubscription);
+    
+    // Monitor emergency alerts for escalation
+    const emergencySubscription = realtimeClient
+      .channel('emergency-escalation')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'emergency_alerts'
+      }, this.handleNewEmergencyAlert)
+      .subscribe();
+    
+    this.subscriptions.set('emergency', emergencySubscription);
+    
+    logger.info('Real-time subscriptions initialized');
+  }
+  
+  private handleMissedCheckIn = async (payload: any) => {
+    const checkIn = payload.new;
+    logger.warn('Check-in missed', { checkInId: checkIn.id, userId: checkIn.user_id });
+    
+    // Trigger emergency alert after grace period
+    // Implementation handled by background job service
+  };
+  
+  private handleNewEmergencyAlert = async (payload: any) => {
+    const alert = payload.new;
+    logger.info('New emergency alert detected', { alertId: alert.id });
+    
+    // Broadcast to connected clients for this user's contacts
+    await this.broadcastToUserContacts(alert.user_id, {
+      type: 'emergency_alert',
+      data: alert
+    });
+  };
+  
+  async broadcastToUserContacts(userId: string, message: any): Promise<void> {
+    // Get user's emergency contacts
+    const result = await pool.query(`
+      SELECT shared_with_contact_id 
+      FROM location_shares 
+      WHERE user_id = $1 AND is_active = TRUE
+    `, [userId]);
+    
+    // Broadcast to each contact's channel
+    result.rows.forEach(row => {
+      realtimeClient
+        .channel(`user-${row.shared_with_contact_id}`)
+        .send({
+          type: 'broadcast',
+          event: 'emergency_update',
+          payload: message
+        });
+    });
+  }
+  
+  async cleanup(): Promise<void> {
+    for (const [name, subscription] of this.subscriptions) {
+      await subscription.unsubscribe();
+      logger.info(`Unsubscribed from ${name} channel`);
+    }
+    this.subscriptions.clear();
+  }
+}
 ```
 </CodeGroup>
 
-## Testing Strategy
+## Testing and Monitoring
 
-<Warning>
-**Safety Testing:** Always test emergency features in safe environments. Use test data and avoid triggering real emergency services during development.
-</Warning>
-
-### Database Testing
+### Database Health Monitoring
 
 <Steps>
-  <Step title="Unit Tests">
-    Test database functions and policies
-    
-    ```sql
-    -- Test emergency alert creation
-    SELECT plan(1);
-    
-    SELECT ok(
-      is_user_in_emergency('550e8400-e29b-41d4-a716-446655440000'),
-      'User should be in emergency state after alert creation'
-    );
-    
-    SELECT * FROM finish();
-    ```
-  </Step>
-  <Step title="Integration Tests">
-    Test real-time subscriptions and data flow
+  <Step title="Connection Pool Monitoring">
+    Monitor database connection health and performance
     
     ```typescript
-    describe('Emergency Alert System', () => {
-      it('should notify emergency contacts in real-time', async () => {
-        const alertData = {
-          user_id: testUserId,
-          alert_type: 'manual',
-          location: { latitude: 40.7128, longitude: -74.0060 }
+    // src/middleware/database-health.ts
+    export const databaseHealthCheck = async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const start = Date.now();
+        await pool.query('SELECT NOW()');
+        const responseTime = Date.now() - start;
+        
+        if (responseTime > 1000) { // 1 second threshold
+          logger.warn('Database response time high', { responseTime });
+        }
+        
+        res.locals.dbHealth = {
+          status: 'healthy',
+          responseTime,
+          activeConnections: pool.totalCount,
+          idleConnections: pool.idleCount
         };
         
-        const subscription = supabase
-          .channel('test-emergency')
-          .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'emergency_alerts'
-          }, (payload) => {
-            expect(payload.new.user_id).toBe(testUserId);
-          })
-          .subscribe();
-          
-        await supabase.from('emergency_alerts').insert(alertData);
-        
-        // Clean up
-        subscription.unsubscribe();
-      });
-    });
+        next();
+      } catch (error) {
+        logger.error('Database health check failed', error);
+        res.locals.dbHealth = { status: 'unhealthy', error: error.message };
+        next();
+      }
+    };
+    ```
+  </Step>
+  <Step title="Query Performance Monitoring">
+    Track slow queries and optimization opportunities
+    
+    ```sql
+    -- Enable query logging for performance analysis
+    ALTER SYSTEM SET log_statement = 'all';
+    ALTER SYSTEM SET log_min_duration_statement = 1000; -- Log queries > 1s
+    SELECT pg_reload_conf();
+    
+    -- Create monitoring view for slow queries
+    CREATE VIEW slow_queries AS
+    SELECT query, mean_exec_time, calls, total_exec_time
+    FROM pg_stat_statements
+    WHERE mean_exec_time > 100 -- queries taking > 100ms on average
+    ORDER BY mean_exec_time DESC;
     ```
   </Step>
 </Steps>
 
 ## Production Deployment
 
-### Deployment Checklist
+### Railway Database Configuration
 
-<Note>
-**Production Readiness:** Ensure all security measures are in place before deploying to production. Safety applications require extra security verification.
-</Note>
-
-- [ ] Row Level Security enabled on all tables
-- [ ] Database backups configured with point-in-time recovery
-- [ ] SSL certificates and TLS 1.3 enforced
-- [ ] Rate limiting configured for API endpoints
-- [ ] Monitoring and alerting set up for emergency functions
-- [ ] Edge function deployment tested
-- [ ] Real-time subscriptions load tested
-- [ ] Emergency notification pathways verified
-
-### Monitoring Setup
+<Warning>
+**Production Security:** Ensure all security measures are properly configured before deploying to production. Safety applications require extra security verification.
+</Warning>
 
 <CardGroup cols={2}>
-  <Card title="Database Monitoring" icon="database">
-    Monitor query performance, connection pool usage, and emergency alert processing times
+  <Card title="Connection Security" icon="shield">
+    SSL connections, connection pooling, and prepared statements for security
   </Card>
-  <Card title="Real-time Monitoring" icon="activity">
-    Track subscription health, message delivery rates, and connection stability
+  <Card title="Performance Tuning" icon="gauge">
+    Optimized indexes, query plans, and connection pool sizing
   </Card>
-  <Card title="Function Monitoring" icon="server">
-    Monitor edge function execution times, error rates, and emergency processing success
+  <Card title="Backup Strategy" icon="backup">
+    Automated backups with point-in-time recovery for emergency data
   </Card>
-  <Card title="Security Monitoring" icon="shield">
-    Track authentication attempts, failed queries, and potential security threats
+  <Card title="Monitoring Setup" icon="monitor">
+    Real-time monitoring of database performance and alert systems
   </Card>
 </CardGroup>
 
-## Troubleshooting
+### Environment Configuration
 
-### Common Issues
+<CodeGroup>
+```bash Production Environment
+# Railway deployment environment
+DATABASE_URL="postgresql://postgres:password@db.railway.app:5432/railway"
+DATABASE_POOL_MIN=5
+DATABASE_POOL_MAX=20
+DATABASE_SSL_MODE="require"
 
-<Accordion title="Real-time Connection Issues">
-**Problem:** Real-time subscriptions not receiving updates
+# Supabase configuration
+SUPABASE_URL="https://project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+SUPABASE_JWT_SECRET="your-jwt-secret"
 
-**Solutions:**
-1. Check RLS policies allow real-time access
-2. Verify table is added to supabase_realtime publication
-3. Confirm client authentication and permissions
-4. Check network connectivity and WebSocket support
-
-```typescript
-// Debug real-time connection
-const debugSubscription = supabase
-  .channel('debug')
-  .on('postgres_changes', {
-    event: '*',
-    schema: 'public',
-    table: 'emergency_alerts'
-  }, (payload) => {
-    console.log('Real-time payload:', payload);
-  })
-  .subscribe((status, err) => {
-    console.log('Subscription status:', status);
-    if (err) console.error('Subscription error:', err);
-  });
+# Real-time configuration
+REALTIME_ENABLED=true
+REALTIME_MAX_CONNECTIONS=100
 ```
-</Accordion>
 
-<Accordion title="RLS Policy Problems">
-**Problem:** Users cannot access their own data
-
-**Solutions:**
-1. Verify user authentication is working
-2. Check JWT token contains correct user ID
-3. Test policies with service role
-4. Use `auth.uid()` function correctly in policies
-
-```sql
--- Debug RLS policies
-SELECT auth.uid(); -- Should return current user ID
-SELECT current_setting('request.jwt.claims', true)::json; -- Check JWT claims
+```typescript Production Database Config
+// src/config/database.prod.ts
+export const productionDbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  pool: {
+    min: parseInt(process.env.DATABASE_POOL_MIN || '5'),
+    max: parseInt(process.env.DATABASE_POOL_MAX || '20'),
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    acquireTimeoutMillis: 60000,
+  },
+  statement_timeout: 30000, // 30 seconds
+  query_timeout: 30000,
+  connectionTimeoutMillis: 2000,
+};
 ```
-</Accordion>
+</CodeGroup>
 
 ## Next Steps
 
 <CardGroup cols={3}>
-  <Card title="Local Development" icon="code" href="/development/local-development">
-    Set up your local development environment with Supabase integration
+  <Card title="Express.js Setup" icon="server" href="/development/express-setup">
+    Configure Express.js server with database integration and API routes
   </Card>
-  <Card title="Component Development" icon="puzzle-piece" href="/development/component-development">
-    Build React Native components that integrate with Supabase
+  <Card title="Authentication System" icon="key" href="/development/authentication">
+    Implement JWT-based authentication with your PostgreSQL user system
   </Card>
-  <Card title="Testing Strategy" icon="test-tube" href="/development/testing-strategy">
-    Comprehensive testing approach for safety-critical features
+  <Card title="API Development" icon="api" href="/development/api-routes">
+    Build REST API endpoints that interact with your database schema
   </Card>
 </CardGroup>
 
 ---
 
-<Info>
-**Security Reminder:** Always keep your Supabase service role key secure and never expose it in client-side code. Use environment variables and proper secret management for production deployments.
-</Info>
+<Note>
+**Architecture Note:** This setup treats Supabase as a PostgreSQL database with real-time capabilities, while Express.js handles all business logic, authentication, and external service integration. This provides better control over safety-critical operations while leveraging Supabase's excellent database features.
+</Note>

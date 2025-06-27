@@ -1,0 +1,1944 @@
+---
+title: "Shelther Design System"
+description: "Complete design system documentation for Shelther's safety-focused mobile platform. Built for React Native with safety-critical principles, comprehensive component library, and production-ready implementation guidelines."
+icon: "palette"
+---
+
+# Shelther Design System
+
+<Info>
+**Safety-First Design System** for the modern era. This comprehensive guide covers every aspect of Shelther's design language, from foundational tokens to complex component interactions, optimized for emergency situations and daily safety monitoring.
+</Info>
+
+## Executive Overview
+
+Shelther's design system is purpose-built for **safety-critical mobile applications** where clarity, accessibility, and reliability can save lives. Our design language balances modern aesthetics with functional requirements for high-stress situations, ensuring every interaction is intuitive, accessible, and trustworthy.
+
+<CardGroup cols={2}>
+  <Card title="Production Architecture" icon="code">
+    **React Native 0.74+** with Expo SDK 52, TypeScript 5.3+, and Express.js backend integration
+  </Card>
+  <Card title="Safety Standards" icon="shield">
+    **WCAG 2.1 AA** compliant with emergency-optimized touch targets and stress-tested usability
+  </Card>
+  <Card title="Performance Metrics" icon="zap">
+    **&lt;500ms** emergency response times with 99.9% uptime reliability standards
+  </Card>
+  <Card title="Cross-Platform" icon="mobile">
+    **Unified experience** across iOS, Android, and web with responsive design principles
+  </Card>
+</CardGroup>
+
+---
+
+## Design Philosophy
+
+### Core Principles
+
+Our design system is built on four foundational principles that guide every design decision:
+
+<Accordion title="Safety-First Design">
+**Emergency Optimization**: Every component is designed to function under stress, with large touch targets (minimum 44px), high contrast ratios (4.5:1+), and clear visual hierarchy that guides users to critical actions.
+
+**Stress-Tested Usability**: Interface elements are tested in simulated emergency scenarios to ensure functionality when users are under pressure, distracted, or in low-light conditions.
+
+**Fault-Tolerant Interactions**: Multiple confirmation paths and clear undo mechanisms prevent accidental actions while maintaining speed for genuine emergencies.
+</Accordion>
+
+<Accordion title="Trustworthy Aesthetics">
+**Professional Confidence**: Clean, modern design language that builds user trust through consistent application of design tokens and predictable interaction patterns.
+
+**Emotional Intelligence**: Calming color gradients and warm interface elements reduce anxiety while maintaining alertness for safety features.
+
+**Brand Reliability**: Consistent visual identity that reinforces Shelther's commitment to user safety across all touchpoints.
+</Accordion>
+
+<Accordion title="Universal Accessibility">
+**Inclusive by Design**: Complete WCAG 2.1 AA compliance with support for screen readers, motor accessibility, and cognitive accessibility considerations.
+
+**Multi-Modal Interaction**: Support for voice commands, gesture controls, and traditional touch interfaces to accommodate diverse user needs.
+
+**Cultural Sensitivity**: Color choices and iconography that work across cultural contexts without relying on cultural assumptions.
+</Accordion>
+
+<Accordion title="Performance Excellence">
+**Instant Response**: Optimized for &lt;200ms standard interactions and &lt;500ms emergency response times with predictable performance across device ranges.
+
+**Battery Efficiency**: Power-optimized animations and background processes that don't compromise device longevity during extended safety monitoring.
+
+**Network Resilience**: Graceful degradation for low-connectivity scenarios with offline-first critical functions.
+</Accordion>
+
+---
+
+## Design Token System
+
+### Foundation Tokens
+
+Our token system uses a three-tier hierarchy: **Primitive** → **Semantic** → **Component** tokens, ensuring scalability and maintainability across the entire platform.
+
+#### Color System
+
+<CodeGroup>
+```json Primitive Color Tokens
+{
+  "color": {
+    "primitive": {
+      "purple": {
+        "50": "#F3F0FF",
+        "100": "#E9E2FF", 
+        "200": "#D1C2FF",
+        "300": "#B49CFF",
+        "400": "#A78BFA",
+        "500": "#8B5CF6",
+        "600": "#7C3AED",
+        "700": "#6D28D9",
+        "800": "#5B21B6",
+        "900": "#4C1D95"
+      },
+      "cyan": {
+        "50": "#ECFEFF",
+        "100": "#CFFAFE",
+        "200": "#A5F3FC", 
+        "300": "#67E8F9",
+        "400": "#22D3EE",
+        "500": "#06B6D4",
+        "600": "#0891B2",
+        "700": "#0E7490",
+        "800": "#155E75",
+        "900": "#164E63"
+      },
+      "green": {
+        "50": "#F0FDF4",
+        "100": "#DCFCE7",
+        "200": "#BBF7D0",
+        "300": "#86EFAC", 
+        "400": "#4ADE80",
+        "500": "#22C55E",
+        "600": "#16A34A",
+        "700": "#15803D",
+        "800": "#166534",
+        "900": "#14532D"
+      },
+      "amber": {
+        "50": "#FFFBEB",
+        "100": "#FEF3C7",
+        "200": "#FDE68A",
+        "300": "#FCD34D",
+        "400": "#FBBF24", 
+        "500": "#F59E0B",
+        "600": "#D97706",
+        "700": "#B45309",
+        "800": "#92400E",
+        "900": "#78350F"
+      },
+      "red": {
+        "50": "#FEF2F2",
+        "100": "#FEE2E2",
+        "200": "#FECACA",
+        "300": "#FCA5A5",
+        "400": "#F87171",
+        "500": "#EF4444",
+        "600": "#DC2626", 
+        "700": "#B91C1C",
+        "800": "#991B1B",
+        "900": "#7F1D1D"
+      },
+      "gray": {
+        "50": "#F9FAFB",
+        "100": "#F3F4F6",
+        "200": "#E5E7EB",
+        "300": "#D1D5DB",
+        "400": "#9CA3AF",
+        "500": "#6B7280",
+        "600": "#4B5563",
+        "700": "#374151",
+        "800": "#1F2937",
+        "900": "#111827"
+      }
+    }
+  }
+}
+```
+
+```json Semantic Color Tokens  
+{
+  "color": {
+    "semantic": {
+      "brand": {
+        "primary": "{color.primitive.purple.500}",
+        "secondary": "{color.primitive.cyan.500}",
+        "gradient": {
+          "start": "{color.primitive.purple.500}",
+          "end": "{color.primitive.cyan.500}"
+        }
+      },
+      "status": {
+        "safe": "{color.primitive.green.500}",
+        "warning": "{color.primitive.amber.500}", 
+        "danger": "{color.primitive.red.500}",
+        "info": "{color.primitive.cyan.600}"
+      },
+      "surface": {
+        "primary": "{color.primitive.gray.50}",
+        "secondary": "{color.primitive.gray.100}",
+        "tertiary": "{color.primitive.gray.200}",
+        "inverse": "{color.primitive.gray.900}"
+      },
+      "text": {
+        "primary": "{color.primitive.gray.900}",
+        "secondary": "{color.primitive.gray.600}",
+        "tertiary": "{color.primitive.gray.400}",
+        "inverse": "{color.primitive.gray.50}",
+        "on-brand": "{color.primitive.gray.50}"
+      },
+      "border": {
+        "subtle": "{color.primitive.gray.200}",
+        "default": "{color.primitive.gray.300}",
+        "strong": "{color.primitive.gray.400}"
+      }
+    }
+  }
+}
+```
+
+```json Component Color Tokens
+{
+  "component": {
+    "button": {
+      "primary": {
+        "background": "{color.semantic.brand.primary}",
+        "text": "{color.semantic.text.on-brand}",
+        "border": "transparent"
+      },
+      "emergency": {
+        "background": "{color.semantic.status.danger}",
+        "text": "{color.semantic.text.inverse}",
+        "border": "transparent"
+      },
+      "secondary": {
+        "background": "transparent",
+        "text": "{color.semantic.brand.primary}",
+        "border": "{color.semantic.border.default}"
+      }
+    },
+    "card": {
+      "background": "{color.semantic.surface.primary}",
+      "border": "{color.semantic.border.subtle}",
+      "shadow": "rgba(0, 0, 0, 0.1)"
+    },
+    "status": {
+      "safe": {
+        "background": "rgba(34, 197, 94, 0.1)",
+        "text": "{color.primitive.green.700}",
+        "icon": "{color.semantic.status.safe}"
+      },
+      "warning": {
+        "background": "rgba(245, 158, 11, 0.1)", 
+        "text": "{color.primitive.amber.700}",
+        "icon": "{color.semantic.status.warning}"
+      },
+      "danger": {
+        "background": "rgba(239, 68, 68, 0.1)",
+        "text": "{color.primitive.red.700}",
+        "icon": "{color.semantic.status.danger}"
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+#### Typography System
+
+<CodeGroup>
+```json Font Tokens
+{
+  "font": {
+    "family": {
+      "primary": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      "display": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      "mono": "'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace"
+    },
+    "weight": {
+      "light": 300,
+      "normal": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "extrabold": 800
+    },
+    "size": {
+      "xs": "0.75rem",    // 12px
+      "sm": "0.875rem",   // 14px  
+      "base": "1rem",     // 16px
+      "lg": "1.125rem",   // 18px
+      "xl": "1.25rem",    // 20px
+      "2xl": "1.5rem",    // 24px
+      "3xl": "1.875rem",  // 30px
+      "4xl": "2.25rem"    // 36px
+    },
+    "lineHeight": {
+      "tight": 1.25,
+      "normal": 1.5,
+      "relaxed": 1.75
+    }
+  }
+}
+```
+
+```json Typography Scale Tokens
+{
+  "typography": {
+    "display": {
+      "large": {
+        "fontSize": "{font.size.4xl}",
+        "fontWeight": "{font.weight.bold}",
+        "lineHeight": "{font.lineHeight.tight}",
+        "letterSpacing": "-0.025em"
+      },
+      "medium": {
+        "fontSize": "{font.size.3xl}",
+        "fontWeight": "{font.weight.bold}",
+        "lineHeight": "{font.lineHeight.tight}",
+        "letterSpacing": "-0.025em"
+      }
+    },
+    "heading": {
+      "h1": {
+        "fontSize": "{font.size.3xl}",
+        "fontWeight": "{font.weight.semibold}", 
+        "lineHeight": "{font.lineHeight.tight}"
+      },
+      "h2": {
+        "fontSize": "{font.size.2xl}",
+        "fontWeight": "{font.weight.semibold}",
+        "lineHeight": "{font.lineHeight.tight}"
+      },
+      "h3": {
+        "fontSize": "{font.size.xl}",
+        "fontWeight": "{font.weight.semibold}",
+        "lineHeight": "{font.lineHeight.normal}"
+      },
+      "h4": {
+        "fontSize": "{font.size.lg}",
+        "fontWeight": "{font.weight.medium}",
+        "lineHeight": "{font.lineHeight.normal}"
+      }
+    },
+    "body": {
+      "large": {
+        "fontSize": "{font.size.lg}",
+        "fontWeight": "{font.weight.normal}",
+        "lineHeight": "{font.lineHeight.relaxed}"
+      },
+      "default": {
+        "fontSize": "{font.size.base}",
+        "fontWeight": "{font.weight.normal}",
+        "lineHeight": "{font.lineHeight.normal}"
+      },
+      "small": {
+        "fontSize": "{font.size.sm}",
+        "fontWeight": "{font.weight.normal}",
+        "lineHeight": "{font.lineHeight.normal}"
+      }
+    },
+    "caption": {
+      "fontSize": "{font.size.xs}",
+      "fontWeight": "{font.weight.medium}",
+      "lineHeight": "{font.lineHeight.normal}",
+      "textTransform": "uppercase",
+      "letterSpacing": "0.05em"
+    }
+  }
+}
+```
+</CodeGroup>
+
+#### Spacing & Layout Tokens
+
+<CodeGroup>
+```json Spacing Tokens (8pt Grid System)
+{
+  "spacing": {
+    "primitive": {
+      "0": "0",
+      "1": "0.25rem",   // 4px
+      "2": "0.5rem",    // 8px  
+      "3": "0.75rem",   // 12px
+      "4": "1rem",      // 16px
+      "5": "1.25rem",   // 20px
+      "6": "1.5rem",    // 24px
+      "8": "2rem",      // 32px
+      "10": "2.5rem",   // 40px
+      "12": "3rem",     // 48px
+      "16": "4rem",     // 64px
+      "20": "5rem",     // 80px
+      "24": "6rem"      // 96px
+    },
+    "semantic": {
+      "page": {
+        "horizontal": "{spacing.primitive.4}",
+        "vertical": "{spacing.primitive.6}"
+      },
+      "section": "{spacing.primitive.8}",
+      "component": "{spacing.primitive.4}",
+      "element": "{spacing.primitive.2}",
+      "inline": "{spacing.primitive.1}"
+    },
+    "component": {
+      "card": {
+        "padding": "{spacing.primitive.4}",
+        "gap": "{spacing.primitive.3}"
+      },
+      "button": {
+        "paddingX": "{spacing.primitive.6}",
+        "paddingY": "{spacing.primitive.3}",
+        "gap": "{spacing.primitive.2}"
+      },
+      "input": {
+        "padding": "{spacing.primitive.3}",
+        "gap": "{spacing.primitive.2}"
+      }
+    }
+  }
+}
+```
+
+```json Border Radius Tokens
+{
+  "borderRadius": {
+    "none": "0",
+    "sm": "0.25rem",    // 4px
+    "default": "0.5rem", // 8px
+    "lg": "0.75rem",    // 12px
+    "xl": "1rem",       // 16px
+    "2xl": "1.5rem",    // 24px
+    "full": "9999px"
+  }
+}
+```
+
+```json Shadow Tokens
+{
+  "shadow": {
+    "sm": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    "default": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    "lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    "xl": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Component Library
+
+### Foundation Components
+
+#### Button System
+
+The button component is central to Shelther's safety-first design, with variants optimized for different contexts and urgency levels.
+
+<CodeGroup>
+```typescript React Native Implementation
+// components/Button/Button.tsx
+import React from 'react';
+import { 
+  TouchableOpacity, 
+  Text, 
+  View, 
+  StyleSheet, 
+  ViewStyle, 
+  TextStyle 
+} from 'react-native';
+import { tokens } from '../tokens';
+
+export interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'emergency' | 'ghost';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  disabled?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  onPress?: () => void;
+  children: React.ReactNode;
+  testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  icon,
+  iconPosition = 'left',
+  onPress,
+  children,
+  testID,
+  accessibilityLabel,
+  accessibilityHint,
+}) => {
+  const buttonStyle: ViewStyle = [
+    styles.base,
+    styles[variant],
+    styles[size],
+    disabled && styles.disabled,
+    loading && styles.loading,
+  ].filter(Boolean);
+
+  const textStyle: TextStyle = [
+    styles.text,
+    styles[`${variant}Text`],
+    styles[`${size}Text`],
+    disabled && styles.disabledText,
+  ].filter(Boolean);
+
+  return (
+    <TouchableOpacity
+      style={buttonStyle}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
+    >
+      <View style={styles.content}>
+        {icon && iconPosition === 'left' && (
+          <View style={styles.iconLeft}>{icon}</View>
+        )}
+        
+        <Text style={textStyle}>{children}</Text>
+        
+        {icon && iconPosition === 'right' && (
+          <View style={styles.iconRight}>{icon}</View>
+        )}
+        
+        {loading && (
+          <View style={styles.loadingIndicator}>
+            {/* Loading spinner component */}
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  base: {
+    borderRadius: tokens.borderRadius.default,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 44, // WCAG touch target minimum
+  },
+  
+  // Variant styles
+  primary: {
+    backgroundColor: tokens.color.component.button.primary.background,
+    borderWidth: 0,
+  },
+  secondary: {
+    backgroundColor: tokens.color.component.button.secondary.background,
+    borderWidth: 1,
+    borderColor: tokens.color.component.button.secondary.border,
+  },
+  emergency: {
+    backgroundColor: tokens.color.component.button.emergency.background,
+    borderWidth: 0,
+    minHeight: 56, // Larger touch target for emergencies
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  
+  // Size styles
+  sm: {
+    paddingHorizontal: tokens.spacing.primitive[4],
+    paddingVertical: tokens.spacing.primitive[2],
+    minHeight: 36,
+  },
+  md: {
+    paddingHorizontal: tokens.spacing.primitive[6],
+    paddingVertical: tokens.spacing.primitive[3],
+  },
+  lg: {
+    paddingHorizontal: tokens.spacing.primitive[8],
+    paddingVertical: tokens.spacing.primitive[4],
+    minHeight: 52,
+  },
+  xl: {
+    paddingHorizontal: tokens.spacing.primitive[10],
+    paddingVertical: tokens.spacing.primitive[5],
+    minHeight: 56,
+  },
+  
+  // State styles
+  disabled: {
+    opacity: 0.5,
+  },
+  loading: {
+    opacity: 0.8,
+  },
+  
+  // Content and text styles
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontFamily: tokens.font.family.primary,
+    fontWeight: tokens.font.weight.medium,
+    textAlign: 'center',
+  },
+  primaryText: {
+    color: tokens.color.component.button.primary.text,
+    fontSize: tokens.font.size.base,
+  },
+  secondaryText: {
+    color: tokens.color.component.button.secondary.text,
+    fontSize: tokens.font.size.base,
+  },
+  emergencyText: {
+    color: tokens.color.component.button.emergency.text,
+    fontSize: tokens.font.size.lg,
+    fontWeight: tokens.font.weight.bold,
+  },
+  ghostText: {
+    color: tokens.color.semantic.text.primary,
+    fontSize: tokens.font.size.base,
+  },
+  disabledText: {
+    opacity: 0.6,
+  },
+  
+  // Icon styles
+  iconLeft: {
+    marginRight: tokens.spacing.primitive[2],
+  },
+  iconRight: {
+    marginLeft: tokens.spacing.primitive[2],
+  },
+  loadingIndicator: {
+    marginLeft: tokens.spacing.primitive[2],
+  },
+});
+
+export default Button;
+```
+
+```typescript Storybook Stories
+// components/Button/Button.stories.tsx
+import type { Meta, StoryObj } from '@storybook/react-native';
+import { View } from 'react-native';
+import Button from './Button';
+import { PhoneIcon, ShieldIcon } from '../icons';
+
+const meta: Meta<typeof Button> = {
+  title: 'Components/Button',
+  component: Button,
+  parameters: {
+    docs: {
+      description: {
+        component: 'Primary button component optimized for safety-critical interactions. Includes emergency variant with enhanced accessibility and larger touch targets.',
+      },
+    },
+  },
+  decorators: [
+    (Story) => (
+      <View style={{ padding: 20, backgroundColor: '#f9fafb' }}>
+        <Story />
+      </View>
+    ),
+  ],
+  argTypes: {
+    variant: {
+      control: { type: 'select' },
+      options: ['primary', 'secondary', 'emergency', 'ghost'],
+      description: 'Visual style variant',
+    },
+    size: {
+      control: { type: 'select' },
+      options: ['sm', 'md', 'lg', 'xl'],
+      description: 'Size variant affecting padding and minimum height',
+    },
+    disabled: {
+      control: { type: 'boolean' },
+      description: 'Disables interaction and applies disabled styling',
+    },
+    loading: {
+      control: { type: 'boolean' },
+      description: 'Shows loading state with spinner',
+    },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Primary: Story = {
+  args: {
+    children: 'Primary Button',
+    variant: 'primary',
+  },
+};
+
+export const Emergency: Story = {
+  args: {
+    children: 'Emergency Alert',
+    variant: 'emergency',
+    accessibilityLabel: 'Trigger emergency alert',
+    accessibilityHint: 'Sends immediate alert to your emergency contacts',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Emergency button with enhanced touch target (56px) and high-contrast styling for crisis situations.',
+      },
+    },
+  },
+};
+
+export const WithIcon: Story = {
+  args: {
+    children: 'Call Emergency Contact',
+    variant: 'primary',
+    icon: <PhoneIcon size={20} />,
+    iconPosition: 'left',
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    children: 'Sending Alert...',
+    variant: 'primary',
+    loading: true,
+  },
+};
+
+export const AllSizes: Story = {
+  render: () => (
+    <View style={{ gap: 16 }}>
+      <Button size="sm">Small Button</Button>
+      <Button size="md">Medium Button</Button>
+      <Button size="lg">Large Button</Button>
+      <Button size="xl">Extra Large Button</Button>
+    </View>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'All available button sizes showing touch target requirements.',
+      },
+    },
+  },
+};
+
+export const AllVariants: Story = {
+  render: () => (
+    <View style={{ gap: 16 }}>
+      <Button variant="primary">Primary Button</Button>
+      <Button variant="secondary">Secondary Button</Button>
+      <Button variant="emergency" icon={<ShieldIcon size={24} />}>
+        Emergency Alert
+      </Button>
+      <Button variant="ghost">Ghost Button</Button>
+    </View>
+  ),
+};
+```
+</CodeGroup>
+
+#### Card Component
+
+<CodeGroup>
+```typescript Card Component
+// components/Card/Card.tsx
+import React from 'react';
+import { 
+  View, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ViewStyle 
+} from 'react-native';
+import { tokens } from '../tokens';
+
+export interface CardProps {
+  variant?: 'default' | 'interactive' | 'elevated';
+  padding?: 'sm' | 'md' | 'lg';
+  onPress?: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  style?: ViewStyle;
+}
+
+const Card: React.FC<CardProps> = ({
+  variant = 'default',
+  padding = 'md',
+  onPress,
+  disabled = false,
+  children,
+  testID,
+  accessibilityLabel,
+  accessibilityHint,
+  style,
+}) => {
+  const cardStyle: ViewStyle = [
+    styles.base,
+    styles[variant],
+    styles[padding],
+    disabled && styles.disabled,
+    style,
+  ].filter(Boolean);
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={cardStyle}
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.95}
+        testID={testID}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole="button"
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={cardStyle} testID={testID}>
+      {children}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  base: {
+    backgroundColor: tokens.color.component.card.background,
+    borderRadius: tokens.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: tokens.color.component.card.border,
+  },
+  
+  // Variant styles
+  default: {
+    shadowColor: tokens.color.component.card.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  interactive: {
+    shadowColor: tokens.color.component.card.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  elevated: {
+    shadowColor: tokens.color.component.card.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  
+  // Padding styles
+  sm: {
+    padding: tokens.spacing.primitive[3],
+  },
+  md: {
+    padding: tokens.spacing.primitive[4],
+  },
+  lg: {
+    padding: tokens.spacing.primitive[6],
+  },
+  
+  // State styles
+  disabled: {
+    opacity: 0.6,
+  },
+});
+
+export default Card;
+```
+</CodeGroup>
+
+### Safety-Specific Components
+
+#### Emergency Status Banner
+
+<CodeGroup>
+```typescript Emergency Status Component
+// components/EmergencyStatus/EmergencyStatus.tsx
+import React from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { tokens } from '../tokens';
+
+export interface EmergencyStatusProps {
+  status: 'safe' | 'warning' | 'danger' | 'monitoring';
+  message: string;
+  animate?: boolean;
+  onPress?: () => void;
+}
+
+const EmergencyStatus: React.FC<EmergencyStatusProps> = ({
+  status,
+  message,
+  animate = false,
+  onPress,
+}) => {
+  const pulseAnimation = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    if (animate && status === 'danger') {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnimation, {
+            toValue: 0.8,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnimation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [animate, status, pulseAnimation]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.container,
+        styles[status],
+        animate && status === 'danger' && { 
+          transform: [{ scale: pulseAnimation }] 
+        }
+      ]}
+    >
+      <View style={styles.content}>
+        <View style={[styles.indicator, styles[`${status}Indicator`]]} />
+        <Text style={[styles.text, styles[`${status}Text`]]}>
+          {message}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: tokens.borderRadius.lg,
+    padding: tokens.spacing.primitive[4],
+    marginHorizontal: tokens.spacing.primitive[4],
+    marginVertical: tokens.spacing.primitive[2],
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.primitive[3],
+  },
+  indicator: {
+    width: 12,
+    height: 12,
+    borderRadius: tokens.borderRadius.full,
+  },
+  text: {
+    flex: 1,
+    fontSize: tokens.font.size.base,
+    fontWeight: tokens.font.weight.medium,
+    fontFamily: tokens.font.family.primary,
+  },
+  
+  // Status variants
+  safe: {
+    backgroundColor: tokens.color.component.status.safe.background,
+  },
+  warning: {
+    backgroundColor: tokens.color.component.status.warning.background,
+  },
+  danger: {
+    backgroundColor: tokens.color.component.status.danger.background,
+  },
+  monitoring: {
+    backgroundColor: tokens.color.semantic.surface.secondary,
+  },
+  
+  // Indicator variants
+  safeIndicator: {
+    backgroundColor: tokens.color.component.status.safe.icon,
+  },
+  warningIndicator: {
+    backgroundColor: tokens.color.component.status.warning.icon,
+  },
+  dangerIndicator: {
+    backgroundColor: tokens.color.component.status.danger.icon,
+  },
+  monitoringIndicator: {
+    backgroundColor: tokens.color.semantic.brand.primary,
+  },
+  
+  // Text variants
+  safeText: {
+    color: tokens.color.component.status.safe.text,
+  },
+  warningText: {
+    color: tokens.color.component.status.warning.text,
+  },
+  dangerText: {
+    color: tokens.color.component.status.danger.text,
+  },
+  monitoringText: {
+    color: tokens.color.semantic.text.primary,
+  },
+});
+
+export default EmergencyStatus;
+```
+</CodeGroup>
+
+---
+
+## Layout System
+
+### Responsive Grid
+
+Shelther uses a flexible grid system optimized for mobile-first design with safety considerations.
+
+<CodeGroup>
+```typescript Grid System
+// components/Layout/Grid.tsx
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { tokens } from '../tokens';
+
+export interface GridProps {
+  columns?: 1 | 2 | 3 | 4;
+  gap?: keyof typeof tokens.spacing.primitive;
+  children: React.ReactNode;
+  style?: ViewStyle;
+}
+
+const Grid: React.FC<GridProps> = ({
+  columns = 2,
+  gap = '4',
+  children,
+  style,
+}) => {
+  const gridStyle: ViewStyle = {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing.primitive[gap],
+    ...style,
+  };
+
+  const itemStyle: ViewStyle = {
+    flex: columns === 1 ? 1 : undefined,
+    width: columns === 1 ? '100%' : 
+           columns === 2 ? `${(100 - 2) / 2}%` :
+           columns === 3 ? `${(100 - 4) / 3}%` :
+           `${(100 - 6) / 4}%`,
+  };
+
+  return (
+    <View style={gridStyle}>
+      {React.Children.map(children, (child, index) => (
+        <View key={index} style={itemStyle}>
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+export default Grid;
+```
+
+```typescript Container System
+// components/Layout/Container.tsx
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { tokens } from '../tokens';
+
+export interface ContainerProps {
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  padding?: boolean;
+  children: React.ReactNode;
+  style?: ViewStyle;
+}
+
+const Container: React.FC<ContainerProps> = ({
+  maxWidth = 'full',
+  padding = true,
+  children,
+  style,
+}) => {
+  return (
+    <View style={[
+      styles.base,
+      padding && styles.padding,
+      styles[maxWidth],
+      style
+    ]}>
+      {children}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  base: {
+    width: '100%',
+    marginHorizontal: 'auto',
+  },
+  padding: {
+    paddingHorizontal: tokens.spacing.semantic.page.horizontal,
+  },
+  sm: { maxWidth: 640 },
+  md: { maxWidth: 768 },
+  lg: { maxWidth: 1024 },
+  xl: { maxWidth: 1280 },
+  full: { maxWidth: '100%' },
+});
+
+export default Container;
+```
+</CodeGroup>
+
+---
+
+## Accessibility Guidelines
+
+### Touch Target Requirements
+
+Safety-critical applications require enhanced touch target specifications:
+
+<Accordion title="Touch Target Specifications">
+**Minimum Sizes:**
+- Standard interactive elements: 44×44px (iOS HIG, Android Material)
+- Emergency actions: 56×56px minimum
+- Secondary actions: 48×48px recommended
+
+**Spacing Requirements:**
+- Minimum 8px spacing between adjacent touch targets
+- 12px spacing for emergency-adjacent elements
+- 16px spacing in high-stress interface areas
+
+**Implementation:**
+```typescript
+const touchTargetSizes = {
+  minimum: 44,
+  recommended: 48, 
+  emergency: 56,
+  spacing: {
+    minimum: 8,
+    recommended: 12,
+    emergency: 16,
+  }
+};
+```
+</Accordion>
+
+### Screen Reader Support
+
+<CodeGroup>
+```typescript Accessibility Props
+// Enhanced accessibility for safety components
+interface AccessibilityProps {
+  accessibilityLabel: string;
+  accessibilityHint?: string;
+  accessibilityRole?: 'button' | 'link' | 'text' | 'image';
+  accessibilityState?: {
+    disabled?: boolean;
+    busy?: boolean;
+    expanded?: boolean;
+    selected?: boolean;
+  };
+  accessibilityActions?: Array<{
+    name: string;
+    label: string;
+  }>;
+}
+
+// Example: Emergency Button with comprehensive a11y
+<Button
+  variant="emergency"
+  accessibilityLabel="Emergency alert button"
+  accessibilityHint="Double tap to send immediate emergency alert to your trusted contacts"
+  accessibilityRole="button"
+  accessibilityState={{ 
+    busy: isLoading,
+    disabled: isDisabled 
+  }}
+  accessibilityActions={[
+    { name: 'activate', label: 'Send emergency alert' },
+    { name: 'longpress', label: 'Cancel emergency alert' }
+  ]}
+>
+  Emergency Alert
+</Button>
+```
+</CodeGroup>
+
+### Color Contrast Standards
+
+All color combinations meet WCAG 2.1 AA standards with enhanced ratios for safety-critical elements:
+
+| Element Type | Standard Ratio | Shelther Requirement |
+|--------------|----------------|---------------------|
+| Normal text | 4.5:1 | 4.5:1 minimum |
+| Large text | 3:1 | 3:1 minimum |
+| Emergency elements | 4.5:1 | 5:1 minimum |
+| Status indicators | 3:1 | 4:1 minimum |
+
+---
+
+## Dark Mode Implementation
+
+### Automatic Theme Switching
+
+<CodeGroup>
+```typescript Theme Provider
+// contexts/ThemeContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Appearance, ColorSchemeName } from 'react-native';
+
+interface ThemeContextType {
+  theme: 'light' | 'dark' | 'auto';
+  colorScheme: ColorSchemeName;
+  setTheme: (theme: 'light' | 'dark' | 'auto') => void;
+  tokens: typeof lightTokens;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ 
+  children 
+}) => {
+  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
+  const [colorScheme, setColorScheme] = useState<ColorSchemeName>(
+    Appearance.getColorScheme()
+  );
+
+  useEffect(() => {
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      setColorScheme(colorScheme);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  const effectiveScheme = theme === 'auto' ? colorScheme : theme;
+  const tokens = effectiveScheme === 'dark' ? darkTokens : lightTokens;
+
+  return (
+    <ThemeContext.Provider value={{
+      theme,
+      colorScheme: effectiveScheme,
+      setTheme,
+      tokens,
+    }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+};
+```
+
+```json Dark Mode Tokens
+{
+  "color": {
+    "semantic": {
+      "surface": {
+        "primary": "{color.primitive.gray.900}",
+        "secondary": "{color.primitive.gray.800}",
+        "tertiary": "{color.primitive.gray.700}"
+      },
+      "text": {
+        "primary": "{color.primitive.gray.50}",
+        "secondary": "{color.primitive.gray.300}",
+        "tertiary": "{color.primitive.gray.400}"
+      },
+      "border": {
+        "subtle": "{color.primitive.gray.700}",
+        "default": "{color.primitive.gray.600}",
+        "strong": "{color.primitive.gray.500}"
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Performance Guidelines
+
+### Animation Performance
+
+<CodeGroup>
+```typescript Optimized Animations
+// utils/animations.ts
+import { Animated, Easing } from 'react-native';
+
+export const animationConfig = {
+  // Timing configurations
+  timing: {
+    fast: 150,
+    normal: 250,
+    slow: 350,
+    easing: Easing.out(Easing.quad),
+  },
+  
+  // Spring configurations
+  spring: {
+    tension: 100,
+    friction: 8,
+    useNativeDriver: true,
+  },
+};
+
+// Optimized button press animation
+export const createPressAnimation = (scale: Animated.Value) => {
+  return Animated.sequence([
+    Animated.timing(scale, {
+      toValue: 0.95,
+      duration: animationConfig.timing.fast,
+      easing: animationConfig.timing.easing,
+      useNativeDriver: true,
+    }),
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: animationConfig.timing.fast,
+      easing: animationConfig.timing.easing,
+      useNativeDriver: true,
+    }),
+  ]);
+};
+
+// Emergency pulse animation
+export const createEmergencyPulse = (scale: Animated.Value) => {
+  return Animated.loop(
+    Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 1.05,
+        duration: 1000,
+        easing: Easing.inOut(Easing.sine),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.inOut(Easing.sine),
+        useNativeDriver: true,
+      }),
+    ])
+  );
+};
+```
+</CodeGroup>
+
+### Memory Management
+
+<CodeGroup>
+```typescript Performance Monitoring
+// utils/performance.ts
+import { InteractionManager } from 'react-native';
+
+export class PerformanceMonitor {
+  private static instance: PerformanceMonitor;
+  private metricsLog: Array<{
+    timestamp: number;
+    event: string;
+    duration?: number;
+    metadata?: Record<string, any>;
+  }> = [];
+
+  static getInstance(): PerformanceMonitor {
+    if (!PerformanceMonitor.instance) {
+      PerformanceMonitor.instance = new PerformanceMonitor();
+    }
+    return PerformanceMonitor.instance;
+  }
+
+  logEvent(event: string, metadata?: Record<string, any>) {
+    this.metricsLog.push({
+      timestamp: Date.now(),
+      event,
+      metadata,
+    });
+  }
+
+  measureAsyncOperation<T>(
+    operation: () => Promise<T>,
+    operationName: string
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      InteractionManager.runAfterInteractions(() => {
+        operation()
+          .then((result) => {
+            const duration = Date.now() - startTime;
+            this.metricsLog.push({
+              timestamp: startTime,
+              event: operationName,
+              duration,
+              metadata: { success: true },
+            });
+            resolve(result);
+          })
+          .catch((error) => {
+            const duration = Date.now() - startTime;
+            this.metricsLog.push({
+              timestamp: startTime,
+              event: operationName,
+              duration,
+              metadata: { success: false, error: error.message },
+            });
+            reject(error);
+          });
+      });
+    });
+  }
+
+  getMetrics() {
+    return this.metricsLog;
+  }
+
+  clearMetrics() {
+    this.metricsLog = [];
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Implementation Guidelines
+
+### Storybook Integration
+
+<CodeGroup>
+```typescript Storybook Configuration
+// .storybook/main.ts
+import type { StorybookConfig } from '@storybook/react-native';
+
+const main: StorybookConfig = {
+  stories: [
+    '../components/**/*.stories.@(js|jsx|ts|tsx)',
+    '../features/**/*.stories.@(js|jsx|ts|tsx)',
+  ],
+  addons: [
+    '@storybook/addon-ondevice-controls',
+    '@storybook/addon-ondevice-actions',
+    '@storybook/addon-ondevice-backgrounds',
+    '@storybook/addon-ondevice-notes',
+  ],
+  framework: {
+    name: '@storybook/react-native',
+    options: {},
+  },
+  typescript: {
+    check: false,
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+    },
+  },
+};
+
+export default main;
+```
+
+```typescript Component Documentation Template
+// Documentation template for new components
+import type { Meta, StoryObj } from '@storybook/react-native';
+import ComponentName from './ComponentName';
+
+const meta: Meta<typeof ComponentName> = {
+  title: 'Components/ComponentName',
+  component: ComponentName,
+  parameters: {
+    docs: {
+      description: {
+        component: 'Brief description of the component purpose and safety considerations.',
+      },
+    },
+    layout: 'centered',
+  },
+  argTypes: {
+    // Define arg types with descriptions
+    variant: {
+      control: { type: 'select' },
+      options: ['default', 'primary', 'secondary'],
+      description: 'Visual style variant',
+    },
+    disabled: {
+      control: { type: 'boolean' },
+      description: 'Disables interaction',
+    },
+  },
+  args: {
+    // Default args
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// Define stories with safety context
+export const Default: Story = {
+  args: {
+    // Default story args
+  },
+};
+
+export const Emergency: Story = {
+  args: {
+    // Emergency context args
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Emergency context with enhanced accessibility.',
+      },
+    },
+  },
+};
+```
+</CodeGroup>
+
+### Design Token Generation
+
+<CodeGroup>
+```javascript Token Build Script
+// scripts/build-tokens.js
+const StyleDictionary = require('style-dictionary');
+const { fileHeader, formattedVariables } = StyleDictionary.formatHelpers;
+
+// Register custom formats for React Native
+StyleDictionary.registerFormat({
+  name: 'typescript/react-native',
+  formatter: function({ dictionary, file }) {
+    return fileHeader({file}) +
+    `export const tokens = {\n` +
+    formattedVariables({
+      format: 'typescript',
+      dictionary,
+      outputReferences: true,
+    }) +
+    `\n};\n\n` +
+    `export type Tokens = typeof tokens;\n`;
+  }
+});
+
+// Register platform configurations
+StyleDictionary.registerPlatform({
+  name: 'react-native',
+  transformGroup: 'react-native',
+  buildPath: 'src/tokens/',
+  files: [{
+    destination: 'index.ts',
+    format: 'typescript/react-native',
+  }]
+});
+
+// Build tokens
+const sd = StyleDictionary.extend({
+  source: ['tokens/**/*.json'],
+  platforms: {
+    'react-native': {
+      transformGroup: 'react-native',
+      buildPath: 'src/tokens/',
+      files: [{
+        destination: 'index.ts',
+        format: 'typescript/react-native',
+      }]
+    }
+  }
+});
+
+sd.buildAllPlatforms();
+console.log('✅ Design tokens built successfully');
+```
+</CodeGroup>
+
+### Code Quality Standards
+
+<CodeGroup>
+```json ESLint Configuration
+{
+  "extends": [
+    "@react-native-community",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "rules": {
+    "react-native/no-inline-styles": "error",
+    "react-native/no-color-literals": "error",
+    "react-native/no-raw-text": "error",
+    "@typescript-eslint/consistent-type-imports": "error",
+    "import/order": ["error", {
+      "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+      "newlines-between": "always"
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["*.stories.@(ts|tsx|js|jsx)"],
+      "rules": {
+        "react-native/no-color-literals": "off",
+        "react-native/no-inline-styles": "off"
+      }
+    }
+  ]
+}
+```
+
+```typescript Type Definitions
+// types/design-system.ts
+export interface ComponentProps {
+  children?: React.ReactNode;
+  testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  style?: ViewStyle | TextStyle;
+}
+
+export interface ThemeProps {
+  theme?: 'light' | 'dark';
+  tokens: Tokens;
+}
+
+export interface SafetyProps {
+  emergencyOptimized?: boolean;
+  highContrast?: boolean;
+  reducedMotion?: boolean;
+}
+
+export type ComponentVariant = 
+  | 'default' 
+  | 'primary' 
+  | 'secondary' 
+  | 'emergency' 
+  | 'ghost';
+
+export type ComponentSize = 'sm' | 'md' | 'lg' | 'xl';
+
+export type SafetyLevel = 'safe' | 'warning' | 'danger' | 'unknown';
+```
+</CodeGroup>
+
+---
+
+## Testing Strategy
+
+### Component Testing
+
+<CodeGroup>
+```typescript Test Utilities
+// __tests__/utils/testing-library.tsx
+import React from 'react';
+import { render as rtlRender, RenderOptions } from '@testing-library/react-native';
+import { ThemeProvider } from '../../src/contexts/ThemeContext';
+
+interface CustomRenderOptions extends RenderOptions {
+  theme?: 'light' | 'dark';
+}
+
+function render(
+  ui: React.ReactElement,
+  { theme = 'light', ...renderOptions }: CustomRenderOptions = {}
+) {
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <ThemeProvider initialTheme={theme}>
+        {children}
+      </ThemeProvider>
+    );
+  }
+
+  return rtlRender(ui, { wrapper: Wrapper, ...renderOptions });
+}
+
+// Safety-specific test utilities
+export const accessibilityTests = {
+  checkTouchTargetSize: (element: any) => {
+    const { width, height } = element.props.style || {};
+    expect(width).toBeGreaterThanOrEqual(44);
+    expect(height).toBeGreaterThanOrEqual(44);
+  },
+  
+  checkEmergencyTouchTarget: (element: any) => {
+    const { width, height } = element.props.style || {};
+    expect(width).toBeGreaterThanOrEqual(56);
+    expect(height).toBeGreaterThanOrEqual(56);
+  },
+  
+  checkAccessibilityProps: (element: any) => {
+    expect(element.props.accessibilityLabel).toBeDefined();
+    expect(element.props.accessibilityRole).toBeDefined();
+  }
+};
+
+export { render };
+export * from '@testing-library/react-native';
+```
+
+```typescript Component Tests
+// __tests__/components/Button.test.tsx
+import React from 'react';
+import { fireEvent } from '@testing-library/react-native';
+import { render, accessibilityTests } from '../utils/testing-library';
+import Button from '../../src/components/Button/Button';
+
+describe('Button Component', () => {
+  it('renders correctly with default props', () => {
+    const { getByText } = render(<Button>Test Button</Button>);
+    expect(getByText('Test Button')).toBeTruthy();
+  });
+
+  it('handles press events', () => {
+    const onPress = jest.fn();
+    const { getByText } = render(
+      <Button onPress={onPress}>Test Button</Button>
+    );
+    
+    fireEvent.press(getByText('Test Button'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('meets touch target requirements', () => {
+    const { getByTestId } = render(
+      <Button testID="button">Test Button</Button>
+    );
+    
+    accessibilityTests.checkTouchTargetSize(getByTestId('button'));
+  });
+
+  it('meets emergency touch target requirements', () => {
+    const { getByTestId } = render(
+      <Button variant="emergency" testID="emergency-button">
+        Emergency
+      </Button>
+    );
+    
+    accessibilityTests.checkEmergencyTouchTarget(getByTestId('emergency-button'));
+  });
+
+  it('has proper accessibility attributes', () => {
+    const { getByTestId } = render(
+      <Button 
+        testID="accessible-button"
+        accessibilityLabel="Emergency alert button"
+        accessibilityHint="Sends alert to emergency contacts"
+      >
+        Emergency
+      </Button>
+    );
+    
+    accessibilityTests.checkAccessibilityProps(getByTestId('accessible-button'));
+  });
+
+  it('works in dark mode', () => {
+    const { getByText } = render(
+      <Button>Test Button</Button>,
+      { theme: 'dark' }
+    );
+    
+    expect(getByText('Test Button')).toBeTruthy();
+  });
+});
+```
+</CodeGroup>
+
+---
+
+## Migration Guide
+
+### From Legacy Systems
+
+<Steps>
+  <Step title="Audit Current Components">
+    Inventory existing components and identify safety-critical elements that need immediate attention
+  </Step>
+  <Step title="Implement Design Tokens">
+    Replace hardcoded values with design tokens, starting with colors and spacing
+  </Step>
+  <Step title="Update Touch Targets">
+    Ensure all interactive elements meet minimum touch target requirements (44px standard, 56px emergency)
+  </Step>
+  <Step title="Add Accessibility">
+    Implement comprehensive accessibility attributes and test with screen readers
+  </Step>
+  <Step title="Performance Optimization">
+    Replace layout-triggering animations with transform-based animations
+  </Step>
+</Steps>
+
+### Breaking Changes Policy
+
+<Warning>
+**Safety-Critical Updates**: Changes affecting emergency functionality require extended testing periods and gradual rollout with feature flags.
+</Warning>
+
+<Accordion title="Version Compatibility">
+**Major Version Changes:**
+- Design token structure modifications
+- Component API breaking changes
+- Accessibility requirement updates
+
+**Minor Version Changes:**
+- New component variants
+- Additional accessibility features
+- Performance improvements
+
+**Patch Version Changes:**
+- Bug fixes
+- Color adjustments
+- Documentation updates
+</Accordion>
+
+---
+
+## Maintenance & Updates
+
+### Design System Governance
+
+<CardGroup cols={3}>
+  <Card title="Design Council" icon="users">
+    Cross-functional team reviewing design changes and ensuring consistency across safety features
+  </Card>
+  <Card title="Component Review" icon="search">
+    Monthly review of component usage, performance metrics, and accessibility compliance
+  </Card>
+  <Card title="Safety Audits" icon="shield">
+    Quarterly audits of safety-critical components with external accessibility experts
+  </Card>
+</CardGroup>
+
+### Update Process
+
+<Steps>
+  <Step title="Proposal & RFC">
+    Document proposed changes with safety impact assessment and accessibility review
+  </Step>
+  <Step title="Prototype & Test">
+    Build working prototype with comprehensive testing including stress scenarios
+  </Step>
+  <Step title="Community Review">
+    Present to design council and stakeholders with focus on safety implications
+  </Step>
+  <Step title="Implementation">
+    Gradual rollout with feature flags and monitoring for safety-critical components
+  </Step>
+  <Step title="Documentation">
+    Update design system documentation and migration guides
+  </Step>
+</Steps>
+
+---
+
+## Resources & Tools
+
+### Development Tools
+
+<CardGroup cols={2}>
+  <Card title="Figma Design Kit" icon="figma" href="https://figma.com/shelther-design-system">
+    Complete Figma component library with design tokens and safety-specific variants
+  </Card>
+  <Card title="Storybook Playground" icon="book" href="https://storybook.shelther.app">
+    Interactive component playground with safety scenarios and accessibility testing
+  </Card>
+  <Card title="Token Studio Plugin" icon="palette">
+    Figma plugin for managing design tokens with automated sync to code
+  </Card>
+  <Card title="Accessibility Scanner" icon="scan-line">
+    Automated accessibility testing tool with safety-specific requirements
+  </Card>
+</CardGroup>
+
+### Documentation Links
+
+<CardGroup cols={3}>
+  <Card title="Component API" icon="code" href="/api-reference/components">
+    Complete TypeScript API documentation for all components
+  </Card>
+  <Card title="Design Tokens" icon="tokens" href="/design-system/tokens">
+    Detailed token reference with usage examples and platform implementations
+  </Card>
+  <Card title="Safety Guidelines" icon="shield" href="/design-system/safety">
+    Comprehensive safety-first design principles and emergency UX patterns
+  </Card>
+  <Card title="Accessibility Guide" icon="universal-access" href="/design-system/accessibility">
+    WCAG 2.1 AA compliance guide with safety-specific requirements
+  </Card>
+  <Card title="Migration Help" icon="arrow-right" href="/design-system/migration">
+    Step-by-step migration guide from legacy systems to Shelther design system
+  </Card>
+  <Card title="Contributing" icon="git-branch" href="/design-system/contributing">
+    Guidelines for contributing to the design system with safety review process
+  </Card>
+</CardGroup>
+
+---
+
+## Support & Community
+
+<Info>
+**Need Help?** Our design system team provides comprehensive support for implementation, accessibility questions, and safety-critical component reviews.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Design System Team" icon="headset">
+    **Email:** design-system@shelther.app  
+    **Response Time:** &lt;24 hours for standard requests, &lt;2 hours for safety-critical issues
+  </Card>
+  <Card title="Community Discord" icon="discord">
+    **Channel:** #design-system  
+    **Active Hours:** 9 AM - 6 PM PST  
+    Join our community for real-time support and discussions
+  </Card>
+</CardGroup>
+
+### Emergency Support
+
+<Warning>
+**Safety-Critical Issues**: For design system issues affecting emergency functionality, contact our 24/7 emergency support line or use the priority support channel in Discord.
+</Warning>
+
+**Emergency Contact:** emergency-design@shelther.app  
+**Response SLA:** &lt;30 minutes for safety-critical component failures
+
+---
+
+**Version:** 1.0.0  
+**Last Updated:** June 27, 2025  
+**Next Review:** September 27, 2025

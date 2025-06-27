@@ -263,6 +263,7 @@
         "group": "Resources",
         "pages": [
           "resources/examples",
+          "resources/design-system",
           "resources/code-samples",
           "resources/expo-plugins",
           "resources/supabase-extensions",

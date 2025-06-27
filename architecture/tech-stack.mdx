@@ -1,121 +1,170 @@
 ---
 title: "Technology Stack"
-description: "Complete technology stack for Shelther safety applications. Detailed breakdown of React Native, Expo SDK 52+, Supabase, and supporting technologies with version specifications and implementation rationale."
+description: "Complete technology stack for Shelther safety applications. Detailed breakdown of React Native, Express.js backend on Railway, Supabase integration, and supporting technologies with version specifications and implementation rationale."
 ---
 
 # Technology Stack
 
 <Info>
-**Modern Safety Stack:** Shelther leverages cutting-edge technologies optimized for safety-critical applications, ensuring reliability, performance, and security for emergency situations.
+**Modern Safety Stack:** Shelther leverages a cutting-edge three-tier architecture optimized for safety-critical applications, ensuring reliability, performance, and security for emergency situations with Express.js + Railway + Supabase.
 </Info>
 
-## Stack Overview
+## Architecture Overview
 
-Our technology choices prioritize safety, reliability, and developer productivity:
+Our technology stack follows a modern three-tier architecture designed for safety-critical applications:
 
-<CardGroup cols={2}>
-  <Card title="Client Platform" icon="mobile">
+<CardGroup cols={3}>
+  <Card title="Client Tier" icon="mobile">
     React Native with Expo SDK 52+ for cross-platform mobile development with native performance
   </Card>
-  <Card title="Backend Platform" icon="server">
-    Supabase providing PostgreSQL, real-time features, authentication, and edge functions
+  <Card title="Server Tier" icon="server">
+    Express.js on Railway platform providing custom business logic and safety-critical processing
   </Card>
-  <Card title="Development Tools" icon="code">
-    TypeScript, ESLint, Prettier, and comprehensive testing framework for quality assurance
-  </Card>
-  <Card title="Infrastructure" icon="cloud">
-    Cloud-native architecture with automatic scaling, monitoring, and disaster recovery
+  <Card title="Data Tier" icon="database">
+    Supabase integration for PostgreSQL, real-time features, authentication, and secure data storage
   </Card>
 </CardGroup>
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        A[React Native App]
+        B[Background Services]
+        C[Offline Storage]
+    end
+    
+    subgraph "Server Layer - Railway"
+        D[Express.js API]
+        E[Background Jobs]
+        F[Health Monitoring]
+    end
+    
+    subgraph "Data Layer - Supabase"
+        G[PostgreSQL Database]
+        H[Real-time Engine]
+        I[Authentication]
+    end
+    
+    subgraph "External Services"
+        J[Twilio SMS]
+        K[Email Service]
+        L[Push Notifications]
+        M[Maps API]
+    end
+    
+    A --> D
+    B --> D
+    C --> A
+    D --> G
+    D --> H
+    D --> I
+    E --> G
+    F --> G
+    D --> J
+    D --> K
+    D --> L
+    A --> M
+    
+    style D fill:#8B5CF6
+    style G fill:#10B981
+    style A fill:#F59E0B
+```
 
 ## Client-Side Technologies
 
 ### React Native Ecosystem
 
 <CodeGroup>
-```json Core Framework
+```json Core Mobile Framework
 {
   "dependencies": {
     "react": "18.2.0",
     "react-native": "0.74.5",
+    "expo": "~52.0.0",
+    "expo-router": "~3.5.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",
     "@react-navigation/bottom-tabs": "^6.5.11"
   },
   "rationale": {
-    "react_native": "Latest stable with New Architecture support",
-    "navigation": "Industry standard for mobile navigation"
+    "react_native": "Latest stable with New Architecture support for performance",
+    "expo_sdk": "Managed workflow with OTA updates for critical safety patches",
+    "navigation": "Industry standard for mobile navigation with deep linking"
   }
 }
 ```
 
-```json Expo SDK Configuration
+```json Safety-Critical Native Modules
 {
   "dependencies": {
-    "expo": "~52.0.0",
-    "expo-router": "~3.5.0",
     "expo-location": "~17.0.0",
     "expo-notifications": "~0.28.0",
     "expo-secure-store": "~13.0.0",
     "expo-task-manager": "~12.0.0",
-    "expo-background-fetch": "~12.0.0"
+    "expo-background-fetch": "~12.0.0",
+    "expo-dev-client": "~4.0.0",
+    "expo-audio": "~12.0.0"
   },
-  "advantages": {
-    "managed_workflow": "Simplified development and deployment",
-    "ota_updates": "Critical bug fixes without app store delays",
-    "native_modules": "Pre-built, tested native functionality"
+  "safety_features": {
+    "location": "Background location tracking for emergency situations",
+    "notifications": "Critical push notifications and local reminders",
+    "secure_store": "Encrypted storage for emergency contact data",
+    "background_tasks": "Continuous safety monitoring and check-in processing",
+    "audio": "Emergency audio recording and voice activation"
   }
 }
 ```
 </CodeGroup>
 
-#### Why React Native + Expo?
+#### Why React Native + Expo for Safety Apps?
 
 <Steps>
-  <Step title="Cross-Platform Efficiency">
-    Single codebase for iOS and Android with 95% code reuse while maintaining native performance
+  <Step title="Cross-Platform Safety">
+    Single codebase for iOS and Android with 95% code reuse, ensuring consistent safety features across platforms
   </Step>
-  <Step title="Safety-Critical Features">
-    Proven background services, location tracking, and push notifications essential for safety apps
+  <Step title="Background Processing">
+    Proven background services for location tracking, check-in monitoring, and emergency detection essential for safety apps
   </Step>
-  <Step title="Rapid Development">
-    Faster iteration cycles crucial for responding to safety feature requests and security updates
+  <Step title="Over-the-Air Updates">
+    Critical security patches and safety feature updates without app store delays - essential for emergency fixes
   </Step>
-  <Step title="Community Ecosystem">
-    Large ecosystem of safety-relevant packages and active community support
+  <Step title="Native Performance">
+    Direct access to device APIs (location, sensors, notifications) with native-level performance for emergency response
   </Step>
 </Steps>
 
-### State Management & Architecture
+### State Management Architecture
 
 <CardGroup cols={2}>
   <Card title="Redux Toolkit" icon="layers">
-    Predictable state management for complex safety workflows with time-travel debugging
+    Global state for safety workflows with predictable updates and time-travel debugging
   </Card>
   <Card title="React Query" icon="refresh">
-    Server state management with optimistic updates and offline synchronization
+    Server state management with offline synchronization and optimistic updates for emergency data
+  </Card>
+  <Card title="MMKV Storage" icon="database">
+    High-performance persistent storage for offline safety features and emergency contacts
   </Card>
   <Card title="Zustand" icon="box">
-    Lightweight local state for UI components and temporary safety data
-  </Card>
-  <Card title="AsyncStorage" icon="database">
-    Persistent local storage for offline safety features and user preferences
+    Lightweight component state for UI interactions and temporary safety data
   </Card>
 </CardGroup>
 
 <CodeGroup>
-```typescript State Management Architecture
-// Redux Toolkit for global safety state
+```typescript Client State Management
+// Redux Toolkit for safety-critical global state
 import { configureStore } from '@reduxjs/toolkit';
 import { emergencySlice } from './slices/emergencySlice';
 import { locationSlice } from './slices/locationSlice';
 import { contactsSlice } from './slices/contactsSlice';
+import { checkInSlice } from './slices/checkInSlice';
 
 export const store = configureStore({
   reducer: {
     emergency: emergencySlice.reducer,
     location: locationSlice.reducer,
     contacts: contactsSlice.reducer,
+    checkIn: checkInSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -125,61 +174,124 @@ export const store = configureStore({
     }),
 });
 
-// React Query for server state
+// React Query for server state with safety optimizations
 import { QueryClient } from '@tanstack/react-query';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      cacheTime: 30 * 60 * 1000, // 30 minutes for safety data
       retry: (failureCount, error) => {
-        // More aggressive retries for safety-critical data
-        if (error.message.includes('emergency')) {
+        // Aggressive retries for emergency endpoints
+        if (error.request?.url?.includes('/emergency/')) {
           return failureCount < 5;
         }
         return failureCount < 3;
       },
+      refetchOnWindowFocus: true, // Keep safety data fresh
+      refetchOnReconnect: true,   // Sync when connection restored
+    },
+    mutations: {
+      retry: 3, // Retry failed emergency operations
     },
   },
 });
+```
+
+```typescript High-Performance Storage
+// MMKV for fast, encrypted local storage
+import { MMKV } from 'react-native-mmkv';
+
+export const storage = new MMKV({
+  id: 'shelther-storage',
+  encryptionKey: 'your-encryption-key',
+});
+
+export const emergencyStorage = new MMKV({
+  id: 'emergency-data',
+  encryptionKey: 'emergency-encryption-key',
+});
+
+// Storage helpers for safety data
+export const SafetyStorage = {
+  setEmergencyContacts: (contacts: EmergencyContact[]) => {
+    emergencyStorage.set('emergency_contacts', JSON.stringify(contacts));
+  },
+  
+  getEmergencyContacts: (): EmergencyContact[] => {
+    const data = emergencyStorage.getString('emergency_contacts');
+    return data ? JSON.parse(data) : [];
+  },
+  
+  setOfflineLocation: (location: LocationData) => {
+    const locations = SafetyStorage.getOfflineLocations();
+    locations.push(location);
+    // Keep only last 100 locations for offline mode
+    if (locations.length > 100) {
+      locations.shift();
+    }
+    emergencyStorage.set('offline_locations', JSON.stringify(locations));
+  },
+  
+  getOfflineLocations: (): LocationData[] => {
+    const data = emergencyStorage.getString('offline_locations');
+    return data ? JSON.parse(data) : [];
+  }
+};
 ```
 </CodeGroup>
 
 ### UI and Design System
 
-<Accordion title="Design System Components">
-**Core UI Library:**
-- React Native Elements 4.0+ for consistent, accessible components
-- React Native Paper for Material Design components
-- Custom safety-specific components for emergency features
+<Accordion title="Safety-Optimized Design System">
+**Core Design Principles:**
+- High contrast colors for emergency visibility
+- Large touch targets (minimum 44px) for stress situations
+- Clear visual hierarchy with safety status indicators
+- Accessibility-first design with screen reader support
+- Consistent iconography for emergency functions
 
-**Styling Framework:**
-- Styled Components for dynamic theming and component styling
-- React Native Reanimated 3 for smooth animations and gestures
-- Custom design tokens for consistent spacing, colors, and typography
+**Component Library:**
+- Custom safety components (emergency buttons, status indicators)
+- React Native Elements for consistent, tested components
+- React Native Reanimated 3 for smooth emergency transitions
+- Gesture Handler for emergency gesture recognition (shake to alert)
 
-**Accessibility:**
-- React Native Accessibility API integration
-- Voice-over and TalkBack support for emergency features
-- High contrast mode and large text support
+**Accessibility Features:**
+- Voice Control integration for hands-free emergency activation
+- High contrast mode for various lighting conditions
+- Dynamic text sizing supporting up to 200% scale
+- Haptic feedback for critical actions and confirmations
 </Accordion>
 
 <CodeGroup>
-```typescript Design System Configuration
-// Theme configuration
-export const theme = {
+```typescript Safety Design System
+// Safety-first theme configuration
+export const safetyTheme = {
   colors: {
-    primary: '#FF5A5A',      // Emergency red
-    secondary: '#4CAF50',    // Safety green
-    warning: '#FF9800',      // Caution orange
-    error: '#F44336',        // Error red
-    background: '#FAFAFA',   // Light background
-    surface: '#FFFFFF',      // Card surfaces
+    // Emergency color palette
+    emergency: {
+      primary: '#FF1744',      // Critical emergency red
+      secondary: '#FF5722',    // Warning orange
+      background: '#FFEBEE',   // Light emergency background
+    },
+    safety: {
+      primary: '#4CAF50',      // Safe green
+      secondary: '#8BC34A',    // Light green
+      background: '#F1F8E9',   // Light safety background
+    },
+    status: {
+      active: '#2196F3',       // Active monitoring blue
+      inactive: '#9E9E9E',     // Inactive gray
+      warning: '#FF9800',      // Caution orange
+      error: '#F44336',        // Error red
+    },
     text: {
-      primary: '#212121',    // High contrast
-      secondary: '#757575',  // Medium contrast
-      disabled: '#BDBDBD',   // Low contrast
+      primary: '#212121',      // High contrast black
+      secondary: '#757575',    // Medium gray
+      onEmergency: '#FFFFFF',  // White on emergency
+      onSafety: '#1B5E20',     // Dark green on safety
     },
   },
   spacing: {
@@ -188,131 +300,653 @@ export const theme = {
     md: 16,
     lg: 24,
     xl: 32,
-  },
-  typography: {
-    h1: { fontSize: 32, fontWeight: 'bold' },
-    h2: { fontSize: 24, fontWeight: 'bold' },
-    body: { fontSize: 16, fontWeight: 'normal' },
-    caption: { fontSize: 12, fontWeight: 'normal' },
+    xxl: 48,
   },
   accessibility: {
-    minimumTouchTarget: 44, // iOS HIG recommendation
-    textScaling: true,      // Support dynamic text sizing
-    highContrast: true,     // High contrast mode support
+    minimumTouchTarget: 44,   // iOS/Android accessibility guidelines
+    emergencyTouchTarget: 64, // Larger for emergency buttons
+    textScaling: true,        // Support dynamic text sizing
+    highContrast: true,       // High contrast mode support
+    hapticFeedback: true,     // Haptic feedback for safety actions
+  },
+  emergency: {
+    buttonSize: {
+      small: 56,
+      medium: 80,
+      large: 120,             // Primary emergency button
+    },
+    animationDuration: 200,   // Fast animations for emergency UI
+    vibrationPattern: [0, 100, 50, 100], // Emergency haptic pattern
   },
 };
+
+// Emergency component examples
+export const EmergencyButton = styled.TouchableOpacity<{size: 'small' | 'medium' | 'large'}>`
+  width: ${props => safetyTheme.emergency.buttonSize[props.size]}px;
+  height: ${props => safetyTheme.emergency.buttonSize[props.size]}px;
+  border-radius: ${props => safetyTheme.emergency.buttonSize[props.size] / 2}px;
+  background-color: ${safetyTheme.colors.emergency.primary};
+  justify-content: center;
+  align-items: center;
+  shadow-color: #000;
+  shadow-offset: 0px 4px;
+  shadow-opacity: 0.3;
+  shadow-radius: 6px;
+  elevation: 8;
+`;
 ```
 </CodeGroup>
 
-## Backend Technologies
+## Server-Side Technologies
 
-### Supabase Platform
+### Express.js on Railway Platform
 
 <Note>
-**Why Supabase for Safety Apps:** Provides enterprise-grade reliability with real-time capabilities essential for emergency features, while maintaining developer productivity and cost efficiency.
+**Why Express.js + Railway:** Provides complete control over safety-critical business logic while maintaining always-warm servers essential for emergency response reliability.
 </Note>
 
 <CardGroup cols={3}>
-  <Card title="PostgreSQL 15+" icon="database">
-    ACID compliance, advanced indexing, and PostGIS for location queries
+  <Card title="Express.js 4.18+" icon="server">
+    Production-ready Node.js framework with comprehensive middleware ecosystem for safety processing
   </Card>
-  <Card title="Real-time Engine" icon="bolt">
-    WebSocket-based subscriptions with &lt;100ms latency for emergency alerts
+  <Card title="Railway Platform" icon="cloud">
+    Always-warm hosting with zero-downtime deployments and automatic scaling for emergency loads
   </Card>
-  <Card title="Edge Functions" icon="server">
-    Deno-based serverless functions for emergency processing and integrations
+  <Card title="Node.js 20 LTS" icon="gear">
+    Long-term support runtime with enhanced security and performance for safety-critical applications
   </Card>
 </CardGroup>
 
-#### Database Technology Rationale
+#### Server Technology Stack Rationale
 
-| Feature | PostgreSQL | Alternative | Why PostgreSQL |
-|---------|------------|-------------|---------------|
-| **ACID Compliance** | ✅ Full ACID | ❌ Eventually consistent | Critical for safety data integrity |
-| **Location Queries** | ✅ PostGIS extension | ⚠️ Basic geo support | Advanced spatial queries for safety zones |
-| **Real-time Updates** | ✅ Built-in triggers | ❌ Additional services | Native real-time for emergency alerts |
-| **Scaling** | ✅ Read replicas | ✅ Horizontal scaling | Proven reliability for safety-critical apps |
-| **Query Performance** | ✅ Advanced indexing | ⚠️ Limited indexing | Sub-100ms queries for emergency response |
+| Feature | Express.js + Railway | Serverless Functions | Traditional VPS |
+|---------|---------------------|----------------------|-----------------|
+| **Cold Start Time** | ✅ Always warm (0ms) | ❌ 100-1000ms | ✅ Always warm |
+| **Emergency Response** | ✅ &lt;500ms processing | ❌ Variable latency | ✅ Consistent |
+| **Scaling** | ✅ Automatic | ✅ Automatic | ❌ Manual |
+| **Maintenance** | ✅ Managed platform | ✅ No maintenance | ❌ High maintenance |
+| **Cost** | ✅ Predictable | ⚠️ Variable | ⚠️ Fixed costs |
+| **Deployment** | ✅ Zero-downtime | ✅ Instant | ❌ Downtime |
+| **Monitoring** | ✅ Built-in | ⚠️ Limited | ❌ Self-managed |
+
+**Winner: Express.js + Railway** - Optimal balance of performance, reliability, and maintainability for safety-critical applications.
 
 <CodeGroup>
-```sql Database Extensions
--- PostGIS for advanced location queries
-CREATE EXTENSION IF NOT EXISTS "postgis";
-
--- UUID generation for security
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Full-text search for venue data
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-
--- Time-series data for analytics
-CREATE EXTENSION IF NOT EXISTS "timescaledb";
+```json Server Dependencies - Production Ready
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "node-cron": "^3.0.3",
+    "twilio": "^4.19.0",
+    "nodemailer": "^6.9.7",
+    "winston": "^3.11.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
 ```
 
-```typescript Supabase Client Configuration
+```typescript Express.js Safety Configuration
+// Production Express.js setup for safety applications
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { emergencyRouter } from './routes/emergency';
+import { locationRouter } from './routes/location';
+import { healthRouter } from './routes/health';
+
+const app = express();
+
+// Security middleware optimized for safety apps
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", process.env.SUPABASE_URL || ''],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS for mobile app integration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['exp://shelther.app', 'https://shelther.app']
+    : true,
+  credentials: true,
+}));
+
+// Rate limiting with emergency bypass
+const emergencyRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: (req) => {
+    // Higher limits for emergency endpoints
+    if (req.path.includes('/emergency/')) return 1000;
+    return 100;
+  },
+  message: 'Too many requests',
+  standardHeaders: true,
+});
+
+app.use('/api', emergencyRateLimit);
+
+// Safety-critical routes
+app.use('/health', healthRouter);           // Health checks (no auth)
+app.use('/api/emergency', emergencyRouter); // Emergency alerts
+app.use('/api/location', locationRouter);   // Location services
+
+// Global error handling for safety
+app.use((error, req, res, next) => {
+  const isSafetyCritical = req.path.includes('/emergency/');
+  
+  if (isSafetyCritical) {
+    // Log critical errors immediately
+    console.error('SAFETY CRITICAL ERROR:', error);
+    
+    // Return safe fallback response
+    res.status(500).json({
+      error: 'Safety service temporarily unavailable',
+      emergencyGuidance: 'Contact emergency services directly if urgent',
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default app;
+```
+</CodeGroup>
+
+### Railway Platform Integration
+
+<Steps>
+  <Step title="Always-Warm Architecture">
+    Railway keeps servers warm to eliminate cold starts critical for emergency response
+  </Step>
+  <Step title="Zero-Downtime Deployments">
+    Blue-green deployments ensure continuous availability during safety feature updates   
+  </Step>
+  <Step title="Automatic Scaling">
+    Dynamic scaling based on emergency load with predefined scaling policies
+  </Step>
+  <Step title="Built-in Monitoring">
+    Comprehensive monitoring with health checks and performance metrics for safety SLAs
+  </Step>
+</Steps>
+
+<CodeGroup>
+```json Railway Configuration
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build",
+    "watchPatterns": ["src/**/*.ts", "package.json"]
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 10,
+    "healthcheckInterval": 30,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3,
+    "sleepApplication": false
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "EMERGENCY_RESPONSE_TIMEOUT": "30000"
+      }
+    }
+  }
+}
+```
+
+```dockerfile Production Dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+COPY tsconfig.json ./
+RUN npm ci
+COPY src/ ./src/
+RUN npm run build
+
+FROM node:20-alpine AS production
+RUN addgroup -g 1001 -S shelther && \
+    adduser -S shelther -u 1001
+WORKDIR /app
+COPY --from=builder --chown=shelther:shelther /app/dist ./dist
+COPY --from=builder --chown=shelther:shelther /app/node_modules ./node_modules
+COPY --from=builder --chown=shelther:shelther /app/package*.json ./
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "
+    const http = require('http');
+    const options = { hostname: 'localhost', port: process.env.PORT || 3000, path: '/health' };
+    const req = http.request(options, (res) => process.exit(res.statusCode === 200 ? 0 : 1));
+    req.on('error', () => process.exit(1));
+    req.end();
+  "
+
+USER shelther
+EXPOSE 3000
+ENV NODE_ENV=production
+CMD ["node", "dist/server.js"]
+```
+</CodeGroup>
+
+### Background Services & Job Processing
+
+<CardGroup cols={2}>
+  <Card title="Node-Cron Scheduler" icon="clock">
+    Reliable job scheduling for check-in monitoring and safety alerts with failure recovery
+  </Card>
+  <Card title="Safety Monitoring Jobs" icon="shield-check">
+    Continuous monitoring for missed check-ins, alert escalation, and emergency system health
+  </Card>
+  <Card title="Notification Services" icon="bell">
+    Multi-channel notification delivery with SMS, email, and push notification failover
+  </Card>
+  <Card title="Performance Monitoring" icon="chart-line">
+    Real-time performance tracking with automatic scaling and health reporting
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```typescript Safety Monitoring Jobs
+// Background job processing for safety-critical operations
+import cron from 'node-cron';
+import { EmergencyService } from '../services/EmergencyService';
+import { CheckInService } from '../services/CheckInService';
+
+export class SafetyMonitoringJobs {
+  constructor(
+    private emergencyService: EmergencyService,
+    private checkInService: CheckInService
+  ) {}
+
+  initializeJobs(): void {
+    // Critical: Check for missed check-ins every 2 minutes
+    cron.schedule('*/2 * * * *', async () => {
+      await this.checkMissedCheckIns();
+    });
+
+    // Emergency alert escalation every 5 minutes
+    cron.schedule('*/5 * * * *', async () => {
+      await this.checkEmergencyEscalation();
+    });
+
+    // System health monitoring every minute
+    cron.schedule('* * * * *', async () => {
+      await this.performHealthCheck();
+    });
+
+    // Data cleanup daily at 2 AM
+    cron.schedule('0 2 * * *', async () => {
+      await this.performSystemCleanup();
+    });
+  }
+
+  private async checkMissedCheckIns(): Promise<void> {
+    try {
+      const overdueCheckIns = await this.checkInService.getOverdueCheckIns();
+      
+      for (const checkIn of overdueCheckIns) {
+        const gracePeriodExpired = this.isGracePeriodExpired(checkIn);
+        
+        if (gracePeriodExpired) {
+          // Trigger emergency alert for missed check-in
+          await this.emergencyService.triggerEmergencyAlert(
+            checkIn.user_id,
+            {
+              alertType: 'check_in_missed',
+              triggerMethod: 'auto_detection',
+              message: `Missed check-in: ${checkIn.notes || 'No details'}`,
+            }
+          );
+
+          await this.checkInService.markCheckInAsMissed(checkIn.id);
+        }
+      }
+    } catch (error) {
+      console.error('Check-in monitoring failed:', error);
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Data Layer Technologies
+
+### Supabase Integration
+
+<CardGroup cols={3}>
+  <Card title="PostgreSQL 15+" icon="database">
+    ACID-compliant database with advanced indexing and PostGIS for location queries
+  </Card>
+  <Card title="Real-time Engine" icon="broadcast-tower">
+    WebSocket subscriptions for instant emergency alerts with automatic reconnection
+  </Card>
+  <Card title="Row Level Security" icon="shield">
+    Database-level security ensuring users access only authorized safety data
+  </Card>
+</CardGroup>
+
+#### Database Technology for Safety Applications
+
+<Warning>
+**Safety Data Requirements:** Emergency data must be ACID-compliant with real-time capabilities and sub-100ms query performance for critical operations.
+</Warning>
+
+| Feature | PostgreSQL + Supabase | MongoDB | Firebase |
+|---------|----------------------|----------|----------|
+| **ACID Compliance** | ✅ Full ACID | ❌ Eventually consistent | ❌ Eventually consistent |
+| **Real-time Updates** | ✅ Built-in WebSockets | ⚠️ Change streams | ✅ Real-time listeners |
+| **Location Queries** | ✅ PostGIS extension | ✅ 2D indexes | ⚠️ Basic geo queries |
+| **Query Performance** | ✅ Advanced indexing | ✅ Flexible indexes | ⚠️ Limited indexing |
+| **Offline Sync** | ⚠️ Custom implementation | ✅ Native sync | ✅ Native sync |
+| **Safety Compliance** | ✅ GDPR/HIPAA ready | ⚠️ Custom compliance | ✅ Compliance features |
+
+**Winner: PostgreSQL + Supabase** - ACID compliance and advanced location queries essential for safety data integrity.
+
+<CodeGroup>
+```sql Safety Database Schema
+-- Emergency alerts with comprehensive tracking
+CREATE TABLE emergency_alerts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  alert_type VARCHAR NOT NULL CHECK (
+    alert_type IN ('manual', 'duress', 'check_in_missed', 'automated')
+  ),
+  trigger_method VARCHAR CHECK (
+    trigger_method IN ('button', 'shake', 'voice', 'widget', 'auto_detection')
+  ),
+  status VARCHAR DEFAULT 'active' CHECK (
+    status IN ('active', 'acknowledged', 'resolved', 'false_alarm')
+  ),
+  severity VARCHAR DEFAULT 'high' CHECK (
+    severity IN ('low', 'medium', 'high', 'critical')
+  ),
+  location_id UUID REFERENCES location_updates(id),
+  message TEXT CHECK (LENGTH(message) <= 500),
+  escalation_level INTEGER DEFAULT 1,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  resolved_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Location tracking with spatial optimization
+CREATE TABLE location_updates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  accuracy REAL,
+  geolocation GEOGRAPHY(POINT, 4326) GENERATED ALWAYS AS (
+    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+  ) STORED,
+  is_emergency BOOLEAN DEFAULT FALSE,
+  battery_level INTEGER CHECK (battery_level BETWEEN 0 AND 100),
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '24 hours')
+);
+
+-- Performance indexes for emergency response
+CREATE INDEX CONCURRENTLY idx_emergency_alerts_active 
+  ON emergency_alerts(user_id, status, created_at DESC) 
+  WHERE status = 'active';
+
+CREATE INDEX CONCURRENTLY idx_location_updates_emergency 
+  ON location_updates(user_id, is_emergency, timestamp DESC) 
+  WHERE is_emergency = TRUE;
+
+CREATE INDEX CONCURRENTLY idx_location_geolocation_gist 
+  ON location_updates USING GIST(geolocation);
+```
+
+```typescript Supabase Client Integration
+// Supabase client configuration for safety applications
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
   realtime: {
     params: {
-      eventsPerSecond: 10,        // Higher rate for emergency events
+      eventsPerSecond: 10, // Higher rate for emergency events
     },
   },
   global: {
     headers: {
-      'x-client-info': 'shelther-mobile-app',
+      'x-client-info': 'shelther-mobile-v1.0',
     },
   },
 });
+
+// Real-time emergency alert subscription
+export const subscribeToEmergencyAlerts = (userId: string, callback: (alert: EmergencyAlert) => void) => {
+  return supabase
+    .channel('emergency-alerts')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'emergency_alerts',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        callback(payload.new as EmergencyAlert);
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',  
+        table: 'emergency_alerts',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        callback(payload.new as EmergencyAlert);
+      }
+    )
+    .subscribe();
+};
 ```
 </CodeGroup>
 
-### Authentication & Security
+## External Service Integrations
 
-<Accordion title="Authentication Architecture">
-**Supabase Auth Features:**
-- JWT-based authentication with automatic refresh
-- Multi-factor authentication (MFA) support
-- Social login providers (Google, Apple, GitHub)
-- Row Level Security (RLS) for data privacy
-- Session management with secure token storage
+### Communication & Notification Services
 
-**Security Enhancements:**
-- Biometric authentication integration
-- Emergency bypass mechanisms
-- Device-specific session management
-- Automatic session cleanup
-</Accordion>
-
-## Development & DevOps Technologies
-
-### Development Tools
-
-<CardGroup cols={2}>
-  <Card title="TypeScript 5.3+" icon="code">
-    Type safety reducing runtime errors critical in safety applications
+<CardGroup cols={3}>
+  <Card title="Twilio SMS" icon="message-square">
+    Primary SMS service with automatic failover to backup providers for emergency notifications
   </Card>
-  <Card title="ESLint + Prettier" icon="check">
-    Code quality and consistency with safety-specific linting rules
+  <Card title="Email Services" icon="mail">
+    Production email delivery with emergency templates and delivery tracking
   </Card>
-  <Card title="Jest + Testing Library" icon="test-tube">
-    Comprehensive testing framework with safety scenario testing
-  </Card>
-  <Card title="Metro Bundler" icon="package">
-    Optimized bundling with code splitting and tree shaking
+  <Card title="Expo Push Notifications" icon="smartphone">
+    Real-time push notifications with badge management and silent emergency alerts
   </Card>
 </CardGroup>
 
+### Service Integration Architecture
+
+<Accordion title="Multi-Channel Notification Strategy">
+**Primary Communication Channels:**
+- SMS via Twilio for immediate emergency alerts
+- Email via SendGrid/Nodemailer for detailed emergency information
+- Push notifications via Expo for app-based alerts
+- Voice calls via Twilio for critical escalation
+
+**Redundancy & Failover:**
+- Automatic failover to backup SMS providers
+- Multiple email service providers for reliability
+- Push notification fallback to local notifications
+- Emergency contact notification via multiple channels simultaneously
+
+**Delivery Tracking:**
+- SMS delivery receipts and read confirmations
+- Email open and click tracking for emergency messages
+- Push notification delivery confirmations
+- Failed delivery automatic retry with exponential backoff
+</Accordion>
+
 <CodeGroup>
-```json Development Configuration
+```typescript Multi-Channel Notification Service
+// Production notification service with failover
+import twilio from 'twilio';
+import nodemailer from 'nodemailer';
+import { Expo } from 'expo-server-sdk';
+
+export class NotificationService {
+  private twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+  
+  private emailTransporter = nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  
+  private expoClient = new Expo();
+
+  async sendEmergencyNotification(
+    contact: EmergencyContact,
+    alert: EmergencyAlert
+  ): Promise<NotificationResult> {
+    const results: NotificationResult = {
+      sms: { success: false },
+      email: { success: false },
+      push: { success: false }
+    };
+
+    // Send SMS if enabled
+    if (contact.notificationPreferences.sms) {
+      try {
+        const smsResult = await this.sendEmergencySMS(contact, alert);
+        results.sms = { success: true, messageId: smsResult.sid };
+      } catch (error) {
+        results.sms = { success: false, error: error.message };
+      }
+    }
+
+    // Send Email if enabled
+    if (contact.notificationPreferences.email) {
+      try {
+        const emailResult = await this.sendEmergencyEmail(contact, alert);
+        results.email = { success: true, messageId: emailResult.messageId };
+      } catch (error) {
+        results.email = { success: false, error: error.message };
+      }
+    }
+
+    // Send Push Notification if user has app
+    if (contact.pushToken) {
+      try {
+        const pushResult = await this.sendEmergencyPush(contact, alert);
+        results.push = { success: true, messageId: pushResult.id };
+      } catch (error) {
+        results.push = { success: false, error: error.message };
+      }
+    }
+
+    return results;
+  }
+
+  private async sendEmergencySMS(
+    contact: EmergencyContact,
+    alert: EmergencyAlert
+  ) {
+    const message = this.formatEmergencyMessage(contact, alert);
+    
+    return await this.twilioClient.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: contact.phoneNumber,
+      statusCallback: `${process.env.BASE_URL}/webhooks/sms-status`,
+    });
+  }
+
+  private formatEmergencyMessage(
+    contact: EmergencyContact, 
+    alert: EmergencyAlert
+  ): string {
+    const userName = contact.name;
+    let message = `🚨 EMERGENCY ALERT 🚨\n\n`;
+    message += `${userName} has triggered an emergency alert.\n\n`;
+    
+    if (alert.location) {
+      message += `📍 Location: https://maps.google.com/maps?q=${alert.location.latitude},${alert.location.longitude}\n\n`;
+    }
+    
+    message += `⏰ Time: ${new Date(alert.createdAt).toLocaleString()}\n\n`;
+    
+    if (alert.message) {
+      message += `💬 Message: ${alert.message}\n\n`;
+    }
+    
+    message += `This is an automated alert from Shelther.\n`;
+    message += `Reply "OK" to acknowledge.`;
+    
+    return message;
+  }
+}
+```
+</CodeGroup>
+
+### Maps & Location Services
+
+<CardGroup cols={2}>
+  <Card title="Google Maps Platform" icon="map">
+    Comprehensive mapping services including geocoding, places, and directions for safety routing
+  </Card>
+  <Card title="Device Location APIs" icon="map-pin">
+    Native device location services with background tracking and geofencing for safety zones
+  </Card>
+</CardGroup>
+
+## Development & DevOps Technologies
+
+### Development Tools & Quality Assurance
+
+<CodeGroup>
+```json Development Dependencies - Client
 {
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.7.0",
@@ -320,73 +954,123 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     "eslint": "^8.57.0",
     "eslint-config-expo": "^7.0.0",
     "prettier": "^3.0.0",
-    "jest": "^29.2.1",
+    "jest": "^29.7.0",
     "@testing-library/react-native": "^12.4.0",
-    "@testing-library/jest-native": "^5.4.3"
+    "@testing-library/jest-native": "^5.4.3",
+    "detox": "^20.13.0"
   },
-  "scripts": {
-    "lint": "eslint src --ext .ts,.tsx",
-    "format": "prettier --write src",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "type-check": "tsc --noEmit"
+  "testing": {
+    "unit": "Jest + React Native Testing Library",
+    "integration": "Detox for end-to-end mobile testing",
+    "safety": "Custom safety scenario testing framework",
+    "performance": "Flipper and React DevTools profiling"
   }
 }
 ```
 
-```typescript Testing Configuration
-// jest.config.js
-module.exports = {
-  preset: 'jest-expo',
-  setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
-  testMatch: [
-    '**/__tests__/**/*.(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)'
-  ],
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.{ts,tsx}',
-    '!src/test/**/*'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    },
-    // Higher coverage for safety-critical modules
-    'src/services/emergency/': {
-      branches: 95,
-      functions: 95,
-      lines: 95,
-      statements: 95
-    }
+```json Development Dependencies - Server
+{
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "@types/jest": "^29.5.0",
+    "typescript": "^5.3.3", 
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-node": "^10.9.1"
+  },
+  "testing": {
+    "unit": "Jest with TypeScript support",
+    "integration": "Supertest for API testing",
+    "safety": "Emergency endpoint testing framework",
+    "performance": "Artillery for load testing"
   }
-};
+}
 ```
 </CodeGroup>
 
-### Build & Deployment
+### Build & Deployment Pipeline
 
 <Steps>
-  <Step title="EAS Build">
-    Expo Application Services for cloud-based builds with code signing and optimization
+  <Step title="Mobile App Deployment">
+    EAS Build for iOS/Android with over-the-air updates for critical safety patches
   </Step>
-  <Step title="EAS Submit">
-    Automated app store submissions with compliance checks and metadata management
+  <Step title="Server Deployment">
+    Railway platform with GitHub Actions CI/CD and zero-downtime deployments
   </Step>
-  <Step title="EAS Update">
-    Over-the-air updates for critical safety feature updates and security patches
+  <Step title="Database Migrations">
+    Supabase migrations with automated backup and rollback capabilities
   </Step>
-  <Step title="GitHub Actions">
-    CI/CD pipeline with automated testing, security scanning, and deployment
+  <Step title="Monitoring & Alerts">
+    Comprehensive monitoring with Sentry error tracking and uptime monitoring
   </Step>
 </Steps>
 
 <CodeGroup>
-```json EAS Build Configuration
+```yml GitHub Actions - Safety CI/CD
+name: Safety-Critical Deployment
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'package*.json']
+
+jobs:
+  safety-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run safety-critical tests
+      run: |
+        npm run test:safety
+        npm run test:integration
+        npm run test:e2e:critical
+      
+    - name: Security audit
+      run: npm audit --audit-level moderate
+      
+    - name: Performance tests
+      run: npm run test:performance
+
+  deploy-server:
+    needs: safety-tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to Railway
+      run: railway up --service shelther-backend
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        
+    - name: Health check
+      run: |
+        sleep 60
+        curl -f https://shelther-api.railway.app/health
+        
+  deploy-mobile:
+    needs: safety-tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Expo
+      uses: expo/expo-github-action@v8
+      with:
+        expo-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+        
+    - name: Build and deploy
+      run: |
+        eas build --platform all --non-interactive
+        eas submit --platform all --non-interactive
+```
+
+```json EAS Configuration - Production Mobile
 {
   "cli": {
     "version": ">= 5.4.0"
@@ -408,7 +1092,7 @@ module.exports = {
     "production": {
       "channel": "production",
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
       },
       "ios": {
         "buildConfiguration": "Release"
@@ -417,251 +1101,224 @@ module.exports = {
   },
   "submit": {
     "production": {}
+  },
+  "updates": {
+    "url": "https://u.expo.dev/your-project-id"
   }
 }
 ```
 </CodeGroup>
 
-## Third-Party Integrations
+## Performance & Monitoring Stack
 
-### Essential Services
+### Performance Targets for Safety Applications
 
-<CardGroup cols={2}>
-  <Card title="Maps & Location" icon="map">
-    Google Maps API for accurate geocoding, routing, and venue data
+<Warning>
+**Safety-Critical SLAs:** These performance targets ensure reliable emergency response. Any degradation triggers immediate alerts and scaling actions.
+</Warning>
+
+| **Operation** | **Target** | **Maximum** | **Monitoring** | **Scaling Trigger** |
+|---------------|------------|-------------|----------------|-------------------|
+| Emergency Alert Processing | &lt;500ms | &lt;1s | Real-time alerting | &gt;800ms average |
+| Mobile App Cold Start | &lt;2s | &lt;3s | Performance monitoring | &gt;2.5s average |
+| Database Queries | &lt;100ms | &lt;200ms | Query monitoring | &gt;150ms average |
+| Real-time Message Delivery | &lt;1s | &lt;2s | WebSocket monitoring | &gt;1.5s average |
+| Background Location Update | &lt;30s | &lt;60s | Location accuracy | &gt;45s interval |
+| System Uptime | 99.9% | 99.5% | External monitoring | Any downtime |
+
+### Monitoring & Analytics Stack
+
+<CardGroup cols={3}>
+  <Card title="Sentry Error Tracking" icon="bug">
+    Real-time error monitoring with safety-critical error prioritization and alerting
   </Card>
-  <Card title="Communication" icon="message">
-    Twilio for SMS fallback and voice calls to emergency contacts
+  <Card title="Railway Monitoring" icon="chart-line">
+    Built-in server monitoring with health checks, performance metrics, and auto-scaling
   </Card>
-  <Card title="Push Notifications" icon="bell">
-    Expo Push Notifications with APNs and FCM for reliable message delivery
-  </Card>
-  <Card title="Error Tracking" icon="bug">
-    Sentry for crash reporting and performance monitoring
+  <Card title="Custom Safety Metrics" icon="shield-check">
+    Emergency response time tracking, location accuracy monitoring, and safety SLA reporting
   </Card>
 </CardGroup>
 
-### Service Integration Details
-
-<Accordion title="Google Maps Integration">
-**Services Used:**
-- Geocoding API for address-to-coordinate conversion
-- Places API for venue search and safety ratings
-- Directions API for safe route planning
-- Static Maps API for offline map generation
-
-**Safety-Specific Features:**
-- Real-time traffic data for route optimization
-- Safety zone creation and geofencing
-- Emergency services location detection
-- Offline map caching for emergency situations
-
-**Implementation:**
-```typescript
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-
-const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-export const SafetyPlacesService = {
-  searchNearbyEmergencyServices: async (location: Location) => {
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-      `location=${location.latitude},${location.longitude}&` +
-      `radius=5000&type=hospital|police|fire_station&` +
-      `key=${GOOGLE_MAPS_API_KEY}`
-    );
-    return response.json();
-  }
-};
-```
-</Accordion>
-
-<Accordion title="Sentry Error Tracking">
-**Configuration for Safety Apps:**
-- High-priority alerting for emergency feature failures
-- Performance monitoring for location services
-- Custom error context for safety scenarios
-- Privacy-compliant error reporting
-
-**Implementation:**
-```typescript
+<CodeGroup>
+```typescript Sentry Configuration - Safety Focused
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.2,
+  profilesSampleRate: 0.2,
   beforeSend(event) {
-    // Filter out personal information
+    // Filter out personal information for privacy
     if (event.extra?.location) {
       delete event.extra.location;
     }
     return event;
   },
+  beforeSendTransaction(event) {
+    // Prioritize safety-critical transactions
+    if (event.transaction?.includes('emergency')) {
+      event.level = 'fatal';
+    }
+    return event;
+  },
 });
 
-export const logEmergencyError = (error: Error, context: any) => {
+// Custom safety error logging
+export const logSafetyError = (error: Error, context: SafetyContext) => {
   Sentry.withScope((scope) => {
-    scope.setTag('emergency', true);
-    scope.setLevel('critical');
-    scope.setContext('emergency_context', context);
+    scope.setTag('safety_critical', true);
+    scope.setLevel('error');
+    scope.setContext('safety_context', {
+      feature: context.feature,
+      userId: context.userId,
+      emergencyType: context.emergencyType,
+      timestamp: new Date().toISOString(),
+    });
     Sentry.captureException(error);
   });
 };
-```
-</Accordion>
 
-## Performance Optimization Stack
-
-### Monitoring & Analytics
-
-<CardGroup cols={3}>
-  <Card title="Flipper" icon="bug">
-    Development debugging with network inspector and performance profiler
-  </Card>
-  <Card title="Reactotron" icon="monitor">
-    React Native debugging with state inspection and API monitoring
-  </Card>
-  <Card title="Performance API" icon="chart-line">
-    Custom performance monitoring for safety-critical operations
-  </Card>
-</CardGroup>
-
-### Bundle Optimization
-
-<CodeGroup>
-```javascript Metro Configuration
-// metro.config.js
-const { getDefaultConfig } = require('expo/metro-config');
-
-const config = getDefaultConfig(__dirname);
-
-// Optimize for production
-config.transformer.minifierConfig = {
-  keep_fnames: true,
-  mangle: {
-    keep_fnames: true,
-  },
-};
-
-// Tree shaking
-config.resolver.platforms = ['ios', 'android', 'native'];
-
-// Remove dev-only code
-if (process.env.NODE_ENV === 'production') {
-  config.transformer.transform = {
-    ...config.transformer.transform,
-    unstable_transformProfile: 'hermes-stable',
-  };
-}
-
-module.exports = config;
-```
-
-```typescript Bundle Analysis
-// Bundle size targets for safety app
-const bundleSizeTargets = {
-  ios: {
-    main: '< 15MB',           // Core app bundle
-    assets: '< 10MB',         // Images, sounds, maps
-    total: '< 25MB',          // Total app size
-  },
-  android: {
-    main: '< 12MB',           // APK size
-    assets: '< 8MB',          // Asset bundle
-    total: '< 20MB',          // Total download
-  },
-  performance: {
-    startup: '< 2 seconds',   // Cold start time
-    tti: '< 3 seconds',       // Time to interactive
-    emergency: '< 1 second',  // Emergency feature response
+// Performance monitoring for safety features
+export const trackSafetyPerformance = (operation: string, duration: number) => {
+  Sentry.addBreadcrumb({
+    message: `Safety operation: ${operation}`,
+    category: 'safety',
+    level: 'info',
+    data: {
+      duration,
+      operation,
+      timestamp: Date.now(),
+    },
+  });
+  
+  // Alert if emergency operations are slow
+  if (operation.includes('emergency') && duration > 1000) {
+    Sentry.captureMessage('Slow emergency operation detected', 'warning');
   }
 };
 ```
 </CodeGroup>
 
-## Version Management
+## Version Management & Technology Roadmap
 
-### Technology Versions
+### Current Technology Versions
 
 <Note>
-**Version Strategy:** We maintain compatibility with the latest stable versions while ensuring thorough testing for safety-critical features.
+**Version Strategy:** We maintain compatibility with the latest stable versions while ensuring thorough testing for safety-critical features before any upgrades.
 </Note>
 
-| Technology | Current Version | Minimum Version | Update Cadence |
-|------------|----------------|-----------------|----------------|
-| **React Native** | 0.74.5 | 0.72.0 | Quarterly |
-| **Expo SDK** | 52.0.0 | 51.0.0 | Semi-annually |
-| **TypeScript** | 5.3.3 | 5.0.0 | As needed |
-| **Supabase** | 2.38.0 | 2.30.0 | Monthly |
-| **Node.js** | 18.17.0 | 18.0.0 | LTS releases |
+| Technology | Current Version | Minimum Version | Update Cadence | Security Updates |
+|------------|----------------|-----------------|----------------|------------------|
+| **React Native** | 0.74.5 | 0.72.0 | Quarterly | Immediate |
+| **Expo SDK** | 52.0.0 | 51.0.0 | Semi-annually | Immediate |
+| **Express.js** | 4.18.2 | 4.17.0 | As needed | Immediate |
+| **Node.js** | 20.10.0 | 20.0.0 | LTS releases | Immediate |
+| **TypeScript** | 5.3.3 | 5.0.0 | Minor updates | As needed |
+| **Supabase** | 2.38.0 | 2.30.0 | Monthly | Immediate |
 
-### Upgrade Strategy
+### Technology Upgrade Strategy
 
 <Steps>
-  <Step title="Testing Environment">
-    All upgrades tested in isolated environment with full safety feature validation
+  <Step title="Safety Testing Environment">
+    All upgrades tested in isolated environment with complete safety feature validation
   </Step>
-  <Step title="Gradual Rollout">
-    Phased deployment starting with internal testing, then limited beta, then full release
+  <Step title="Phased Rollout">
+    Gradual deployment: internal testing → limited beta → staged production → full release
   </Step>
-  <Step title="Rollback Plan">
-    Immediate rollback capability for any issues affecting safety functionality
+  <Step title="Automatic Rollback">
+    Immediate rollback capability if safety features are compromised during upgrades
   </Step>
-  <Step title="Emergency Patches">
-    Fast-track process for security and safety-critical updates
+  <Step title="Emergency Patch Process">
+    Fast-track deployment for security and safety-critical updates bypassing normal cycles
   </Step>
 </Steps>
 
-## Future Technology Considerations
-
-### Emerging Technologies
+### Future Technology Roadmap
 
 <CardGroup cols={2}>
-  <Card title="React Native New Architecture" icon="architecture">
-    Fabric renderer and TurboModules for improved performance and reliability
+  <Card title="2025 Initiatives" icon="calendar">
+    **Q1-Q2 2025:**
+    - React Native New Architecture migration
+    - Expo SDK 53+ adoption
+    - Express.js performance optimizations
+    - Advanced offline synchronization
   </Card>
-  <Card title="WebAssembly (WASM)" icon="microchip">
-    High-performance computation for real-time location analysis and AI features
-  </Card>
-  <Card title="GraphQL Federation" icon="share-alt">
-    Unified API layer for complex data relationships and third-party integrations
-  </Card>
-  <Card title="Edge Computing" icon="cloud">
-    Regional data processing for reduced latency in emergency situations
+  <Card title="Emerging Technologies" icon="rocket">
+    **Under Evaluation:**
+    - WebAssembly for location processing
+    - AI/ML integration for predictive safety
+    - Edge computing for regional processing
+    - Advanced biometric authentication
   </Card>
 </CardGroup>
 
-## Technology Decision Matrix
+## Technology Decision Framework
 
-### Framework Comparison
+### Safety-First Technology Evaluation
 
-| Requirement | React Native + Expo | Flutter | Native |
-|-------------|---------------------|---------|--------|
-| **Development Speed** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| **Performance** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Ecosystem** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Safety Libraries** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Maintenance** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| **Community** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+When evaluating new technologies for Shelther, we use this safety-first decision matrix:
 
-**Winner: React Native + Expo** - Best balance of development speed, ecosystem maturity, and safety-specific library availability.
+| Criteria | Weight | Evaluation Questions |
+|----------|--------|---------------------|
+| **Safety Impact** | 40% | Does this improve emergency response reliability? |
+| **Reliability** | 25% | What is the uptime and failure rate in production? |
+| **Performance** | 20% | Does this meet our &lt;500ms emergency response target? |
+| **Security** | 10% | Does this enhance or compromise user data protection? |
+| **Maintainability** | 5% | How does this affect long-term maintenance burden? |
+
+### Architecture Evolution Path
+
+<Steps>
+  <Step title="Current State (2025)">
+    Three-tier architecture with React Native + Express.js + Supabase optimized for safety
+  </Step>
+  <Step title="Near-term Evolution (2025-2026)">
+    Enhanced offline capabilities, AI-powered risk assessment, and advanced location processing
+  </Step>
+  <Step title="Long-term Vision (2026+)">
+    Microservices architecture with edge computing and predictive safety analytics
+  </Step>
+</Steps>
 
 ---
 
-## Implementation Guidelines
+## Implementation Priorities
 
-<Warning>
-**Critical Dependencies:** Some technologies are essential for safety functionality. Ensure proper implementation of location services, push notifications, and offline storage before deploying to production.
-</Warning>
+<Info>
+**Safety-First Implementation:** Core safety features take precedence over performance optimizations or feature additions. Emergency functionality must be bulletproof before adding enhancements.
+</Info>
+
+### Phase 1: Foundation (Weeks 1-4)
+- ✅ React Native + Expo development build setup
+- ✅ Express.js server with Railway deployment
+- ✅ Supabase database with safety schema
+- ✅ Basic emergency alert and location tracking
+
+### Phase 2: Safety Features (Weeks 5-8)
+- 🔄 Multi-channel notification system
+- 🔄 Background job processing for check-ins
+- 🔄 Real-time emergency alert subscriptions
+- 🔄 Comprehensive health monitoring
+
+### Phase 3: Production Hardening (Weeks 9-12)
+- ⏳ Performance optimization and scaling
+- ⏳ Security hardening and compliance
+- ⏳ Comprehensive testing and monitoring
+- ⏳ CI/CD pipeline with safety validations
+
+## Next Steps
 
 <CardGroup cols={3}>
-  <Card title="Client Setup" icon="mobile" href="/architecture/client-architecture">
-    Detailed client-side architecture and implementation patterns
+  <Card title="Client Development" icon="mobile" href="/development/expo-configuration">
+    Set up React Native development environment with Expo and safety-critical features
   </Card>
-  <Card title="Backend Setup" icon="server" href="/architecture/backend-architecture">
-    Supabase configuration and server-side implementation
+  <Card title="Server Development" icon="server" href="/development/express-setup">
+    Configure Express.js server with Railway deployment and Supabase integration
   </Card>
-  <Card title="Data Flow" icon="workflow" href="/architecture/data-flow">
-    How data flows through the system during normal and emergency operations
+  <Card title="Database Setup" icon="database" href="/development/supabase-integration">
+    Initialize Supabase with safety-optimized schema and real-time subscriptions  
   </Card>
 </CardGroup>
+
+This comprehensive technology stack provides the foundation for building a world-class safety platform that users can depend on in critical situations. Every technology choice has been made with safety, reliability, and user protection as the primary considerations.
